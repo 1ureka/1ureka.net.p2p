@@ -1,19 +1,23 @@
 import { Box, Typography, ButtonBase, Stack } from "@mui/material";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
-import PhoneIcon from "@mui/icons-material/Phone";
-import PhoneInTalkIcon from "@mui/icons-material/PhoneInTalk";
-import { useFormStore, transition } from "./utils";
+import PhoneRoundedIcon from "@mui/icons-material/PhoneRounded";
+import PhoneInTalkRoundedIcon from "@mui/icons-material/PhoneInTalkRounded";
+import { useFormStore, transition, type Role } from "./utils";
 
-interface RoleCardProps {
-  role: "caller" | "receiver";
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  selected: boolean;
-  onClick: () => void;
-}
+const roleCardMap: Record<Role, { title: string; description: string; icon: React.ReactNode }> = {
+  host: {
+    title: "主持連線",
+    description: "作為連線的主持方，您將創建 offer 並等待對方的 answer",
+    icon: <PhoneRoundedIcon sx={{ fontSize: 128 }} />,
+  },
+  client: {
+    title: "加入連線",
+    description: "作為連線的加入方，您將接收對方的 offer 並創建 answer",
+    icon: <PhoneInTalkRoundedIcon sx={{ fontSize: 128 }} />,
+  },
+};
 
-const RoleCard = ({ role, title, description, icon, selected, onClick }: RoleCardProps) => {
+const RoleCard = ({ role, selected, onClick }: { role: Role; selected: boolean; onClick: () => void }) => {
   return (
     <ButtonBase
       onClick={onClick}
@@ -46,8 +50,6 @@ const RoleCard = ({ role, title, description, icon, selected, onClick }: RoleCar
       <Box
         sx={{
           position: "absolute",
-          //   top: -20,
-          //   right: -20,
           inset: "60% auto auto 25%",
           opacity: 0.3,
           transform: "rotate(15deg) scale(3)",
@@ -55,17 +57,17 @@ const RoleCard = ({ role, title, description, icon, selected, onClick }: RoleCar
           zIndex: 0,
         }}
       >
-        {icon}
+        {roleCardMap[role].icon}
       </Box>
 
       {/* 內容區域 */}
       <Stack spacing={1} sx={{ position: "relative", zIndex: 1, flex: 1, width: "100%" }}>
         <Typography variant="h6" color="text.primary" align="left">
-          {title}
+          {roleCardMap[role].title}
         </Typography>
 
         <Typography variant="body2" color="text.secondary" align="left">
-          {description}
+          {roleCardMap[role].description}
         </Typography>
 
         {/* Spacer */}
@@ -95,21 +97,6 @@ const RoleCard = ({ role, title, description, icon, selected, onClick }: RoleCar
 const Step1 = () => {
   const { selectedRole, setSelectedRole } = useFormStore();
 
-  const roles = [
-    {
-      role: "caller" as const,
-      title: "發起通話",
-      description: "作為通話的發起方，您將創建 offer 並等待對方的 answer",
-      icon: <PhoneIcon sx={{ fontSize: 128 }} />,
-    },
-    {
-      role: "receiver" as const,
-      title: "接收通話",
-      description: "作為通話的接收方，您將接收對方的 offer 並創建 answer",
-      icon: <PhoneInTalkIcon sx={{ fontSize: 128 }} />,
-    },
-  ];
-
   return (
     <Stack spacing={3} sx={{ width: "100%" }}>
       <Box>
@@ -117,22 +104,13 @@ const Step1 = () => {
           選擇您的角色
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          請選擇您在 P2P 連接中的角色。發起方將建立連接請求，接收方將回應連接請求。
+          請選擇您在 P2P 連接中的角色。主持方將建立連接請求，加入方將回應連接請求。
         </Typography>
       </Box>
 
       <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 3 }}>
-        {roles.map((roleData) => (
-          <RoleCard
-            key={roleData.role}
-            role={roleData.role}
-            title={roleData.title}
-            description={roleData.description}
-            icon={roleData.icon}
-            selected={selectedRole === roleData.role}
-            onClick={() => setSelectedRole(roleData.role)}
-          />
-        ))}
+        <RoleCard role={"host"} selected={selectedRole === "host"} onClick={() => setSelectedRole("host")} />
+        <RoleCard role={"client"} selected={selectedRole === "client"} onClick={() => setSelectedRole("client")} />
       </Box>
     </Stack>
   );

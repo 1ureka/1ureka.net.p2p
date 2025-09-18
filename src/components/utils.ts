@@ -1,5 +1,6 @@
-import { create } from "zustand";
-
+// =================================
+// Sx
+// =================================
 export const transition = "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)";
 export const buttonWithStartIconSx = { pl: 1.5, borderRadius: 2 };
 export const buttonContainedSx = {
@@ -8,6 +9,27 @@ export const buttonContainedSx = {
   "&:active": { scale: "0.97" },
   transition,
 };
+
+// =================================
+// Utility Functions
+// =================================
+type Success<T> = { data: T; error: null };
+type Failure<E> = { data: null; error: E };
+type Result<T, E = Error> = Success<T> | Failure<E>;
+
+export async function tryCatch<T, E = Error>(promise: Promise<T>): Promise<Result<T, E>> {
+  try {
+    const data = await promise;
+    return { data, error: null };
+  } catch (error) {
+    return { data: null, error: error as E };
+  }
+}
+
+// =================================
+// Zustand Stores
+// =================================
+import { create } from "zustand";
 
 // 步驟狀態管理
 interface StepState {
@@ -35,7 +57,7 @@ export const useStepStore = create<StepState>((set) => ({
 }));
 
 // 表單狀態管理
-export type Role = "caller" | "receiver" | null;
+export type Role = "host" | "client";
 
 interface FormState {
   // Step1 狀態
@@ -53,7 +75,7 @@ interface FormState {
 }
 
 export const useFormStore = create<FormState>((set) => ({
-  selectedRole: null,
+  selectedRole: "host",
   order: "",
   answer: "",
 
@@ -61,10 +83,5 @@ export const useFormStore = create<FormState>((set) => ({
   setOrder: (order) => set({ order }),
   setAnswer: (answer) => set({ answer }),
 
-  reset: () =>
-    set({
-      selectedRole: null,
-      order: "",
-      answer: "",
-    }),
+  reset: () => set({ selectedRole: "host", order: "", answer: "" }),
 }));

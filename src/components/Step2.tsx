@@ -2,49 +2,94 @@ import { Box, Typography, TextField, IconButton, Tooltip, Stack, Alert } from "@
 import type { TextFieldProps } from "@mui/material";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import ContentPasteRoundedIcon from "@mui/icons-material/ContentPasteRounded";
-import PhoneIcon from "@mui/icons-material/Phone";
-import PhoneInTalkIcon from "@mui/icons-material/PhoneInTalk";
-import { useFormStore, type Role } from "./utils";
+import PhoneRoundedIcon from "@mui/icons-material/PhoneRounded";
+import PhoneInTalkRoundedIcon from "@mui/icons-material/PhoneInTalkRounded";
+import { transition, tryCatch, useFormStore, type Role } from "./utils";
 
-const CopyPasteButton = ({ type, onClick }: { type: "copy" | "paste"; onClick: () => void }) => {
+const copyPasteMap = {
+  copy: { title: "複製", icon: <ContentCopyRoundedIcon fontSize="small" /> },
+  paste: { title: "從剪貼板貼上", icon: <ContentPasteRoundedIcon fontSize="small" /> },
+} as const;
+
+const handleCopy = async (text: string, callback: () => void) => {
+  const { error } = await tryCatch(navigator.clipboard.writeText(text));
+  if (error) return console.error("複製失敗:", error);
+  callback();
+};
+
+const handlePaste = async (callback: (text: string) => void) => {
+  const { data: text, error } = await tryCatch(navigator.clipboard.readText());
+  if (error) return console.error("貼上失敗:", error);
+  callback(text);
+};
+
+type CopyPasteButtonProps =
+  | { type: "copy"; text: string; setter?: never }
+  | { type: "paste"; text?: never; setter: (value: string) => void };
+
+const CopyPasteButton = ({ type, text, setter }: CopyPasteButtonProps) => {
   return (
-    <Tooltip title={type === "copy" ? "複製" : "從剪貼板貼上"}>
+    <Tooltip title={copyPasteMap[type].title}>
       <IconButton
         size="small"
-        onClick={onClick}
-        sx={{ "&:hover": { bgcolor: "action.hover", transform: "scale(1.1)" } }}
+        onClick={() => {
+          if (type === "copy") handleCopy(text, () => {});
+          else handlePaste(setter);
+        }}
+        sx={{
+          p: 0.5,
+          borderRadius: 2,
+          bgcolor: "action.hover",
+          "&:hover": { bgcolor: "action.selected", scale: "1.02" },
+          "&:active": { scale: "0.98" },
+          transition,
+        }}
       >
-        {type === "copy" ? <ContentCopyRoundedIcon fontSize="small" /> : <ContentPasteRoundedIcon fontSize="small" />}
+        {copyPasteMap[type].icon}
       </IconButton>
     </Tooltip>
   );
 };
 
-const InfoField = ({
-  role,
-  type,
-  value,
-  onChange,
-}: Omit<TextFieldProps, "role"> & { role: Role; type: "order" | "answer" }) => {
-  const placeholderMap = {
-    host: { order: "您的 offer 將在這裡顯示", answer: "將對方的 answer 貼到這裡..." },
-    client: { order: "將對方的 offer 貼到這裡...", answer: "您的 answer 將在這裡顯示" },
-  };
+const infoFieldMap = {
+  host: {
+    order: { label: "您的 offer 將在這裡顯示", disabled: true, buttonType: "copy" },
+    answer: { label: "將對方的 answer 貼到這裡...", disabled: false, buttonType: "paste" },
+  },
+  client: {
+    order: { label: "將對方的 offer 貼到這裡...", disabled: false, buttonType: "paste" },
+    answer: { label: "您的 answer 將在這裡顯示", disabled: true, buttonType: "copy" },
+  },
+} as const;
 
-  const placeholder = role ? placeholderMap[role === "caller" ? "host" : "client"][type] : "";
-  const disabled = (role === "caller" && type === "order") || (role === "receiver" && type === "answer");
+type InfoFieldType = Omit<TextFieldProps, "role"> & {
+  role: Role;
+  type: "order" | "answer";
+  value: string;
+  onCopyPaste: () => void;
+};
 
+const InfoField = ({ role, type, value, onChange, onCopyPaste }: InfoFieldType) => {
   return (
-    <TextField
-      fullWidth
-      multiline
-      rows={8}
-      placeholder={placeholder}
-      value={value}
-      onChange={onChange}
-      disabled={disabled}
-      sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2, "&.Mui-disabled": { bgcolor: "action.hover" } } }}
-    />
+    <Box sx={{ position: "relative" }}>
+      <TextField
+        fullWidth
+        multiline
+        rows={8}
+        placeholder={infoFieldMap[role][type].label}
+        value={value}
+        onChange={onChange}
+        disabled={infoFieldMap[role][type].disabled}
+        sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2, "&.Mui-disabled": { bgcolor: "action.hover" } } }}
+      />
+      <Box sx={{ position: "absolute", inset: "auto 0 0 auto", p: 2 }}>
+        {infoFieldMap[role][type].buttonType === "copy" ? (
+          <CopyPasteButton type="copy" text={value} />
+        ) : (
+          <CopyPasteButton type="paste" setter={onCopyPaste} />
+        )}
+      </Box>
+    </Box>
   );
 };
 
@@ -80,38 +125,42 @@ const Step2 = () => {
           交換 SDP 資訊
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          根據您選擇的角色，請在對應的欄位中輸入或複製相關的 SDP 資訊。發起方需要提供 offer，接收方需要提供 answer。
+          根據您選擇的角色，請在對應的欄位中輸入或複製相關的 SDP 資訊。主持方需要提供 offer，加入方需要提供 answer。
         </Typography>
       </Box>
 
       <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 3 }}>
-        <Stack spacing={1}>
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <Typography variant="subtitle1">Offer (SDP)</Typography>
-            {selectedRole === "caller" && order && (
-              <CopyPasteButton type="copy" onClick={() => handleCopy(order, "Offer")} />
-            )}
-            {selectedRole === "receiver" && (
-              <CopyPasteButton type="paste" onClick={() => handlePaste(setOrder, "Offer")} />
-            )}
-          </Box>
+        <Box>
+          <Typography variant="subtitle1" sx={{ mb: 1 }}>
+            Offer (SDP)
+          </Typography>
+          <InfoField
+            role={selectedRole}
+            type="order"
+            value={order}
+            onChange={(e) => setOrder(e.target.value)}
+            onCopyPaste={() => {
+              if (selectedRole === "host") handleCopy(order, "Offer");
+              else handlePaste(setOrder, "Offer");
+            }}
+          />
+        </Box>
 
-          <InfoField role={selectedRole} type="order" value={order} onChange={(e) => setOrder(e.target.value)} />
-        </Stack>
-
-        <Stack spacing={1}>
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <Typography variant="subtitle1">Answer (SDP)</Typography>
-            {selectedRole === "caller" && answer && (
-              <CopyPasteButton type="paste" onClick={() => handlePaste(setAnswer, "Answer")} />
-            )}
-            {selectedRole === "receiver" && (
-              <CopyPasteButton type="copy" onClick={() => handleCopy(answer, "Answer")} />
-            )}
-          </Box>
-
-          <InfoField role={selectedRole} type="answer" value={answer} onChange={(e) => setAnswer(e.target.value)} />
-        </Stack>
+        <Box>
+          <Typography variant="subtitle1" sx={{ mb: 1 }}>
+            Answer (SDP)
+          </Typography>
+          <InfoField
+            role={selectedRole}
+            type="answer"
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+            onCopyPaste={() => {
+              if (selectedRole === "client") handleCopy(answer, "Answer");
+              else handlePaste(setAnswer, "Answer");
+            }}
+          />
+        </Box>
       </Box>
 
       {selectedRole && (
@@ -119,11 +168,11 @@ const Step2 = () => {
           severity="info"
           variant="outlined"
           sx={{ borderRadius: 2, borderStyle: "dashed", borderWidth: 2, borderColor: "#71A5BF50" }}
-          icon={selectedRole === "caller" ? <PhoneIcon /> : <PhoneInTalkIcon />}
+          icon={selectedRole === "host" ? <PhoneRoundedIcon /> : <PhoneInTalkRoundedIcon />}
         >
-          {selectedRole === "caller"
-            ? "作為發起方，請先將您的 offer 提供給對方，然後將對方回傳的 answer 貼上到右側欄位。"
-            : "作為接收方，請先將對方的 offer 貼上到左側欄位，然後將您的 answer 提供給對方。"}
+          {selectedRole === "host"
+            ? "作為主持方，請先將您的 offer 提供給對方，然後將對方回傳的 answer 貼上到右側欄位。"
+            : "作為加入方，請先將對方的 offer 貼上到左側欄位，然後將您的 answer 提供給對方。"}
         </Alert>
       )}
     </Stack>

@@ -1,5 +1,5 @@
 import { Box, Typography, Stack } from "@mui/material";
-import ConstructionIcon from "@mui/icons-material/Construction";
+import ConstructionRoundedIcon from "@mui/icons-material/ConstructionRounded";
 
 const Step3 = () => {
   return (
@@ -15,7 +15,7 @@ const Step3 = () => {
 
       <Box sx={{ py: 8 }}>
         <Stack spacing={3} alignItems="center">
-          <ConstructionIcon
+          <ConstructionRoundedIcon
             sx={{
               fontSize: 80,
               color: "warning.main",
