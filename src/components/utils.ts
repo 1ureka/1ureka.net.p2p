@@ -11,22 +11,6 @@ export const buttonContainedSx = {
 };
 
 // =================================
-// Utility Functions
-// =================================
-type Success<T> = { data: T; error: null };
-type Failure<E> = { data: null; error: E };
-type Result<T, E = Error> = Success<T> | Failure<E>;
-
-export async function tryCatch<T, E = Error>(promise: Promise<T>): Promise<Result<T, E>> {
-  try {
-    const data = await promise;
-    return { data, error: null };
-  } catch (error) {
-    return { data: null, error: error as E };
-  }
-}
-
-// =================================
 // Zustand Stores
 // =================================
 import { create } from "zustand";
@@ -55,6 +39,10 @@ export const useStepStore = create<StepState>((set) => ({
       prev: state.current,
     })),
 }));
+
+// WebRTCStore, 應該要多 status: "等待填入參數" | "連線中" | "已連線"
+// role, setRole(呼叫時，自動重新創建 RTCPeerConnection，因為要重置或填入其他參數，因此是 Promise), offer, setOffer(setRole時要重置 offer, answer，並在 host 時自動填入 offer), answer, setAnswer(setRole 時要重置 offer, answer), localICECandidates(setRole 時自動填入), remoteICECandidates, setRemoteICECandidates, status(只能由 create 內部修改，對於use層面來說是 readonly), connect: () => Promise<null | string ("缺少 [某個參數]" | error.message)> 會進行連線，會在建立後與橋接器連接，並在斷線時更新 status 回 "等待填入參數" 並重新呼叫 setRole
+// 已連線時，記得禁用 connect 按鈕與 connect function 在 status 為 "已連線" 時，要丟出錯誤 (但不關閉已有連線)
 
 // 表單狀態管理
 export type Role = "host" | "client";

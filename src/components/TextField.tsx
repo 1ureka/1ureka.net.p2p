@@ -3,7 +3,8 @@ import type { TextFieldProps } from "@mui/material";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import ContentPasteRoundedIcon from "@mui/icons-material/ContentPasteRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
-import { transition, tryCatch } from "./utils";
+import { transition } from "./utils";
+import { tryCatch } from "src/utils";
 import { useRef, useState } from "react";
 
 type TextFieldWithClipboardProps = {
