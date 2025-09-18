@@ -65,9 +65,9 @@ interface FormState {
   setSelectedRole: (role: Role) => void;
 
   // Step2 狀態
-  order: string;
+  offer: string;
   answer: string;
-  setOrder: (order: string) => void;
+  setOffer: (offer: string) => void;
   setAnswer: (answer: string) => void;
 
   // 重置所有狀態
@@ -76,12 +76,12 @@ interface FormState {
 
 export const useFormStore = create<FormState>((set) => ({
   selectedRole: "host",
-  order: "",
+  offer: "",
   answer: "",
 
   setSelectedRole: (role) => set({ selectedRole: role }),
-  setOrder: (order) => set({ order }),
+  setOffer: (offer) => set({ offer }),
   setAnswer: (answer) => set({ answer }),
 
-  reset: () => set({ selectedRole: "host", order: "", answer: "" }),
+  reset: () => set({ selectedRole: "host", offer: "", answer: "" }),
 }));
