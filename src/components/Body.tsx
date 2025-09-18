@@ -1,9 +1,12 @@
-import { Box, Paper, Stack, Typography, Button } from "@mui/material";
+import { Box, Paper, Stack, Typography } from "@mui/material";
 import { useStepStore } from "./utils";
+import { Step1 } from "./Step1";
+import { Step2 } from "./Step2";
+import { Step3 } from "./Step3";
 
 const Indicator = ({ steps, current }: { steps: string[]; current: number }) => {
   return (
-    <Box sx={{ display: "grid", gap: 5, gridTemplateColumns: `repeat(${steps.length}, 1fr)` }}>
+    <Box sx={{ display: "grid", gap: 5, gridTemplateColumns: `repeat(${steps.length}, 1fr)`, p: 5 }}>
       {steps.map((step, index) => (
         <Stack sx={{ gap: 1 }} key={step}>
           <Box
@@ -71,8 +74,10 @@ const StepWrapper = ({ children, stepIndex, currentIndex }: StepWrapperProps) =>
       sx={{
         position: "absolute",
         inset: 0,
-        display: "grid",
-        placeItems: "center",
+        p: 5,
+        pt: 0,
+        overflow: "hidden",
+        overflowY: "auto",
         opacity: offset === 0 ? 1 : 0,
         filter: offset === 0 ? "blur(0px)" : "blur(2px)",
         transform: offset === 0 ? "translateX(0) scale(1)" : `translateX(${offset * 100}px) scale(0.95)`,
@@ -90,38 +95,15 @@ const Body = () => {
 
   return (
     <Box sx={{ position: "relative", flex: 1, display: "grid", placeItems: "center", minHeight: 0 }}>
-      <Paper sx={{ p: 5, borderRadius: 5, width: 0.8, maxHeight: 1, overflow: "auto" }}>
-        <Stack spacing={4}>
-          <Indicator steps={steps} current={current} />
-
-          {/* StepWrapper 測試區域 */}
-          <Box
-            sx={{
-              position: "relative",
-              height: "200px",
-              border: "1px dashed",
-              borderColor: "divider",
-              borderRadius: 2,
-              overflow: "hidden",
-            }}
-          >
-            {steps.map((step, index) => (
-              <StepWrapper key={step} stepIndex={index} currentIndex={current}>
-                <Stack spacing={2} alignItems="center">
-                  <Typography variant="h5" color="primary">
-                    {step}
-                  </Typography>
-                  <Typography variant="body1" color="text.secondary" align="center">
-                    這是第 {index + 1} 步的內容區域
-                  </Typography>
-                  <Button variant="contained" size="small">
-                    {step === "選擇角色" ? "選擇" : step === "交換 order / answer" ? "開始交換" : "交換 ICE"}
-                  </Button>
-                </Stack>
-              </StepWrapper>
-            ))}
-          </Box>
-        </Stack>
+      <Paper sx={{ borderRadius: 5, width: 0.8, height: 1, display: "flex", flexDirection: "column" }}>
+        <Indicator steps={steps} current={current} />
+        <Box sx={{ position: "relative", flex: 1, width: 1, overflow: "hidden" }}>
+          {[Step1, Step2, Step3].map((StepComponent, index) => (
+            <StepWrapper key={index} stepIndex={index} currentIndex={current}>
+              <StepComponent />
+            </StepWrapper>
+          ))}
+        </Box>
       </Paper>
     </Box>
   );

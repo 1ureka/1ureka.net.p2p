@@ -33,3 +33,38 @@ export const useStepStore = create<StepState>((set) => ({
       prev: state.current,
     })),
 }));
+
+// 表單狀態管理
+export type Role = "caller" | "receiver" | null;
+
+interface FormState {
+  // Step1 狀態
+  selectedRole: Role;
+  setSelectedRole: (role: Role) => void;
+
+  // Step2 狀態
+  order: string;
+  answer: string;
+  setOrder: (order: string) => void;
+  setAnswer: (answer: string) => void;
+
+  // 重置所有狀態
+  reset: () => void;
+}
+
+export const useFormStore = create<FormState>((set) => ({
+  selectedRole: null,
+  order: "",
+  answer: "",
+
+  setSelectedRole: (role) => set({ selectedRole: role }),
+  setOrder: (order) => set({ order }),
+  setAnswer: (answer) => set({ answer }),
+
+  reset: () =>
+    set({
+      selectedRole: null,
+      order: "",
+      answer: "",
+    }),
+}));
