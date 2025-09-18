@@ -1,19 +1,19 @@
 import { Box, Typography, ButtonBase, Stack } from "@mui/material";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
-import PhoneRoundedIcon from "@mui/icons-material/PhoneRounded";
-import PhoneInTalkRoundedIcon from "@mui/icons-material/PhoneInTalkRounded";
+import RouterRoundedIcon from "@mui/icons-material/RouterRounded";
+import ComputerRoundedIcon from "@mui/icons-material/ComputerRounded";
 import { useFormStore, transition, type Role } from "./utils";
 
 const roleCardMap: Record<Role, { title: string; description: string; icon: React.ReactNode }> = {
   host: {
     title: "主持連線",
     description: "作為連線的主持方，您將創建 offer 並等待對方的 answer",
-    icon: <PhoneRoundedIcon sx={{ fontSize: 128 }} />,
+    icon: <RouterRoundedIcon sx={{ fontSize: 96 }} />,
   },
   client: {
     title: "加入連線",
     description: "作為連線的加入方，您將接收對方的 offer 並創建 answer",
-    icon: <PhoneInTalkRoundedIcon sx={{ fontSize: 128 }} />,
+    icon: <ComputerRoundedIcon sx={{ fontSize: 96 }} />,
   },
 };
 
@@ -50,7 +50,7 @@ const RoleCard = ({ role, selected, onClick }: { role: Role; selected: boolean; 
       <Box
         sx={{
           position: "absolute",
-          inset: "60% auto auto 25%",
+          inset: "30% auto auto 25%",
           opacity: 0.3,
           transform: "rotate(15deg) scale(3)",
           color: "primary.main",

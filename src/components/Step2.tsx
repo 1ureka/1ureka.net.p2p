@@ -1,6 +1,6 @@
 import { Box, Typography, Stack, Alert, IconButton, Tooltip } from "@mui/material";
-import PhoneRoundedIcon from "@mui/icons-material/PhoneRounded";
-import PhoneInTalkRoundedIcon from "@mui/icons-material/PhoneInTalkRounded";
+import RouterRoundedIcon from "@mui/icons-material/RouterRounded";
+import ComputerRoundedIcon from "@mui/icons-material/ComputerRounded";
 import AutoFixHighRoundedIcon from "@mui/icons-material/AutoFixHighRounded";
 import { useFormStore, type Role, transition } from "./utils";
 import { TextField } from "./TextField";
@@ -146,7 +146,7 @@ const HelperText = ({ role }: { role: Role }) => (
     severity="info"
     variant="outlined"
     sx={{ borderRadius: 2, borderStyle: "dashed", borderWidth: 2, borderColor: "#71A5BF50" }}
-    icon={role === "host" ? <PhoneRoundedIcon /> : <PhoneInTalkRoundedIcon />}
+    icon={role === "host" ? <RouterRoundedIcon /> : <ComputerRoundedIcon />}
   >
     {role === "host"
       ? "作為主持方，請先將您的 offer 提供給對方，然後將對方回傳的 answer 貼上到右側欄位。"
