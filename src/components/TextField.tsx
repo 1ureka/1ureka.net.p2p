@@ -2,7 +2,9 @@ import { Box, TextField, IconButton, Tooltip } from "@mui/material";
 import type { TextFieldProps } from "@mui/material";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import ContentPasteRoundedIcon from "@mui/icons-material/ContentPasteRounded";
+import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import { transition, tryCatch } from "./utils";
+import { useRef, useState } from "react";
 
 type TextFieldWithClipboardProps = {
   label: string;
@@ -26,7 +28,12 @@ const buttonSx = {
 };
 
 function TextFieldWithClipboard({ label, disabled, mode, value, onChange }: TextFieldWithClipboardProps) {
+  const [showSuccess, setShowSuccess] = useState(false);
+  const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const handleClipboard = async () => {
+    if (timeout.current) clearTimeout(timeout.current);
+
     if (mode === "copy") {
       const { error } = await tryCatch(navigator.clipboard.writeText(value));
       if (error) return console.error("複製失敗:", error);
@@ -35,6 +42,9 @@ function TextFieldWithClipboard({ label, disabled, mode, value, onChange }: Text
       if (error) return console.error("貼上失敗:", error);
       onChange(text);
     }
+
+    setShowSuccess(true);
+    timeout.current = setTimeout(() => setShowSuccess(false), 2000);
   };
 
   const handleChange: TextFieldProps["onChange"] = (e) => {
@@ -55,9 +65,22 @@ function TextFieldWithClipboard({ label, disabled, mode, value, onChange }: Text
       />
 
       <Box sx={{ position: "absolute", inset: "auto 0 0 auto", p: 2 }}>
-        <Tooltip title={mode === "copy" ? "複製" : "貼上"}>
+        <Tooltip title={showSuccess ? "成功!" : mode === "copy" ? "複製" : "貼上"}>
           <IconButton size="small" onClick={handleClipboard} sx={buttonSx}>
-            {mode === "copy" ? (
+            {showSuccess ? (
+              <CheckRoundedIcon
+                fontSize="small"
+                sx={{
+                  color: "success.main",
+                  animation: "checkPulse 0.6s ease-out",
+                  "@keyframes checkPulse": {
+                    "0%": { transform: "scale(0)", opacity: 0 },
+                    "50%": { transform: "scale(1.2)", opacity: 1 },
+                    "100%": { transform: "scale(1)", opacity: 1 },
+                  },
+                }}
+              />
+            ) : mode === "copy" ? (
               <ContentCopyRoundedIcon fontSize="small" />
             ) : (
               <ContentPasteRoundedIcon fontSize="small" />
