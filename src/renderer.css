@@ -1,0 +1,12 @@
+@font-face {
+  font-family: "jf openhuninn";
+  src: url("./fonts/jf-openhuninn-2.1.ttf") format("truetype");
+  font-style: normal;
+  font-display: swap;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: gray transparent;
+  scroll-behavior: smooth;
+}

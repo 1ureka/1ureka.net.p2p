@@ -12,6 +12,7 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "noUnusedLocals": true,
+    "strictNullChecks": true,
     "jsx": "react-jsx"
   }
 }
