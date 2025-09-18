@@ -1,6 +1,6 @@
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import { Box, Button, Paper, Typography } from "@mui/material";
-import { buttonContainedSx, buttonWithStartIconSx } from "./utils";
+import { buttonContainedSx, buttonWithStartIconSx, useStepStore } from "./utils";
 
 type Status = "connected" | "disconnected" | "connecting";
 const StatusIndicator = ({ module, status }: { module: string; status: Status }) => {
@@ -56,6 +56,8 @@ const StatusIndicator = ({ module, status }: { module: string; status: Status })
 };
 
 const Footer = () => {
+  const { current, steps, nextStep, prevStep } = useStepStore();
+
   return (
     <Paper
       elevation={6}
@@ -71,7 +73,12 @@ const Footer = () => {
       }}
     >
       <Box>
-        <Button startIcon={<ArrowBackRoundedIcon />} sx={buttonWithStartIconSx}>
+        <Button
+          startIcon={<ArrowBackRoundedIcon />}
+          sx={buttonWithStartIconSx}
+          onClick={prevStep}
+          disabled={current === 0}
+        >
           回到上一步
         </Button>
       </Box>
@@ -82,7 +89,13 @@ const Footer = () => {
       </Box>
 
       <Box sx={{ justifySelf: "flex-end" }}>
-        <Button variant="contained" disableElevation sx={buttonContainedSx}>
+        <Button
+          variant="contained"
+          disableElevation
+          sx={buttonContainedSx}
+          onClick={nextStep}
+          disabled={current === steps.length - 1}
+        >
           下一步
         </Button>
       </Box>

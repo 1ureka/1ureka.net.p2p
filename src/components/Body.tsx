@@ -1,5 +1,5 @@
 import { Box, Paper, Stack, Typography, Button } from "@mui/material";
-import { useState } from "react";
+import { useStepStore } from "./utils";
 
 const Indicator = ({ steps, current }: { steps: string[]; current: number }) => {
   return (
@@ -86,22 +86,13 @@ const StepWrapper = ({ children, stepIndex, currentIndex }: StepWrapperProps) =>
 };
 
 const Body = () => {
-  const [step, setStep] = useState<{ current: number; prev: number }>({ current: 0, prev: 0 });
-  const steps = ["選擇角色", "交換 order / answer", "交換 ICE candidate"];
-
-  const handlePrevStep = () => {
-    setStep((prev) => ({ current: Math.max(0, prev.current - 1), prev: prev.current }));
-  };
-
-  const handleNextStep = () => {
-    setStep((prev) => ({ current: Math.min(steps.length - 1, prev.current + 1), prev: prev.current }));
-  };
+  const { current, steps } = useStepStore();
 
   return (
     <Box sx={{ position: "relative", flex: 1, display: "grid", placeItems: "center", minHeight: 0 }}>
       <Paper sx={{ p: 5, borderRadius: 5, width: 0.8, maxHeight: 1, overflow: "auto" }}>
         <Stack spacing={4}>
-          <Indicator steps={steps} current={step.current} />
+          <Indicator steps={steps} current={current} />
 
           {/* StepWrapper 測試區域 */}
           <Box
@@ -114,38 +105,22 @@ const Body = () => {
               overflow: "hidden",
             }}
           >
-            {steps.map((stepName, index) => (
-              <StepWrapper key={stepName} stepIndex={index} currentIndex={step.current}>
+            {steps.map((step, index) => (
+              <StepWrapper key={step} stepIndex={index} currentIndex={current}>
                 <Stack spacing={2} alignItems="center">
                   <Typography variant="h5" color="primary">
-                    {stepName}
+                    {step}
                   </Typography>
                   <Typography variant="body1" color="text.secondary" align="center">
                     這是第 {index + 1} 步的內容區域
                   </Typography>
                   <Button variant="contained" size="small">
-                    {stepName === "選擇角色" ? "選擇" : stepName === "交換 order / answer" ? "開始交換" : "交換 ICE"}
+                    {step === "選擇角色" ? "選擇" : step === "交換 order / answer" ? "開始交換" : "交換 ICE"}
                   </Button>
                 </Stack>
               </StepWrapper>
             ))}
           </Box>
-
-          {/* 測試按鈕組 */}
-          <Stack spacing={2}>
-            <Typography variant="h6" color="text.secondary" align="center">
-              測試控制區域 (臨時)
-            </Typography>
-
-            <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
-              <Button variant="outlined" onClick={handlePrevStep} disabled={step.current === 0}>
-                上一步
-              </Button>
-              <Button variant="contained" onClick={handleNextStep} disabled={step.current === steps.length - 1}>
-                下一步
-              </Button>
-            </Box>
-          </Stack>
         </Stack>
       </Paper>
     </Box>
