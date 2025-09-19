@@ -217,8 +217,8 @@ const useWebRTC = create<WebRTCStore>((set, get) => {
     }
 
     if (error) {
-      set({ status: "disconnected", progress: "" });
       peerConnection.close();
+      set({ status: "disconnected", progress: "" });
     } else {
       set({ status: "connected", progress: "連線成功" });
     }
