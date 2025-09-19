@@ -5,11 +5,6 @@ import { z } from "zod";
 // 採用 Vanilla ICE， review 時請 **不准** 提議 Trickle ICE，vercel edge call 很貴
 const API_BASE = "https://1ureka.vercel.app/api/webrtc";
 
-type WebRTCStore = {
-  status: "connected" | "disconnected" | "connecting";
-  connect: (role: "host" | "client", code: string) => Promise<null | string>;
-};
-
 // =================================================================
 // 本地 WebRTC 處理邏輯
 // =================================================================
@@ -20,7 +15,7 @@ const createConnection = () => {
 };
 
 const createLocalCandidates = (peerConnection: RTCPeerConnection) => {
-  return new Promise<string[]>((res) => {
+  return new Promise<string[]>(async (res) => {
     const candidates: string[] = [];
 
     peerConnection.onicecandidate = (event) => {
@@ -28,6 +23,9 @@ const createLocalCandidates = (peerConnection: RTCPeerConnection) => {
       if (candidate) candidates.push(candidate);
       else res(candidates); // 當 candidate 為 null 時，表示 ICE 收集完成
     };
+
+    await new Promise((r) => setTimeout(r, 5000)); // 最多等 5 秒
+    res(candidates);
   });
 };
 
@@ -35,6 +33,7 @@ const createLocalDescription = async (
   peerConnection: RTCPeerConnection,
   method: keyof Pick<RTCPeerConnection, "createOffer" | "createAnswer">
 ) => {
+  peerConnection.createDataChannel("trigger-sdp-gathering"); // 某些瀏覽器需要有 data channel 才會有正確 sdp
   const { data: description, error: err1 } = await tryCatch(peerConnection[method]());
   if (err1 || !description.sdp) return { error: "創建描述失敗", data: null };
 
@@ -44,7 +43,7 @@ const createLocalDescription = async (
   if (err2) return { error: "設置本地描述失敗", data: null };
 
   const { data: candidates, error: err3 } = await tryCatch(candidatesPromise);
-  if (err3) return { error: "收集 ICE Candidate 失敗", data: null };
+  if (err3 || candidates.length === 0) return { error: "收集 ICE Candidate 失敗", data: null };
 
   return { data: { description: description.sdp, candidates }, error: null };
 };
@@ -137,17 +136,23 @@ const createDataChannel = (peerConnection: RTCPeerConnection, timeout: number = 
 // =================================================================
 // 以 Host 或 Client 身份連線的流程
 // =================================================================
-const connAsHost = async (peerConnection: RTCPeerConnection, code: string): Promise<null | string> => {
-  const { data: body, error: err1 } = await createLocalDescription(peerConnection, "createOffer");
+type ConnFn = (pc: RTCPeerConnection, code: string, report?: (message: string) => void) => Promise<null | string>;
+
+const connAsHost: ConnFn = async (pc, code, report) => {
+  report?.("建立連線中，準備創建本地描述");
+  const { data: body, error: err1 } = await createLocalDescription(pc, "createOffer");
   if (err1 !== null) return err1;
 
+  report?.("創建本地描述完成，準備發送至伺服器");
   const err2 = await sendSession({ code, type: "offer", body });
   if (err2) return err2;
 
-  const err3 = await pollSession(peerConnection, { code, type: "answer" });
+  report?.("本地描述發送完成，等待對方回應");
+  const err3 = await pollSession(pc, { code, type: "answer" });
   if (err3) return err3;
 
-  const result = await createDataChannel(peerConnection);
+  report?.("收到對方描述，連線建立中");
+  const result = await createDataChannel(pc);
   if (typeof result === "string") return result; // 發生錯誤，回傳錯誤訊息
 
   // TODO: 可以開始使用 dataChannel 了
@@ -155,17 +160,21 @@ const connAsHost = async (peerConnection: RTCPeerConnection, code: string): Prom
   return null;
 };
 
-const connAsClient = async (peerConnection: RTCPeerConnection, code: string): Promise<null | string> => {
-  const err1 = await pollSession(peerConnection, { code, type: "offer" });
+const connAsClient: ConnFn = async (pc, code, report) => {
+  report?.("建立連線中，等待對方的描述");
+  const err1 = await pollSession(pc, { code, type: "offer" });
   if (err1) return err1;
 
-  const { data: body, error: err2 } = await createLocalDescription(peerConnection, "createAnswer");
+  report?.("收到對方描述，準備創建本地描述");
+  const { data: body, error: err2 } = await createLocalDescription(pc, "createAnswer");
   if (err2 !== null) return err2;
 
+  report?.("創建本地描述完成，準備發送至伺服器");
   const err3 = await sendSession({ code, type: "answer", body });
   if (err3) return err3;
 
-  const result = await createDataChannel(peerConnection);
+  report?.("本地描述發送完成，連線建立中");
+  const result = await createDataChannel(pc);
   if (typeof result === "string") return result; // 發生錯誤，回傳錯誤訊息
 
   // TODO: 可以開始使用 dataChannel 了
@@ -182,26 +191,47 @@ const WebRTCParamSchema = z.object({
   status: z.enum(["disconnected"], "已經連線或正在連線中"),
 });
 
+type WebRTCStore = {
+  status: "connected" | "disconnected" | "connecting";
+  progress: string;
+  connect: (role: "host" | "client", code: string) => Promise<null | string>;
+};
+
 const useWebRTC = create<WebRTCStore>((set, get) => {
-  const connect = async (role: "host" | "client", code: string): Promise<null | string> => {
+  let peerConnection = createConnection();
+
+  const connect: WebRTCStore["connect"] = async (role, code) => {
     const validation = WebRTCParamSchema.safeParse({ role, code, status: get().status });
     if (!validation.success) return validation.error.issues.map((i) => i.message).join("; ");
 
+    peerConnection = createConnection();
     set({ status: "connecting" });
-    const peerConnection = createConnection();
-    const error = role === "host" ? await connAsHost(peerConnection, code) : await connAsClient(peerConnection, code);
+
+    let error: string | null;
+    const reportProgress = (message: string) => set({ progress: message });
+
+    if (role === "host") {
+      error = await connAsHost(peerConnection, code, reportProgress);
+    } else {
+      error = await connAsClient(peerConnection, code, reportProgress);
+    }
 
     if (error) {
-      set({ status: "disconnected" });
+      set({ status: "disconnected", progress: "" });
       peerConnection.close();
     } else {
-      set({ status: "connected" });
+      set({ status: "connected", progress: "連線成功" });
     }
 
     return error;
   };
 
-  return { status: "disconnected", connect };
+  const disconnect = () => {
+    peerConnection.close();
+    set({ status: "disconnected", progress: "" });
+  };
+
+  return { status: "disconnected", progress: "", connect, disconnect };
 });
 
 export { useWebRTC };
