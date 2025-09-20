@@ -19,8 +19,8 @@ const createLocalCandidates = (peerConnection: RTCPeerConnection) => {
     const candidates: string[] = [];
 
     peerConnection.onicecandidate = (event) => {
-      const candidate = event.candidate?.candidate;
-      if (candidate) candidates.push(candidate);
+      const candidate = event.candidate;
+      if (candidate) candidates.push(JSON.stringify(candidate.toJSON()));
       else res(candidates); // 當 candidate 為 null 時，表示 ICE 收集完成
     };
 
@@ -33,7 +33,6 @@ const createLocalDescription = async (
   peerConnection: RTCPeerConnection,
   method: keyof Pick<RTCPeerConnection, "createOffer" | "createAnswer">
 ) => {
-  peerConnection.createDataChannel("trigger-sdp-gathering"); // 某些瀏覽器需要有 data channel 才會有正確 sdp
   const { data: description, error: err1 } = await tryCatch(peerConnection[method]());
   if (err1 || !description.sdp) return { error: "創建描述失敗", data: null };
 
@@ -85,11 +84,14 @@ const getSession = async (peerConnection: RTCPeerConnection, session: Omit<Sessi
   const { error: err1 } = await tryCatch(peerConnection.setRemoteDescription(sessionDescription));
   if (err1) return `設置遠端描述失敗`;
 
-  // 不更詳細，因為就算知道是誰錯，我也沒辦法幹嘛
   const results = await Promise.all(
     candidates.map(async (candidate) => {
-      const { error } = await tryCatch(peerConnection.addIceCandidate(new RTCIceCandidate({ candidate })));
-      return !error;
+      try {
+        await peerConnection.addIceCandidate(new RTCIceCandidate(JSON.parse(candidate)));
+        return true;
+      } catch {
+        return false;
+      }
     })
   );
 
@@ -117,20 +119,15 @@ const pollSession: typeof getSession = async (peerConnection, session) => {
 // =================================================================
 // DataChannel 傳輸邏輯
 // =================================================================
-const createDataChannel = (peerConnection: RTCPeerConnection, timeout: number = 5000) => {
-  const promise = new Promise<RTCDataChannel | string>((res) => {
+const createDataChannel = (peerConnection: RTCPeerConnection, timeout: number = 15000) => {
+  return new Promise<RTCDataChannel | string>(async (res) => {
     const dataChannel = peerConnection.createDataChannel("data", { negotiated: true, id: 0 });
     dataChannel.onopen = () => res(dataChannel);
     dataChannel.onerror = () => res("DataChannel 在連接前就發生錯誤");
     dataChannel.onclose = () => res("DataChannel 因未知原因提早關閉");
+    await new Promise<void>((res) => setTimeout(() => res(), timeout));
+    res("DataChannel 開啟超時");
   });
-
-  const result = Promise.race([
-    promise,
-    new Promise<string>((res) => setTimeout(() => res("DataChannel 開啟超時"), timeout)),
-  ]);
-
-  return result;
 };
 
 // =================================================================
@@ -139,6 +136,8 @@ const createDataChannel = (peerConnection: RTCPeerConnection, timeout: number = 
 type ConnFn = (pc: RTCPeerConnection, code: string, report?: (message: string) => void) => Promise<null | string>;
 
 const connAsHost: ConnFn = async (pc, code, report) => {
+  const dataChannelPromise = createDataChannel(pc);
+
   report?.("建立連線中，準備創建本地描述");
   const { data: body, error: err1 } = await createLocalDescription(pc, "createOffer");
   if (err1 !== null) return err1;
@@ -152,8 +151,8 @@ const connAsHost: ConnFn = async (pc, code, report) => {
   if (err3) return err3;
 
   report?.("收到對方描述，連線建立中");
-  const result = await createDataChannel(pc);
-  if (typeof result === "string") return result; // 發生錯誤，回傳錯誤訊息
+  const result = await dataChannelPromise;
+  if (typeof result === "string") return result;
 
   // TODO: 可以開始使用 dataChannel 了
 
@@ -161,6 +160,8 @@ const connAsHost: ConnFn = async (pc, code, report) => {
 };
 
 const connAsClient: ConnFn = async (pc, code, report) => {
+  const dataChannelPromise = createDataChannel(pc);
+
   report?.("建立連線中，等待對方的描述");
   const err1 = await pollSession(pc, { code, type: "offer" });
   if (err1) return err1;
@@ -174,8 +175,8 @@ const connAsClient: ConnFn = async (pc, code, report) => {
   if (err3) return err3;
 
   report?.("本地描述發送完成，連線建立中");
-  const result = await createDataChannel(pc);
-  if (typeof result === "string") return result; // 發生錯誤，回傳錯誤訊息
+  const result = await dataChannelPromise;
+  if (typeof result === "string") return result;
 
   // TODO: 可以開始使用 dataChannel 了
 
