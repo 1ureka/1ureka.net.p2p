@@ -1,4 +1,3 @@
-import { create } from "zustand";
 import { tryCatch } from "src/utils";
 import { z } from "zod";
 
@@ -125,17 +124,19 @@ const createDataChannel = (peerConnection: RTCPeerConnection, timeout: number = 
     dataChannel.onopen = () => res(dataChannel);
     dataChannel.onerror = () => res("DataChannel 在連接前就發生錯誤");
     dataChannel.onclose = () => res("DataChannel 因未知原因提早關閉");
-    await new Promise<void>((res) => setTimeout(() => res(), timeout));
-    res("DataChannel 開啟超時");
   });
 };
 
 // =================================================================
 // 以 Host 或 Client 身份連線的流程
 // =================================================================
-type ConnFn = (pc: RTCPeerConnection, code: string, report?: (message: string) => void) => Promise<null | string>;
+type ConnectFunction = (
+  pc: RTCPeerConnection,
+  code: string,
+  report?: (message: string) => void
+) => Promise<null | string>;
 
-const connAsHost: ConnFn = async (pc, code, report) => {
+const connAsHost: ConnectFunction = async (pc, code, report) => {
   const dataChannelPromise = createDataChannel(pc);
 
   report?.("建立連線中，準備創建本地描述");
@@ -151,7 +152,10 @@ const connAsHost: ConnFn = async (pc, code, report) => {
   if (err3) return err3;
 
   report?.("收到對方描述，連線建立中");
-  const result = await dataChannelPromise;
+  const result = await Promise.race([
+    dataChannelPromise,
+    new Promise<string>((r) => setTimeout(() => r("等待 DataChannel 超時"), 5000)),
+  ]);
   if (typeof result === "string") return result;
 
   // TODO: 可以開始使用 dataChannel 了
@@ -159,7 +163,7 @@ const connAsHost: ConnFn = async (pc, code, report) => {
   return null;
 };
 
-const connAsClient: ConnFn = async (pc, code, report) => {
+const connAsClient: ConnectFunction = async (pc, code, report) => {
   const dataChannelPromise = createDataChannel(pc);
 
   report?.("建立連線中，等待對方的描述");
@@ -175,7 +179,10 @@ const connAsClient: ConnFn = async (pc, code, report) => {
   if (err3) return err3;
 
   report?.("本地描述發送完成，連線建立中");
-  const result = await dataChannelPromise;
+  const result = await Promise.race([
+    dataChannelPromise,
+    new Promise<string>((r) => setTimeout(() => r("等待 DataChannel 超時"), 5000)),
+  ]);
   if (typeof result === "string") return result;
 
   // TODO: 可以開始使用 dataChannel 了
@@ -183,59 +190,4 @@ const connAsClient: ConnFn = async (pc, code, report) => {
   return null;
 };
 
-// =================================================================
-// API 包裝，只提供 UI 必要的資訊
-// =================================================================
-const WebRTCParamSchema = z.object({
-  code: z.string().trim().min(1, "代碼不能為空"),
-  role: z.enum(["host", "client"], "角色只能是 host 或 client"),
-  status: z.enum(["disconnected"], "已經連線或正在連線中"),
-});
-
-type WebRTCStore = {
-  status: "connected" | "disconnected" | "connecting";
-  progress: string;
-  connect: (role: "host" | "client", code: string) => Promise<null | string>;
-};
-
-const useWebRTC = create<WebRTCStore>((set, get) => {
-  let peerConnection = createConnection();
-
-  const connect: WebRTCStore["connect"] = async (role, code) => {
-    const validation = WebRTCParamSchema.safeParse({ role, code, status: get().status });
-    if (!validation.success) return validation.error.issues.map((i) => i.message).join("; ");
-
-    peerConnection = createConnection();
-    set({ status: "connecting" });
-
-    let error: string | null;
-    const reportProgress = (message: string) => set({ progress: message });
-
-    if (role === "host") {
-      error = await connAsHost(peerConnection, code, reportProgress);
-    } else {
-      error = await connAsClient(peerConnection, code, reportProgress);
-    }
-
-    if (error) {
-      peerConnection.close();
-      set({ status: "disconnected", progress: "" });
-    } else {
-      set({ status: "connected", progress: "連線成功" });
-    }
-
-    return error;
-  };
-
-  const disconnect = () => {
-    const { status } = get();
-    if (status !== "connected") return;
-
-    peerConnection.close();
-    set({ status: "disconnected", progress: "" });
-  };
-
-  return { status: "disconnected", progress: "", connect, disconnect };
-});
-
-export { useWebRTC };
+export { createConnection, connAsHost, connAsClient };
