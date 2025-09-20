@@ -1,7 +1,7 @@
 // store/webrtc.ts, store/bridge.ts 是用於讓 UI 知道目前的連線狀態
 // native/webrtc.ts, native/bridge.ts 是用於處理實際的連線邏輯
 
-import { tryCatch } from "src/utils";
+import { tryCatch } from "@/utils";
 import { z } from "zod";
 
 // 採用 Vanilla ICE， review 時請 **不准** 提議 Trickle ICE，vercel edge call 很貴
@@ -121,7 +121,7 @@ const pollSession: typeof getSession = async (peerConnection, session) => {
 // =================================================================
 // DataChannel 傳輸邏輯
 // =================================================================
-const createDataChannel = (peerConnection: RTCPeerConnection, timeout: number = 15000) => {
+const createDataChannel = (peerConnection: RTCPeerConnection) => {
   return new Promise<RTCDataChannel | string>(async (res) => {
     const dataChannel = peerConnection.createDataChannel("data", { negotiated: true, id: 0 });
     dataChannel.onopen = () => res(dataChannel);

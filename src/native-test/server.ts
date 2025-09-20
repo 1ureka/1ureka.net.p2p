@@ -16,7 +16,7 @@ interface ClientConnection {
 class TestServer {
   private server: net.Server;
   private clients: Map<net.Socket, ClientConnection> = new Map();
-  private port: number = 8080;
+  private port = 8080;
 
   constructor() {
     this.server = net.createServer(this.handleConnection.bind(this));

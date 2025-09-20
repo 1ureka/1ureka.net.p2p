@@ -3,7 +3,7 @@
 
 import { create } from "zustand";
 import { z } from "zod";
-import { connAsClient, connAsHost, createConnection } from "src/native/webrtc";
+import { connAsClient, connAsHost, createConnection } from "@/native/webrtc";
 
 const WebRTCParamSchema = z.object({
   code: z.string().trim().min(1, "代碼不能為空"),

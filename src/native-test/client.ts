@@ -16,8 +16,8 @@ class TestClient {
     packetSizes: { small: 0, medium: 0, large: 0 },
   };
   private buffer: Buffer = Buffer.alloc(0);
-  private host: string = "127.0.0.1";
-  private port: number = 8080;
+  private host = "127.0.0.1";
+  private port = 8080;
 
   connect() {
     this.socket = net.connect(this.port, this.host, () => {
