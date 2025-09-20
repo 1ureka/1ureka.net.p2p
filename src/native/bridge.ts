@@ -1,38 +1,46 @@
 import net from "net";
 import { ipcMain, type BrowserWindow } from "electron";
+import { createStore } from "zustand/vanilla";
 import { createReporter } from "./log";
 
 // 一個 Electron app 內只會有一個橋接，且該橋接要馬未連接，要馬已連接
 
-let lock = false; // 理論上根本用不到，因為只有我一個人在寫
+type State = {
+  status: "disconnected" | "connected" | "failed" | "connecting";
+  setStatus: (win: BrowserWindow, status: State["status"]) => void;
+};
+
+const store = createStore<State>((set, get) => ({
+  status: "disconnected",
+  setStatus: (win, status) => {
+    const prev = get().status;
+    if (prev === status) return;
+    set({ status });
+    win.webContents.send(`bridge.${status}`);
+  },
+}));
+
+const getLock = () => store.getState().status === "connecting" || store.getState().status === "connected";
+const setStatus = (win: BrowserWindow, status: State["status"]) => store.getState().setStatus(win, status);
 
 /**
  * 建立 TCP 與 WebRTC 之間的橋接，將資料在兩者之間轉發 (對稱部分的邏輯)
  */
 function createBridge(socket: net.Socket, win: BrowserWindow) {
   const report = createReporter("Bridge", win);
-  if (lock) {
-    report({ level: "warn", message: "Bridge is already established, ignoring duplicate attempt" });
-    return;
-  } else {
-    report({ level: "info", message: "Binding TCP <-> WebRTC" });
-    lock = true;
-  }
 
   // disconnect events
   socket.on("error", (error) => {
     report({ level: "error", message: "TCP socket error", data: { error } });
     socket.destroy();
-    win.webContents.send("bridge.disconnect");
+    setStatus(win, "disconnected");
     ipcMain.removeAllListeners("bridge.data.fromRTC");
-    lock = false;
   });
 
   socket.on("close", () => {
     report({ level: "info", message: "TCP socket closed" });
-    win.webContents.send("bridge.disconnect");
+    setStatus(win, "disconnected");
     ipcMain.removeAllListeners("bridge.data.fromRTC");
-    lock = false;
   });
 
   // TCP → WebRTC (renderer)
@@ -55,25 +63,32 @@ function createBridge(socket: net.Socket, win: BrowserWindow) {
  */
 export function createHostBridge(win: BrowserWindow, port: number) {
   const report = createReporter("Server", win);
+
+  if (getLock()) {
+    report({ level: "warn", message: "Bridge is already established or connecting, ignoring duplicate attempt" });
+    return;
+  }
+
+  setStatus(win, "connecting");
   const socket = net.connect(port, "127.0.0.1").setTimeout(1000);
   const address = `localhost:${port}`;
 
   socket.on("timeout", () => {
     report({ level: "error", message: `Connection to TCP server at ${address} timed out` });
     socket.destroy();
-    win.webContents.send("bridge.fail");
+    setStatus(win, "failed");
   });
 
   socket.on("error", (error) => {
     report({ level: "error", message: `Error connecting to TCP server at ${address}`, data: { error } });
     socket.destroy();
-    win.webContents.send("bridge.fail");
+    setStatus(win, "failed");
   });
 
   socket.on("connect", () => {
     report({ level: "info", message: `Connected to TCP server at ${address}` });
     createBridge(socket, win);
-    win.webContents.send("bridge.connect");
+    setStatus(win, "connected");
   });
 }
 
@@ -85,7 +100,7 @@ export function createClientBridge(win: BrowserWindow, port: number) {
 
   const server = net.createServer((socket) => {
     report({ level: "info", message: "Client connected to TCP proxy" });
-    win.webContents.send("bridge.connect");
+    setStatus(win, "connected");
     createBridge(socket, win);
   });
 
@@ -96,6 +111,6 @@ export function createClientBridge(win: BrowserWindow, port: number) {
   server.on("error", (error) => {
     report({ level: "error", message: `TCP server listen error on port ${port}`, data: { error } });
     server.close();
-    win.webContents.send("bridge.fail");
+    setStatus(win, "failed");
   });
 }
