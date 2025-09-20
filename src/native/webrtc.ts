@@ -23,11 +23,11 @@ const createLocalCandidates = (peerConnection: RTCPeerConnection) => {
     peerConnection.onicecandidate = (event) => {
       const candidate = event.candidate;
       if (candidate) candidates.push(JSON.stringify(candidate.toJSON()));
-      else res(candidates); // 當 candidate 為 null 時，表示 ICE 收集完成
+      else res([...candidates]); // 當 candidate 為 null 時，表示 ICE 收集完成
     };
 
     await new Promise((r) => setTimeout(r, 5000)); // 最多等 5 秒
-    res(candidates);
+    res([...candidates]);
   });
 };
 
