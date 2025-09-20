@@ -28,7 +28,7 @@ const theme = createTheme({
     primary: { main: "#71A5BF" },
     background: { default: "#202020", paper: "#202020" },
   },
-  typography: { fontFamily: `"jf openhuninn"`, button: { fontSize: "1rem" } },
+  typography: { fontFamily: `"jf openhuninn"`, fontSize: 14, button: { fontSize: "1rem" } },
   spacing: "0.5rem",
 });
 
