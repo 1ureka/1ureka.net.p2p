@@ -1,3 +1,6 @@
+// store/webrtc.ts, store/bridge.ts 是用於讓 UI 知道目前的連線狀態
+// native/webrtc.ts, native/bridge.ts 是用於處理實際的連線邏輯
+
 import { tryCatch } from "src/utils";
 import { z } from "zod";
 

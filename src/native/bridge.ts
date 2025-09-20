@@ -1,3 +1,6 @@
+// store/webrtc.ts, store/bridge.ts 是用於讓 UI 知道目前的連線狀態
+// native/webrtc.ts, native/bridge.ts 是用於處理實際的連線邏輯
+
 import net from "net";
 import { ipcMain, type BrowserWindow } from "electron";
 import { createStore } from "zustand/vanilla";
@@ -16,7 +19,7 @@ const store = createStore<State>((set, get) => ({
     const prev = get().status;
     if (prev === status) return;
     set({ status });
-    win.webContents.send(`bridge.${status}`);
+    win.webContents.send(`bridge.status`, status);
   },
 }));
 
