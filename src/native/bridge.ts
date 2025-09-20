@@ -8,8 +8,10 @@ import { createReporter } from "./log";
 
 // 一個 Electron app 內只會有一個橋接，且該橋接要馬未連接，要馬已連接
 
+export type BridgeStatus = "disconnected" | "connected" | "failed" | "connecting";
+
 type State = {
-  status: "disconnected" | "connected" | "failed" | "connecting";
+  status: BridgeStatus;
   setStatus: (win: BrowserWindow, status: State["status"]) => void;
 };
 
