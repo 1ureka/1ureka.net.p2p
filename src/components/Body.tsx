@@ -2,7 +2,7 @@ import { Box, Paper, Stack, Typography } from "@mui/material";
 import { Step1 } from "./Step1";
 import { Step2 } from "./Step2";
 import { Step3 } from "./Step3";
-import { useStepStore } from "src/store/steps";
+import { useStepStore } from "@/store/steps";
 
 const Indicator = ({ steps, current }: { steps: string[]; current: number }) => {
   return (
