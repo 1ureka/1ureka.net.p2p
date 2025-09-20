@@ -1,6 +1,7 @@
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import { Box, Button, Paper, Typography } from "@mui/material";
-import { buttonContainedSx, buttonWithStartIconSx, useStepStore } from "./utils";
+import { buttonContainedSx, buttonWithStartIconSx } from "./utils";
+import { useStepStore } from "src/store/steps";
 
 type Status = "connected" | "disconnected" | "connecting";
 const StatusIndicator = ({ module, status }: { module: string; status: Status }) => {
