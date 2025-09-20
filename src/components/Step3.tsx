@@ -1,6 +1,7 @@
 import { Box, Typography, Stack } from "@mui/material";
 import ConstructionRoundedIcon from "@mui/icons-material/ConstructionRounded";
 
+// TODO: 標題改成連線狀態概覽，介紹文字改成該區域大致上有哪些資訊、以及說明要兩者狀態都ok才可傳輸，改成統整 WebRTC 連線狀態、Bridge Server 連線狀態，傳入總量(bytes)、傳入頻率(bytes/s)、傳出總量(bytes)、傳出頻率(bytes/s)
 const Step3 = () => {
   return (
     <Stack spacing={3} sx={{ width: "100%", textAlign: "center" }}>

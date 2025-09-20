@@ -5,6 +5,7 @@ import { useState } from "react";
 import { buttonContainedSx } from "./utils";
 // import { BridgeLogList } from "./BridgeLogList";
 
+// TODO: 不再分兩個 tab，改成單個日誌區域就好
 const LogDrawer = ({ open, onClose }: DrawerProps) => {
   const [tab, setTab] = useState<"webrtc" | "bridge">("webrtc");
 

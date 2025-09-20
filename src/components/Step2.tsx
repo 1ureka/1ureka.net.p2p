@@ -1,88 +1,16 @@
-import { Box, Typography, Stack, Alert, IconButton, Tooltip } from "@mui/material";
+import { Box, Typography, Stack, Alert } from "@mui/material";
 import RouterRoundedIcon from "@mui/icons-material/RouterRounded";
 import ComputerRoundedIcon from "@mui/icons-material/ComputerRounded";
-import AutoFixHighRoundedIcon from "@mui/icons-material/AutoFixHighRounded";
-import { useFormStore, type Role, transition } from "./utils";
+import { useFormStore, type Role } from "./utils";
 import { TextField } from "./TextField";
-
-// 生成假的 SDP 資料
-const generateFakeOffer = (): string => {
-  return `v=0
-o=- ${Date.now()} 2 IN IP4 127.0.0.1
-s=-
-t=0 0
-a=group:BUNDLE 0
-a=extmap-allow-mixed
-a=msid-semantic: WMS
-m=application 9 UDP/DTLS/SCTP webrtc-datachannel
-c=IN IP4 0.0.0.0
-a=ice-ufrag:${Math.random().toString(36).substring(2, 6)}
-a=ice-pwd:${Math.random().toString(36).substring(2, 26)}
-a=ice-options:trickle
-a=fingerprint:sha-256 ${Array.from({ length: 32 }, () =>
-    Math.floor(Math.random() * 256)
-      .toString(16)
-      .padStart(2, "0")
-  ).join(":")}
-a=setup:actpass
-a=mid:0
-a=sctp-port:5000
-a=max-message-size:262144`;
-};
-
-const generateFakeAnswer = (): string => {
-  return `v=0
-o=- ${Date.now()} 2 IN IP4 127.0.0.1
-s=-
-t=0 0
-a=group:BUNDLE 0
-a=extmap-allow-mixed
-a=msid-semantic: WMS
-m=application 9 UDP/DTLS/SCTP webrtc-datachannel
-c=IN IP4 0.0.0.0
-a=ice-ufrag:${Math.random().toString(36).substring(2, 6)}
-a=ice-pwd:${Math.random().toString(36).substring(2, 26)}
-a=ice-options:trickle
-a=fingerprint:sha-256 ${Array.from({ length: 32 }, () =>
-    Math.floor(Math.random() * 256)
-      .toString(16)
-      .padStart(2, "0")
-  ).join(":")}
-a=setup:active
-a=mid:0
-a=sctp-port:5000
-a=max-message-size:262144`;
-};
 
 const HostTextFields = () => {
   const { offer, answer, setOffer, setAnswer } = useFormStore();
 
-  const handleGenerateOffer = () => {
-    setOffer(generateFakeOffer());
-  };
-
   return (
     <>
       <Box>
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-          <Typography variant="subtitle1">Offer (SDP)</Typography>
-          <Tooltip title="生成 Offer">
-            <IconButton
-              size="small"
-              onClick={handleGenerateOffer}
-              sx={{
-                p: 0.5,
-                borderRadius: 2,
-                bgcolor: "action.hover",
-                "&:hover": { bgcolor: "action.selected", scale: "1.02" },
-                "&:active": { scale: "0.98" },
-                transition,
-              }}
-            >
-              <AutoFixHighRoundedIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Box>
+        <Typography variant="subtitle1">Offer (SDP)</Typography>
         <TextField mode="copy" value={offer} onChange={setOffer} label="您的 offer 將在這裡顯示" disabled />
       </Box>
       <Box>
@@ -98,12 +26,6 @@ const HostTextFields = () => {
 const ClientTextFields = () => {
   const { offer, answer, setOffer, setAnswer } = useFormStore();
 
-  const handleGenerateAnswer = () => {
-    if (offer.trim()) {
-      setAnswer(generateFakeAnswer());
-    }
-  };
-
   return (
     <>
       <Box>
@@ -113,28 +35,7 @@ const ClientTextFields = () => {
         <TextField mode="paste" value={offer} onChange={setOffer} label="將對方的 offer 貼到這裡..." />
       </Box>
       <Box>
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-          <Typography variant="subtitle1">Answer (SDP)</Typography>
-          <Tooltip title={offer.trim() ? "生成 Answer" : "請先輸入 Offer"}>
-            <span>
-              <IconButton
-                size="small"
-                onClick={handleGenerateAnswer}
-                disabled={!offer.trim()}
-                sx={{
-                  p: 0.5,
-                  borderRadius: 2,
-                  bgcolor: offer.trim() ? "action.hover" : "action.disabledBackground",
-                  "&:hover": offer.trim() ? { bgcolor: "action.selected", scale: "1.02" } : {},
-                  "&:active": offer.trim() ? { scale: "0.98" } : {},
-                  transition,
-                }}
-              >
-                <AutoFixHighRoundedIcon fontSize="small" />
-              </IconButton>
-            </span>
-          </Tooltip>
-        </Box>
+        <Typography variant="subtitle1">Answer (SDP)</Typography>
         <TextField mode="copy" value={answer} onChange={setAnswer} label="您的 answer 將在這裡顯示" disabled />
       </Box>
     </>
@@ -154,6 +55,7 @@ const HelperText = ({ role }: { role: Role }) => (
   </Alert>
 );
 
+// TODO: 改成可輸入 port, 並可按下開始連線至 Bridge Server，當連接狀態不為 fail, disconnected 時，禁用連線按鈕，connecting 時顯示 loading={true}
 const Step2 = () => {
   const { selectedRole } = useFormStore();
 

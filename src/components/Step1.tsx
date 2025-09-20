@@ -94,6 +94,27 @@ const RoleCard = ({ role, selected, onClick }: { role: Role; selected: boolean; 
   );
 };
 
+// TODO: 改成選擇 role, 輸入 code, 並可按下開始連線至 WebRTC，當連接狀態不為 fail, disconnected 時，禁用連線按鈕，connecting 時顯示 loading={true}
+
+// TODO: 在連線時，會出現 circular progress，並且顯示目前進度訊息，透過以下設計: (但要轉成 MUI component and sx)
+// <div className="relative h-32 overflow-hidden flex flex-col justify-end">
+//     <AnimatePresence>
+//       {history.slice(-5).map((item) => (
+//         <motion.div
+//           key={item.timestamp + item.message}
+//           layout
+//           initial={{ opacity: 0, scale: 0.8 }}
+//           animate={{ opacity: 1, scale: 1 }}
+//           exit={{ opacity: 0 }}
+//           transition={{ duration: 0.3, ease: "easeOut" }}
+//           className="text-sm text-gray-700"
+//         >
+//           {item.message}
+//         </motion.div>
+//       ))}
+//     </AnimatePresence>
+//   </div>
+
 const Step1 = () => {
   const { selectedRole, setSelectedRole } = useFormStore();
 

@@ -66,7 +66,7 @@ const Footer = () => {
         position: "relative",
         display: "grid",
         alignItems: "center",
-        gridTemplateColumns: "1fr auto 1fr",
+        gridTemplateColumns: "1fr 1fr",
         p: 2.5,
         px: 5,
         borderRadius: (theme) => `${theme.spacing(5)} ${theme.spacing(5)} 0 0`,
@@ -84,10 +84,10 @@ const Footer = () => {
         </Button>
       </Box>
 
-      <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
+      {/* <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
         <StatusIndicator module="WebRTC" status="connecting" />
         <StatusIndicator module="Bridge" status="disconnected" />
-      </Box>
+      </Box> */}
 
       <Box sx={{ justifySelf: "flex-end" }}>
         <Button
