@@ -2,59 +2,49 @@
 // native/webrtc.ts, native/bridge.ts 是用於處理實際的連線邏輯
 
 import { create } from "zustand";
-import { z } from "zod";
-import { connAsClient, connAsHost, createConnection } from "@/native/webrtc";
 
-const WebRTCParamSchema = z.object({
-  code: z.string().trim().min(1, "代碼不能為空"),
-  role: z.enum(["host", "client"], "角色只能是 host 或 client"),
-  status: z.enum(["disconnected"], "已經連線或正在連線中"),
-});
+// ===============================================================
+// 以下是給 UI 使用的 hook， readonly
+// ===============================================================
+type WebRTCStatus = "disconnected" | "connected" | "failed" | "connecting";
+type HistoryItem = { message: string; timestamp: number };
 
-type WebRTCStore = {
-  status: "connected" | "disconnected" | "connecting";
-  progress: string;
-  connect: (role: "host" | "client", code: string) => Promise<null | string>;
+type State = {
+  status: WebRTCStatus;
+  history: HistoryItem[]; // 歷史進度訊息
+  error: HistoryItem | null; // 最後一次的錯誤訊息
 };
 
-const useWebRTC = create<WebRTCStore>((set, get) => {
-  let peerConnection = createConnection();
+const store = create<State>(() => ({
+  status: "disconnected",
+  history: [],
+  error: null,
+}));
 
-  const connect: WebRTCStore["connect"] = async (role, code) => {
-    const validation = WebRTCParamSchema.safeParse({ role, code, status: get().status });
-    if (!validation.success) return validation.error.issues.map((i) => i.message).join("; ");
-
-    peerConnection = createConnection();
-    set({ status: "connecting" });
-
-    let error: string | null;
-    const reportProgress = (message: string) => set({ progress: message });
-
-    if (role === "host") {
-      error = await connAsHost(peerConnection, code, reportProgress);
-    } else {
-      error = await connAsClient(peerConnection, code, reportProgress);
-    }
-
-    if (error) {
-      peerConnection.close();
-      set({ status: "disconnected", progress: "" });
-    } else {
-      set({ status: "connected", progress: "連線成功" });
-    }
-
-    return error;
-  };
-
-  const disconnect = () => {
-    const { status } = get();
-    if (status !== "connected") return;
-
-    peerConnection.close();
-    set({ status: "disconnected", progress: "" });
-  };
-
-  return { status: "disconnected", progress: "", connect, disconnect };
-});
-
+const useWebRTC = store;
 export { useWebRTC };
+
+// ===============================================================
+// 以下是給 native/webrtc.ts 使用的函式，更新狀態
+// ===============================================================
+const getLock = () => store.getState().status === "connecting" || store.getState().status === "connected";
+
+const clearHistory = () => store.setState({ history: [], error: null });
+
+const setState = (partial: Partial<{ status: WebRTCStatus; progress: string; error: string }>) => {
+  const now = Date.now();
+
+  store.setState((state) => {
+    const status = "status" in partial ? partial.status : undefined;
+    const progress = partial.progress ? { message: partial.progress, timestamp: now } : undefined;
+    const error = partial.error ? { message: partial.error, timestamp: now } : undefined;
+
+    return {
+      ...(status ? { status } : {}),
+      ...(progress ? { history: [...state.history, progress].slice(-25) } : {}),
+      ...(error ? { error } : {}),
+    };
+  });
+};
+
+export { setState, getLock, clearHistory };
