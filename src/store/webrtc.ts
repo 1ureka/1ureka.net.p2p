@@ -11,7 +11,7 @@ type HistoryItem = { message: string; timestamp: number };
 
 type State = {
   status: WebRTCStatus;
-  history: HistoryItem[]; // 歷史進度訊息
+  history: HistoryItem[]; // 歷史進度訊息 (只包含進度訊息，不包含錯誤訊息)
   error: HistoryItem | null; // 最後一次的錯誤訊息
 };
 
@@ -27,24 +27,41 @@ export { useWebRTC };
 // ===============================================================
 // 以下是給 native/webrtc.ts 使用的函式，更新狀態
 // ===============================================================
+type PrimitiveState = {
+  status: WebRTCStatus;
+  progress: string;
+  history: never[]; // 只能清空
+  error: string;
+};
+
 const getLock = () => store.getState().status === "connecting" || store.getState().status === "connected";
 
-const clearHistory = () => store.setState({ history: [], error: null });
-
-const setState = (partial: Partial<{ status: WebRTCStatus; progress: string; error: string }>) => {
+const setState = (partial: Partial<PrimitiveState>) => {
   const now = Date.now();
 
-  store.setState((state) => {
-    const status = "status" in partial ? partial.status : undefined;
-    const progress = partial.progress ? { message: partial.progress, timestamp: now } : undefined;
-    const error = partial.error ? { message: partial.error, timestamp: now } : undefined;
+  store.setState((prev) => {
+    // 進度
+    let history = prev.history;
+    if (partial.history !== undefined) {
+      history = [];
+    } else if (partial.progress !== undefined) {
+      history = [...prev.history, { message: partial.progress, timestamp: now }];
+    }
 
-    return {
-      ...(status ? { status } : {}),
-      ...(progress ? { history: [...state.history, progress].slice(-25) } : {}),
-      ...(error ? { error } : {}),
-    };
+    // 錯誤
+    let error = prev.error;
+    if (partial.error !== undefined) {
+      error = { message: partial.error, timestamp: now };
+    }
+
+    // 狀態
+    let status = prev.status;
+    if (partial.status !== undefined) {
+      status = partial.status;
+    }
+
+    return { status, history, error };
   });
 };
 
-export { setState, getLock, clearHistory };
+export { setState, getLock };
