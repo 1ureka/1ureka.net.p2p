@@ -1,6 +1,9 @@
-import { app, BrowserWindow, Menu } from "electron";
+import { app, BrowserWindow, Menu, ipcMain } from "electron";
 import path from "node:path";
 import started from "electron-squirrel-startup";
+import { createClientBridge, createHostBridge } from "./native/bridge";
+import { TestClient } from "./native-test/client";
+import { TestServer } from "./native-test/server";
 
 Menu.setApplicationMenu(null);
 
@@ -11,8 +14,8 @@ if (started) {
 
 const createWindow = () => {
   const mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: 1000,
+    height: 750,
     resizable: false,
     webPreferences: { preload: path.join(__dirname, "preload.js") },
     backgroundColor: "#202020",
@@ -24,10 +27,25 @@ const createWindow = () => {
     mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
   }
 
-  //   mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
 
-  // 等待前端傳來RTC連線成功通知後，根據使用者選擇的 host/client 角色，呼叫 createHostBridge 或 createClientBridge
-  // 並且啟動 testServer 或 testClient
+  ipcMain.on("bridge.start.host", (event, port) => {
+    createHostBridge(mainWindow, port);
+  });
+
+  ipcMain.on("bridge.start.client", (event, port) => {
+    createClientBridge(mainWindow, port);
+  });
+
+  ipcMain.on("test.server", () => {
+    const server = new TestServer();
+    server.start();
+  });
+
+  ipcMain.on("test.client", () => {
+    const client = new TestClient();
+    client.connect();
+  });
 };
 
 // 不打算支援 macOS
