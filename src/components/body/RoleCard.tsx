@@ -57,7 +57,7 @@ const RoleCard = ({ role, selected, onClick }: RoleCardProps) => {
       <Box
         sx={{
           position: "absolute",
-          inset: "30% auto auto 25%",
+          inset: "35% auto auto 25%",
           opacity: 0.3,
           transform: "rotate(15deg) scale(3)",
           color: "primary.main",

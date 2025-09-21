@@ -59,7 +59,10 @@ const StatusIndicator = ({ module, status }: { module: string; status: Status })
 };
 
 const Footer = () => {
-  const { current, steps, nextStep, prevStep } = useFormStore();
+  const current = useFormStore((state) => state.current);
+  const steps = useFormStore((state) => state.steps);
+  const nextStep = useFormStore((state) => state.nextStep);
+  const prevStep = useFormStore((state) => state.prevStep);
   const webrtcStatus = useWebRTC((state) => state.status);
 
   return (
