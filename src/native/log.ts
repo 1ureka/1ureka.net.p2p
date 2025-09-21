@@ -20,4 +20,4 @@ const createReporter = (module: string, win: BrowserWindow) => {
   };
 };
 
-export { createReporter };
+export { createReporter, type LogEntry };
