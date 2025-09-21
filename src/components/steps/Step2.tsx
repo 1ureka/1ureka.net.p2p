@@ -5,10 +5,10 @@ import { createWebRTC } from "@/native/webrtc";
 import { useWebRTC } from "@/store/webrtc";
 import { useFormStore } from "@/store/form";
 
-import { buttonContainedSx } from "./utils";
+import { buttonContainedSx } from "../utils";
 import { CodeInput } from "@/components/step1/CodeInput";
 import { LogDisplay } from "@/components/step1/LogDisplay";
-import { StepDescription } from "./body/StepDescription";
+import { StepDescription } from "./StepDescription";
 
 const Step2 = () => {
   const { status, history } = useWebRTC();

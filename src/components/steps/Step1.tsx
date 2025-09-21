@@ -1,6 +1,6 @@
 import { Box } from "@mui/material";
-import { RoleCard } from "@/components/body/RoleCard";
-import { StepDescription } from "./body/StepDescription";
+import { RoleCard } from "@/components/steps/Step1Card";
+import { StepDescription } from "./StepDescription";
 import { useFormStore } from "@/store/form";
 
 const Step1 = () => {
