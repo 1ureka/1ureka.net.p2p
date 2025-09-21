@@ -1,50 +1,61 @@
-import { Box, Typography, Stack } from "@mui/material";
-import ConstructionRoundedIcon from "@mui/icons-material/ConstructionRounded";
+import { Box, Button } from "@mui/material";
+import SendRoundedIcon from "@mui/icons-material/SendRounded";
 
-// TODO: 標題改成連線狀態概覽，介紹文字改成該區域大致上有哪些資訊、以及說明要兩者狀態都ok才可傳輸，改成統整 WebRTC 連線狀態、Bridge Server 連線狀態，傳入總量(bytes)、傳入頻率(bytes/s)、傳出總量(bytes)、傳出頻率(bytes/s)
+import { useFormStore } from "@/store/form";
+import { useBridge } from "@/store/bridge";
+
+import { buttonContainedSx } from "@/components/utils";
+import { StepDescription } from "./StepDescription";
+import { StepInput } from "./StepInput";
+import { Step3Logs } from "./Step3Logs";
+
 const Step3 = () => {
-  return (
-    <Stack spacing={3} sx={{ width: "100%", textAlign: "center" }}>
-      <Box>
-        <Typography variant="h5" sx={{ mb: 1 }}>
-          ICE Candidate 交換
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          此功能正在開發中，敬請期待...
-        </Typography>
-      </Box>
+  const { status, history } = useBridge();
+  const role = useFormStore((state) => state.role);
+  const port = useFormStore((state) => state.tcpPort);
+  const portError = useFormStore((state) => state.tcpPortError);
+  const setPort = useFormStore((state) => state.setTcpPort);
 
-      <Box sx={{ py: 8 }}>
-        <Stack spacing={3} alignItems="center">
-          <ConstructionRoundedIcon
-            sx={{
-              fontSize: 80,
-              color: "warning.main",
-              animation: "bounce 2s infinite",
-              "@keyframes bounce": {
-                "0%, 20%, 50%, 80%, 100%": {
-                  transform: "translateY(0)",
-                },
-                "40%": {
-                  transform: "translateY(-10px)",
-                },
-                "60%": {
-                  transform: "translateY(-5px)",
-                },
-              },
-            }}
+  const handleConnect = () => {
+    if (portError) return;
+    window.electron.send(`bridge.start.${role}`, Number(port));
+  };
+
+  return (
+    <Box sx={{ width: 1, height: 1, display: "grid", gridTemplateRows: "auto 1fr", gap: 3 }}>
+      <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 3, alignItems: "flex-end" }}>
+        <StepDescription
+          title="TCP 連接"
+          description={
+            role === "host"
+              ? "請輸入你的本地服務正在監聽的 TCP 連接埠，開始連線並且 WebRTC 也連線成功後，就會將遠端流量轉發到這個連接埠。"
+              : "請輸入你的本地應用客戶端需要連接的 TCP 連接埠，開始連線並且 WebRTC 也連線成功後，就會將流量轉發到遠端 TCP 服務。"
+          }
+        />
+
+        <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 1, alignItems: "stretch" }}>
+          <StepInput
+            value={port}
+            onChange={(value) => setPort(value)}
+            disabled={status === "connecting" || status === "connected"}
+            placeholder={role === "host" ? "本地服務監聽的連接埠 (e.g. 9000)" : "本地應用需要連接的連接埠 (e.g. 9000)"}
+            error={!!portError}
           />
 
-          <Typography variant="h6" color="text.secondary">
-            功能開發中
-          </Typography>
-
-          <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 400 }}>
-            ICE Candidate 交換功能正在積極開發中，將支援完整的 WebRTC 連接建立流程。 請先完成前面的步驟設置。
-          </Typography>
-        </Stack>
+          <Button
+            onClick={handleConnect}
+            loading={status === "connecting"}
+            disabled={status === "connecting" || status === "connected" || !!portError}
+            sx={{ ...buttonContainedSx, width: "auto", minWidth: 0 }}
+            variant="contained"
+          >
+            <SendRoundedIcon />
+          </Button>
+        </Box>
       </Box>
-    </Stack>
+
+      <Step3Logs history={history} />
+    </Box>
   );
 };
 
