@@ -1,7 +1,7 @@
 import { Box, Typography } from "@mui/material";
 import { AnimatePresence, motion } from "motion/react";
-import type { BridgeLogEntry } from "@/native/bridge";
-import { ellipsisSx } from "../utils";
+import type { BridgeLogEntry } from "@/native/bridgeReport";
+import { ellipsisSx } from "@/components/utils";
 
 const formatData = (data: Record<string, unknown>) => {
   try {
@@ -64,7 +64,7 @@ const getRow = ({ level, timestamp, message, module, data }: BridgeLogEntry) => 
   );
 };
 
-const LogDisplay = ({ history }: { history: BridgeLogEntry[] }) => {
+const Step3Logs = ({ history }: { history: BridgeLogEntry[] }) => {
   return (
     <Box
       sx={{
@@ -107,4 +107,4 @@ const LogDisplay = ({ history }: { history: BridgeLogEntry[] }) => {
   );
 };
 
-export { LogDisplay };
+export { Step3Logs };

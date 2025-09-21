@@ -3,6 +3,7 @@ import { Box, Button, Paper, Typography } from "@mui/material";
 import { buttonContainedSx, buttonWithStartIconSx } from "./utils";
 import { useFormStore } from "@/store/form";
 import { useWebRTC } from "@/store/webrtc";
+import { useBridge } from "@/store/bridge";
 
 type Status = "connected" | "disconnected" | "connecting" | "failed";
 const StatusIndicator = ({ module, status }: { module: string; status: Status }) => {
@@ -64,6 +65,7 @@ const Footer = () => {
   const nextStep = useFormStore((state) => state.nextStep);
   const prevStep = useFormStore((state) => state.prevStep);
   const webrtcStatus = useWebRTC((state) => state.status);
+  const tcpStatus = useBridge((state) => state.status);
 
   return (
     <Paper
@@ -92,7 +94,7 @@ const Footer = () => {
 
       <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
         <StatusIndicator module="WebRTC" status={webrtcStatus} />
-        <StatusIndicator module="Bridge" status="disconnected" />
+        <StatusIndicator module="Bridge" status={tcpStatus} />
       </Box>
 
       <Box sx={{ justifySelf: "flex-end" }}>
