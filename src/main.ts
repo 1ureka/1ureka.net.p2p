@@ -15,6 +15,7 @@ const createWindow = () => {
     height: 800,
     resizable: false,
     webPreferences: { preload: path.join(__dirname, "preload.js") },
+    backgroundColor: "#202020",
   });
 
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
