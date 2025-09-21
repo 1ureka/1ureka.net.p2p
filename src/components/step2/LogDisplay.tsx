@@ -1,24 +1,66 @@
 import { Box, Typography } from "@mui/material";
 import { AnimatePresence, motion } from "motion/react";
 import type { BridgeLogEntry } from "@/native/bridge";
+import { ellipsisSx } from "../utils";
+
+const formatData = (data: Record<string, unknown>) => {
+  try {
+    // 檢查是否是 Error 物件
+    if (data.error && typeof data.error === "object") {
+      const error = data.error as any;
+      if (error.message) {
+        return `錯誤: ${error.message}`;
+      }
+      if (error.code) {
+        return `錯誤代碼: ${error.code}`;
+      }
+    }
+
+    // 對於其他類型的 data，嘗試格式化為可讀的字串
+    const entries = Object.entries(data);
+    if (entries.length === 0) return null;
+
+    return entries
+      .map(([key, value]) => {
+        if (typeof value === "string" || typeof value === "number") {
+          return `${key}: ${value}`;
+        }
+        return `${key}: ${JSON.stringify(value)}`;
+      })
+      .join(", ");
+  } catch {
+    return JSON.stringify(data);
+  }
+};
+
+const getColor = (level: BridgeLogEntry["level"]) => {
+  switch (level) {
+    case "error":
+      return "error.main";
+    case "warn":
+      return "warning.main";
+    default:
+      return "text.secondary";
+  }
+};
 
 const getRow = ({ level, timestamp, message, module, data }: BridgeLogEntry) => {
-  const getColor = () => {
-    switch (level) {
-      case "error":
-        return "error.main";
-      case "warn":
-        return "warning.main";
-      default:
-        return "text.secondary";
-    }
-  };
+  const dataString = data ? formatData(data) : null;
 
-  // 改變成多行，適合顯示 BridgeLogEntry，記得一路去找到究竟 data 是什麼樣的東西，該如何呈現給使用者
   return (
-    <Typography variant="body2" sx={{ mb: 0.5, color: getColor() }}>
-      {`[${new Date(timestamp).toLocaleTimeString()}] [${module}] ${message}`}
-    </Typography>
+    <Box sx={{ mb: 0.5 }}>
+      <Typography variant="body2" sx={{ color: getColor(level) }}>
+        {`[${new Date(timestamp).toLocaleTimeString()}] [${module}] ${message}`}
+      </Typography>
+      {dataString && (
+        <Typography
+          variant="caption"
+          sx={{ color: "text.disabled", ml: 1, fontFamily: "monospace", ...ellipsisSx, WebkitLineClamp: 2 }}
+        >
+          {dataString}
+        </Typography>
+      )}
+    </Box>
   );
 };
 
