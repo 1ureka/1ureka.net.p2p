@@ -5,7 +5,7 @@ import { createWebRTC } from "@/native/webrtc";
 import { useWebRTC } from "@/store/webrtc";
 import { useFormStore } from "@/store/form";
 
-import { buttonContainedSx } from "../utils";
+import { buttonContainedSx } from "@/components/utils";
 import { StepDescription } from "./StepDescription";
 import { StepInput } from "./StepInput";
 import { Step2Logs } from "./Step2Logs";
