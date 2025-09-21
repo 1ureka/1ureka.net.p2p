@@ -16,6 +16,7 @@ const CodeInput = ({ value, onChange, disabled, placeholder, error, helperText }
       helperText={helperText}
       variant="filled"
       fullWidth
+      size="small"
       sx={{
         "& .MuiFilledInput-root": {
           borderRadius: 2,

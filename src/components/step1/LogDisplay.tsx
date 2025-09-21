@@ -5,7 +5,7 @@ import type { WebRTCLogEntry } from "@/store/webrtc";
 const getRow = ({ level, timestamp, message }: WebRTCLogEntry) => {
   return (
     <Typography variant="body2" sx={{ mb: 0.5, color: level === "error" ? "error.main" : "text.secondary" }}>
-      {`[${new Date(timestamp).toLocaleTimeString()}] [${level.toUpperCase()}] ${message}`}
+      {`[${new Date(timestamp).toLocaleTimeString()}] ${message}`}
     </Typography>
   );
 };

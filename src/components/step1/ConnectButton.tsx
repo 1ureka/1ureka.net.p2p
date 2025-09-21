@@ -16,7 +16,6 @@ const ConnectButton = ({ loading, disabled, onClick }: ButtonProps) => {
         "&:active": { scale: "0.99" },
         py: 1.5,
         px: 4,
-        fontSize: "1.1rem",
       }}
     >
       開始連接

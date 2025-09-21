@@ -95,7 +95,7 @@ const Body = () => {
 
   return (
     <Box sx={{ position: "relative", flex: 1, display: "grid", placeItems: "center", minHeight: 0 }}>
-      <Paper sx={{ borderRadius: 5, width: 0.8, height: 1, display: "flex", flexDirection: "column" }}>
+      <Paper sx={{ borderRadius: 5, width: 0.9, height: 1, display: "flex", flexDirection: "column" }}>
         <Indicator steps={steps} current={current} />
         <Box sx={{ position: "relative", flex: 1, width: 1, overflow: "hidden" }}>
           {[Step1, Step2, Step3].map((StepComponent, index) => (
