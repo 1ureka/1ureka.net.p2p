@@ -157,7 +157,7 @@ class TestServer {
     } else {
       let totalSent = 0;
       let totalAcked = 0;
-      let allRtts: number[] = [];
+      const allRtts: number[] = [];
 
       for (const client of this.clients.values()) {
         totalSent += client.stats.sent;

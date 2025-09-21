@@ -1,6 +1,6 @@
 import { Box, Typography } from "@mui/material";
 import { AnimatePresence, motion } from "motion/react";
-import type { BridgeLogEntry } from "@/store/bridge";
+import type { BridgeLogEntry } from "@/native/bridge";
 
 const getRow = ({ level, timestamp, message, module, data }: BridgeLogEntry) => {
   const getColor = () => {
