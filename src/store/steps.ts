@@ -11,7 +11,7 @@ interface StepState {
 const useStepStore = create<StepState>((set) => ({
   current: 0,
   prev: 0,
-  steps: ["選擇角色", "交換 order / answer", "交換 ICE candidate"],
+  steps: ["WebRTC 連接", "TCP 連接", "連線狀態概覽"],
   nextStep: () =>
     set((state) => ({
       current: Math.min(state.steps.length - 1, state.current + 1),

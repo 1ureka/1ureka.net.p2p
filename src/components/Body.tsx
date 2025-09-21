@@ -76,7 +76,6 @@ const StepWrapper = ({ children, stepIndex, currentIndex }: StepWrapperProps) =>
         inset: 0,
         p: 5,
         pt: 0,
-        pb: 2,
         overflow: "hidden",
         overflowY: "auto",
         opacity: offset === 0 ? 1 : 0,
