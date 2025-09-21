@@ -36,7 +36,7 @@ const LogDisplay = ({ history }: { history: WebRTCLogEntry[] }) => {
         </Typography>
       )}
       <AnimatePresence>
-        {history.slice(-10).map((item) => (
+        {history.slice(-7).map((item) => (
           <motion.div
             key={item.timestamp + item.message}
             layout
