@@ -114,24 +114,15 @@ const getSession = async (session: Omit<Session, "body">) => {
 // =================================================================
 // DataChannel 傳輸邏輯
 // =================================================================
-// TODO: 將生命週期的部分提出，並且改到 createWebRTC 而非 connAsHost/connAsClient
 const createDataChannel = (peerConnection: RTCPeerConnection) => {
   setState({ progress: "初始化 DataChannel 中" });
 
   const promise = new Promise<RTCDataChannel>((resolve, reject) => {
-    // 一個 RTC 連線只會有一個 DataChannel，因此設置
     // negotiated: true 時，只要 id 相同就能直接建立連線 (對稱寫法)，利用該機制來共用函數
     const dataChannel = peerConnection.createDataChannel("data", { negotiated: true, id: 0 });
     dataChannel.onopen = () => resolve(dataChannel);
-
-    dataChannel.onerror = () => {
-      reject(new Error("DataChannel failed to open"));
-      dataChannel.close();
-    };
-    dataChannel.onclose = () => {
-      reject(new Error("DataChannel closed unexpectedly"));
-      dataChannel.close();
-    };
+    dataChannel.onerror = () => reject(new Error("DataChannel failed to open"));
+    dataChannel.onclose = () => reject(new Error("DataChannel closed unexpectedly"));
   });
 
   return {
@@ -176,8 +167,8 @@ const connAsClient = async (peerConnection: RTCPeerConnection, code: string) => 
 
 const ensureClosePropagation = (peerConnection: RTCPeerConnection, dataChannel: RTCDataChannel) => {
   const close = () => {
-    peerConnection.close(); // 根據 w3c ED，兩者都是冪等，因此不需擔心重複呼叫
-    dataChannel.close();
+    peerConnection.close(); // 根據 w3c ED，其是冪等，因此不需擔心重複呼叫
+    // 整段代碼都不該直接呼叫 dataChannel.close()，因為 DataChannel 的生命週期應該被 PeerConnection 綁定
     setState({ status: "disconnected" });
   };
 
@@ -193,12 +184,11 @@ const ensureClosePropagation = (peerConnection: RTCPeerConnection, dataChannel: 
   return close;
 };
 
-// ================================================================
-// API 入口
-// ================================================================
-
 /**
- * 創建一個 唯一 的 WebRTC 連線，且 PeerConnection 的生命週期與 DataChannel 綁定
+ * 創建一個 唯一 的 WebRTC 連線，且 DataChannel 的生命週期會被 PeerConnection 綁定
+ * @param role 主機 (host) 或 客戶端 (client)
+ * @param code 用於信令伺服器的代碼，必須非空
+ * @returns 成功時回傳 DataChannel 與 close 函數，失敗時會更新狀態並回傳 undefined
  */
 const createWebRTC = async (role: "host" | "client", code: string) => {
   if (getLock()) {
