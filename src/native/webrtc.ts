@@ -192,13 +192,19 @@ const ensureClosePropagation = (peerConnection: RTCPeerConnection, dataChannel: 
   return close;
 };
 
+// =================================================================
+// API 入口
+// =================================================================
+type Role = "host" | "client";
+type Code = string;
+
 /**
  * 創建一個 唯一 的 WebRTC 連線，且 DataChannel 的生命週期會被 PeerConnection 綁定
  * @param role 主機 (host) 或 客戶端 (client)
  * @param code 用於信令伺服器的代碼，必須非空
  * @returns 成功時回傳 close 函數，失敗時會更新狀態並回傳 undefined
  */
-const createWebRTC = async (role: "host" | "client", code: string) => {
+const createWebRTC = async (role: Role, code: Code) => {
   if (getLock()) {
     setState({ error: "connection has already been established or is in progress", status: "failed" });
     return;
@@ -226,4 +232,4 @@ const createWebRTC = async (role: "host" | "client", code: string) => {
   return close;
 };
 
-export { createWebRTC };
+export { createWebRTC, type Role, type Code };
