@@ -7,12 +7,12 @@ import { create } from "zustand";
 // 以下是給 UI 使用的 hook， readonly
 // ===============================================================
 type WebRTCStatus = "disconnected" | "connected" | "failed" | "connecting";
-type HistoryItem = { message: string; timestamp: number };
+type WebRTCLogEntry = { level: "info" | "error"; message: string; timestamp: number };
 
 type State = {
   status: WebRTCStatus;
-  history: HistoryItem[]; // 歷史進度訊息 (只包含進度訊息，不包含錯誤訊息)
-  error: HistoryItem | null; // 最後一次的錯誤訊息
+  history: WebRTCLogEntry[];
+  error: WebRTCLogEntry | null; // 最後一次的錯誤訊息
 };
 
 const store = create<State>(() => ({
@@ -22,7 +22,7 @@ const store = create<State>(() => ({
 }));
 
 const useWebRTC = store;
-export { useWebRTC, type HistoryItem };
+export { useWebRTC, type WebRTCLogEntry };
 
 // ===============================================================
 // 以下是給 native/webrtc.ts 使用的函式，更新狀態
@@ -30,8 +30,8 @@ export { useWebRTC, type HistoryItem };
 type PrimitiveState = {
   status: WebRTCStatus;
   progress: string;
-  history: never[]; // 只能清空
   error: string;
+  history: never[]; // 只能清空
 };
 
 const getLock = () => store.getState().status === "connecting" || store.getState().status === "connected";
@@ -42,22 +42,26 @@ const setState = (partial: Partial<PrimitiveState>) => {
   store.setState((prev) => {
     // 進度
     let history = prev.history;
-    if (partial.history !== undefined) {
-      history = [];
-    } else if (partial.progress !== undefined) {
-      history = [...prev.history, { message: partial.progress, timestamp: now }];
+    if (partial.progress !== undefined) {
+      history = [...prev.history, { level: "info", message: partial.progress, timestamp: now }];
     }
 
     // 錯誤
     let error = prev.error;
     if (partial.error !== undefined) {
-      error = { message: partial.error, timestamp: now };
+      error = { level: "error", message: partial.error, timestamp: now };
+      history = [...history, error];
     }
 
     // 狀態
     let status = prev.status;
     if (partial.status !== undefined) {
       status = partial.status;
+    }
+
+    // 歷史只能清空 (若該次呼叫也帶如了 progress, error, 則忽略(在這裡覆蓋))
+    if (partial.history !== undefined) {
+      history = [];
     }
 
     return { status, history, error };

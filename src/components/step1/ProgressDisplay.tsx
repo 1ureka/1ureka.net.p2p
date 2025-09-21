@@ -1,8 +1,8 @@
 import { Box, Typography } from "@mui/material";
 import { AnimatePresence, motion } from "motion/react";
-import type { HistoryItem } from "@/store/webrtc";
+import type { WebRTCLogEntry } from "@/store/webrtc";
 
-const ProgressDisplay = ({ history }: { history: HistoryItem[] }) => {
+const ProgressDisplay = ({ history }: { history: WebRTCLogEntry[] }) => {
   return (
     <Box
       sx={{
