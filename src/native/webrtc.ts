@@ -136,6 +136,14 @@ const createDataChannel = (peerConnection: RTCPeerConnection) => {
   };
 };
 
+const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
+  // TODO: 實作 DataChannel <=> IPC 的雙向綁定
+  const testCode = crypto.randomUUID();
+  console.log(`DataChannel opened, test code: ${testCode}`);
+  dataChannel.send(`Hello from data channel! This is a test message with code: ${testCode}`);
+  dataChannel.onmessage = (event) => console.log("Received message:", event.data);
+};
+
 // =================================================================
 // 生命週期管理，創建與關閉
 // =================================================================
@@ -188,7 +196,7 @@ const ensureClosePropagation = (peerConnection: RTCPeerConnection, dataChannel: 
  * 創建一個 唯一 的 WebRTC 連線，且 DataChannel 的生命週期會被 PeerConnection 綁定
  * @param role 主機 (host) 或 客戶端 (client)
  * @param code 用於信令伺服器的代碼，必須非空
- * @returns 成功時回傳 DataChannel 與 close 函數，失敗時會更新狀態並回傳 undefined
+ * @returns 成功時回傳 close 函數，失敗時會更新狀態並回傳 undefined
  */
 const createWebRTC = async (role: "host" | "client", code: string) => {
   if (getLock()) {
@@ -212,13 +220,9 @@ const createWebRTC = async (role: "host" | "client", code: string) => {
   }
 
   const close = ensureClosePropagation(peerConnection, dataChannel);
-
-  // TODO: 可以開始使用 dataChannel 了
   setState({ status: "connected", progress: "連線建立完成" });
-  dataChannel.send("Hello from " + role);
-  dataChannel.onmessage = (event) => console.log("Received message:", event.data);
 
-  return { dataChannel, close };
+  return close;
 };
 
 export { createWebRTC };
