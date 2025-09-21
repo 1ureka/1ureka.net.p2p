@@ -2,7 +2,15 @@ import { Box, Typography } from "@mui/material";
 import { AnimatePresence, motion } from "motion/react";
 import type { WebRTCLogEntry } from "@/store/webrtc";
 
-const ProgressDisplay = ({ history }: { history: WebRTCLogEntry[] }) => {
+const getRow = ({ level, timestamp, message }: WebRTCLogEntry) => {
+  return (
+    <Typography variant="body2" sx={{ mb: 0.5, color: level === "error" ? "error.main" : "text.secondary" }}>
+      {`[${new Date(timestamp).toLocaleTimeString()}] [${level.toUpperCase()}] ${message}`}
+    </Typography>
+  );
+};
+
+const LogDisplay = ({ history }: { history: WebRTCLogEntry[] }) => {
   return (
     <Box
       sx={{
@@ -28,7 +36,7 @@ const ProgressDisplay = ({ history }: { history: WebRTCLogEntry[] }) => {
         </Typography>
       )}
       <AnimatePresence>
-        {history.slice(-100).map((item) => (
+        {history.slice(-10).map((item) => (
           <motion.div
             key={item.timestamp + item.message}
             layout
@@ -37,9 +45,7 @@ const ProgressDisplay = ({ history }: { history: WebRTCLogEntry[] }) => {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
           >
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-              {`[${new Date(item.timestamp).toLocaleTimeString()}] ${item.message}`}
-            </Typography>
+            {getRow(item)}
           </motion.div>
         ))}
       </AnimatePresence>
@@ -47,4 +53,4 @@ const ProgressDisplay = ({ history }: { history: WebRTCLogEntry[] }) => {
   );
 };
 
-export { ProgressDisplay };
+export { LogDisplay };

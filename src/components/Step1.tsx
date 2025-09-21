@@ -4,22 +4,22 @@ import { Box, Typography } from "@mui/material";
 import { createWebRTC, type Role } from "@/native/webrtc";
 import { useWebRTC } from "@/store/webrtc";
 
-import { RoleCard } from "./step1/RoleCard";
-import { CodeInput } from "./step1/CodeInput";
-import { ConnectButton } from "./step1/ConnectButton";
-import { ProgressDisplay } from "./step1/ProgressDisplay";
+import { RoleCard } from "@/components/step1/RoleCard";
+import { CodeInput } from "@/components/step1/CodeInput";
+import { ConnectButton } from "@/components/step1/ConnectButton";
+import { LogDisplay } from "@/components/step1/LogDisplay";
 
 const Step1 = () => {
   const [role, setRole] = useState<Role>("host");
   const [code, setCode] = useState<{ content: string; error: boolean }>({ content: "", error: false });
-  const { status, history, error } = useWebRTC();
+  const { status, history } = useWebRTC();
 
-  const handleConnect = async () => {
+  const handleConnect = () => {
     if (code.content.trim().length === 0) {
       setCode((prev) => ({ ...prev, error: true }));
       return;
     }
-    await createWebRTC(role, code.content.trim());
+    createWebRTC(role, code.content.trim());
   };
 
   return (
@@ -53,7 +53,7 @@ const Step1 = () => {
         </Box>
       </Box>
 
-      <ProgressDisplay history={history} />
+      <LogDisplay history={history} />
     </Box>
   );
 };
