@@ -3,12 +3,32 @@
 
 import { create } from "zustand";
 import type { BridgeStatus } from "@/native/bridge";
+import type { LogEntry } from "@/native/log";
 
-type BridgeState = {
+// ===============================================================
+// 以下是給 UI 使用的 hook， readonly
+// ===============================================================
+type BridgeLogEntry = LogEntry;
+
+type State = {
   status: BridgeStatus;
+  history: BridgeLogEntry[];
 };
 
-export const useBridgeStore = create<BridgeState>((set) => {
-  window.electron.on("bridge.status", (status) => set({ status }));
-  return { status: "disconnected" };
+const store = create<State>((set) => {
+  window.electron.on("bridge.status", (status: BridgeStatus) => {
+    set((prev) => {
+      // 當狀態變成 connecting 時，也就是重新連線的時候，清空日誌
+      const isClear = status === "connecting" && prev.status !== "connecting";
+      return { ...prev, status, history: isClear ? [] : prev.history };
+    });
+  });
+  window.electron.on("log.new.entry", (entry: LogEntry) => {
+    set((prev) => ({ ...prev, history: [...prev.history, entry] }));
+  });
+
+  return { status: "disconnected", history: [] };
 });
+
+const useBridge = store;
+export { useBridge, type BridgeLogEntry };

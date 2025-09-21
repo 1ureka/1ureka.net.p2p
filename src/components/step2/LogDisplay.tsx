@@ -1,16 +1,28 @@
 import { Box, Typography } from "@mui/material";
 import { AnimatePresence, motion } from "motion/react";
-import type { WebRTCLogEntry } from "@/store/webrtc";
+import type { BridgeLogEntry } from "@/store/bridge";
 
-const getRow = ({ level, timestamp, message }: WebRTCLogEntry) => {
+const getRow = ({ level, timestamp, message, module, data }: BridgeLogEntry) => {
+  const getColor = () => {
+    switch (level) {
+      case "error":
+        return "error.main";
+      case "warn":
+        return "warning.main";
+      default:
+        return "text.secondary";
+    }
+  };
+
+  // 改變成多行，適合顯示 BridgeLogEntry，記得一路去找到究竟 data 是什麼樣的東西，該如何呈現給使用者
   return (
-    <Typography variant="body2" sx={{ mb: 0.5, color: level === "error" ? "error.main" : "text.secondary" }}>
-      {`[${new Date(timestamp).toLocaleTimeString()}] ${message}`}
+    <Typography variant="body2" sx={{ mb: 0.5, color: getColor() }}>
+      {`[${new Date(timestamp).toLocaleTimeString()}] [${module}] ${message}`}
     </Typography>
   );
 };
 
-const LogDisplay = ({ history }: { history: WebRTCLogEntry[] }) => {
+const LogDisplay = ({ history }: { history: BridgeLogEntry[] }) => {
   return (
     <Box
       sx={{
@@ -32,13 +44,13 @@ const LogDisplay = ({ history }: { history: WebRTCLogEntry[] }) => {
           color="text.secondary"
           sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", userSelect: "none" }}
         >
-          連接日誌將顯示在此處
+          TCP 連接日誌將顯示在此處
         </Typography>
       )}
       <AnimatePresence>
-        {history.slice(-10).map((item) => (
+        {history.slice(-7).map((item, index) => (
           <motion.div
-            key={item.timestamp + item.message}
+            key={item.timestamp + item.message + index}
             layout
             initial={{ opacity: 0, scale: 0.8, x: -20 }}
             animate={{ opacity: 1, scale: 1, x: 0 }}
