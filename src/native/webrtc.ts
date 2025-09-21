@@ -12,23 +12,9 @@ const API_BASE = "https://1ureka.vercel.app/api/webrtc";
 // 本地 WebRTC 處理邏輯
 // =================================================================
 const createConnection = () => {
-  const peerConnection = new RTCPeerConnection({
+  return new RTCPeerConnection({
     iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }],
   });
-
-  // TODO: 思考這部分代碼究竟是否要放在這裡
-  peerConnection.onconnectionstatechange = () => {
-    if (peerConnection.connectionState === "failed") {
-      setState({ status: "failed", error: "RTC 連線失敗" });
-      peerConnection.close();
-    }
-    if (peerConnection.connectionState === "disconnected") {
-      setState({ status: "disconnected", error: "RTC 連線中斷" });
-      peerConnection.close();
-    }
-  };
-
-  return peerConnection;
 };
 
 const createLocalCandidates = (peerConnection: RTCPeerConnection) => {
@@ -128,23 +114,29 @@ const getSession = async (session: Omit<Session, "body">) => {
 // =================================================================
 // DataChannel 傳輸邏輯
 // =================================================================
+// TODO: 將生命週期的部分提出，並且改到 createWebRTC 而非 connAsHost/connAsClient
 const createDataChannel = (peerConnection: RTCPeerConnection) => {
   setState({ progress: "初始化 DataChannel 中" });
 
   const promise = new Promise<RTCDataChannel>((resolve, reject) => {
-    // 設計為一個 RTC 連線只會有一個 DataChannel，因此設置
+    // 一個 RTC 連線只會有一個 DataChannel，因此設置
     // negotiated: true 時，只要 id 相同就能直接建立連線 (對稱寫法)，利用該機制來共用函數
     const dataChannel = peerConnection.createDataChannel("data", { negotiated: true, id: 0 });
-
     dataChannel.onopen = () => resolve(dataChannel);
-    dataChannel.onerror = () => reject(new Error("DataChannel failed to open"));
-    dataChannel.onclose = () => reject(new Error("DataChannel closed unexpectedly"));
+
+    dataChannel.onerror = () => {
+      reject(new Error("DataChannel failed to open"));
+      dataChannel.close();
+    };
+    dataChannel.onclose = () => {
+      reject(new Error("DataChannel closed unexpectedly"));
+      dataChannel.close();
+    };
   });
 
   return {
     getPromise() {
       setState({ progress: "等待 DataChannel 開啟，連線建立中" });
-
       const timeoutPromise = new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("DataChannel connection timed out")), 5000)
       );
@@ -154,7 +146,7 @@ const createDataChannel = (peerConnection: RTCPeerConnection) => {
 };
 
 // =================================================================
-// 以 Host 或 Client 身份連線的流程
+// 生命週期管理，創建與關閉
 // =================================================================
 const connAsHost = async (peerConnection: RTCPeerConnection, code: string) => {
   const dataChannel = createDataChannel(peerConnection);
@@ -182,9 +174,32 @@ const connAsClient = async (peerConnection: RTCPeerConnection, code: string) => 
   return await dataChannel.getPromise();
 };
 
+const ensureClosePropagation = (peerConnection: RTCPeerConnection, dataChannel: RTCDataChannel) => {
+  const close = () => {
+    peerConnection.close(); // 根據 w3c ED，兩者都是冪等，因此不需擔心重複呼叫
+    dataChannel.close();
+    setState({ status: "disconnected" });
+  };
+
+  peerConnection.onconnectionstatechange = () => {
+    if (["closed", "disconnected", "failed"].includes(peerConnection.connectionState)) {
+      close();
+    }
+  };
+
+  dataChannel.onclose = () => close();
+  dataChannel.onerror = () => close();
+
+  return close;
+};
+
 // ================================================================
 // API 入口
 // ================================================================
+
+/**
+ * 創建一個 唯一 的 WebRTC 連線，且 PeerConnection 的生命週期與 DataChannel 綁定
+ */
 const createWebRTC = async (role: "host" | "client", code: string) => {
   if (getLock()) {
     setState({ error: "connection has already been established or is in progress", status: "failed" });
@@ -206,10 +221,14 @@ const createWebRTC = async (role: "host" | "client", code: string) => {
     return;
   }
 
+  const close = ensureClosePropagation(peerConnection, dataChannel);
+
   // TODO: 可以開始使用 dataChannel 了
   setState({ status: "connected", progress: "連線建立完成" });
   dataChannel.send("Hello from " + role);
   dataChannel.onmessage = (event) => console.log("Received message:", event.data);
+
+  return { dataChannel, close };
 };
 
 export { createWebRTC };
