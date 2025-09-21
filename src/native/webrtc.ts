@@ -3,6 +3,7 @@
 
 import { tryCatch } from "@/utils";
 import { z } from "zod";
+import { getLock, setState } from "@/store/webrtc";
 
 // 採用 Vanilla ICE， review 時請 **不准** 提議 Trickle ICE，vercel edge call 很貴
 const API_BASE = "https://1ureka.vercel.app/api/webrtc";
@@ -11,42 +12,78 @@ const API_BASE = "https://1ureka.vercel.app/api/webrtc";
 // 本地 WebRTC 處理邏輯
 // =================================================================
 const createConnection = () => {
-  return new RTCPeerConnection({
+  const peerConnection = new RTCPeerConnection({
     iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }],
   });
+
+  // TODO: 思考這部分代碼究竟是否要放在這裡
+  peerConnection.onconnectionstatechange = () => {
+    if (peerConnection.connectionState === "failed") {
+      setState({ status: "failed", error: "RTC 連線失敗" });
+      peerConnection.close();
+    }
+    if (peerConnection.connectionState === "disconnected") {
+      setState({ status: "disconnected", error: "RTC 連線中斷" });
+      peerConnection.close();
+    }
+  };
+
+  return peerConnection;
 };
 
 const createLocalCandidates = (peerConnection: RTCPeerConnection) => {
-  return new Promise<string[]>(async (res) => {
-    const candidates: string[] = [];
+  setState({ progress: "初始化本地 ICE Candidate 收集器中" });
+  const candidates: string[] = [];
 
+  const promise = new Promise<string[]>((resolve) => {
     peerConnection.onicecandidate = (event) => {
       const candidate = event.candidate;
       if (candidate) candidates.push(JSON.stringify(candidate.toJSON()));
-      else res([...candidates]); // 當 candidate 為 null 時，表示 ICE 收集完成
+      else resolve([...candidates]); // 當 candidate 為 null 時，表示 ICE 收集完成
     };
-
-    await new Promise((r) => setTimeout(r, 5000)); // 最多等 5 秒
-    res([...candidates]);
   });
+
+  return {
+    getPromise() {
+      setState({ progress: "收集本地 ICE Candidate 中" });
+      const timeout = new Promise<string[]>((resolve) => setTimeout(() => resolve([...candidates]), 5000));
+      return Promise.race([promise, timeout]);
+    },
+  };
 };
 
-const createLocalDescription = async (
-  peerConnection: RTCPeerConnection,
-  method: keyof Pick<RTCPeerConnection, "createOffer" | "createAnswer">
-) => {
-  const { data: description, error: err1 } = await tryCatch(peerConnection[method]());
-  if (err1 || !description.sdp) return { error: "創建描述失敗", data: null };
+const createLocalDescription = async (peerConnection: RTCPeerConnection, method: "createOffer" | "createAnswer") => {
+  const candidates = createLocalCandidates(peerConnection);
 
-  const candidatesPromise = createLocalCandidates(peerConnection);
+  setState({ progress: "創建本地描述中" });
+  const description = await peerConnection[method]();
 
-  const { error: err2 } = await tryCatch(peerConnection.setLocalDescription(description));
-  if (err2) return { error: "設置本地描述失敗", data: null };
+  setState({ progress: "設置本地描述中" });
+  await peerConnection.setLocalDescription(description);
 
-  const { data: candidates, error: err3 } = await tryCatch(candidatesPromise);
-  if (err3 || candidates.length === 0) return { error: "收集 ICE Candidate 失敗", data: null };
+  return { description: JSON.stringify(description), candidates: await candidates.getPromise() };
+};
 
-  return { data: { description: description.sdp, candidates }, error: null };
+const createRemoteCandidates = async (peerConnection: RTCPeerConnection, candidates: string[]) => {
+  setState({ progress: `添加 ${candidates.length} 個遠端 ICE Candidate 中` });
+
+  const result = await Promise.all(
+    candidates.map(async (candidate) => {
+      try {
+        await peerConnection.addIceCandidate(new RTCIceCandidate(JSON.parse(candidate)));
+        return true;
+      } catch {
+        return false;
+      }
+    })
+  );
+
+  if (result.every((r) => r === false)) throw new Error(`failed to add any ICE Candidate`);
+};
+
+const createRemoteDescription = async (peerConnection: RTCPeerConnection, description: string) => {
+  setState({ progress: "設置遠端描述中" });
+  await peerConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(description)));
 };
 
 // =================================================================
@@ -58,6 +95,7 @@ type Session = { code: string; type: "offer" | "answer"; body: SessionBody };
 
 const sendSession = async (session: Session) => {
   const { code, type, body } = session;
+  setState({ progress: `嘗試將 ${type} 發送至信令伺服器中` });
 
   const res = await fetch(`${API_BASE}/${code}.${type}`, {
     method: "POST",
@@ -65,132 +103,113 @@ const sendSession = async (session: Session) => {
     body: JSON.stringify(body),
   });
 
-  if (res.status !== 204) return "發送 " + type + " 失敗";
-  return null;
+  if (res.status !== 204) throw new Error(`failed to send ${type}, status code: ${res.status}`);
 };
 
-const getSession = async (peerConnection: RTCPeerConnection, session: Omit<Session, "body">) => {
+const getSession = async (session: Omit<Session, "body">) => {
   const { code, type } = session;
 
-  const res = await fetch(`${API_BASE}/${code}.${type}`);
-  if (res.status !== 200) return `取得 ${type} 失敗`;
+  for (let attempts = 0; attempts < 20; attempts++) {
+    try {
+      setState({ progress: `嘗試從信令伺服器取得 ${session.type} 中 (${attempts + 1}/20)` });
 
-  const { data, error } = await tryCatch(res.json());
-  if (error) return `解析 ${type} 失敗`;
+      const res = await fetch(`${API_BASE}/${code}.${type}`);
+      if (res.status !== 200) throw new Error(`failed to get ${type}, status code: ${res.status}`);
 
-  const parseResult = SessionBodySchema.safeParse(data);
-  if (!parseResult.success) return `解析 ${type} 失敗`;
-  const { description, candidates } = parseResult.data;
-
-  const sessionDescription = new RTCSessionDescription({ type, sdp: description });
-  const { error: err1 } = await tryCatch(peerConnection.setRemoteDescription(sessionDescription));
-  if (err1) return `設置遠端描述失敗`;
-
-  const results = await Promise.all(
-    candidates.map(async (candidate) => {
-      try {
-        await peerConnection.addIceCandidate(new RTCIceCandidate(JSON.parse(candidate)));
-        return true;
-      } catch {
-        return false;
-      }
-    })
-  );
-
-  if (results.every((r) => r === false)) return `添加 ICE Candidate 失敗`;
-
-  return null;
-};
-
-const pollSession: typeof getSession = async (peerConnection, session) => {
-  let attempts = 0;
-  const maxAttempts = 20;
-
-  while (true) {
-    if (attempts >= maxAttempts) return `等待 ${session.type} 超時`;
-
-    await new Promise((r) => setTimeout(r, 3000));
-
-    const error = await getSession(peerConnection, session);
-    if (!error) return null;
-
-    attempts++;
+      return SessionBodySchema.parse(await res.json());
+    } catch {
+      await new Promise((r) => setTimeout(r, 3000));
+    }
   }
+
+  throw new Error(`failed to get ${type}, reached max attempts`);
 };
 
 // =================================================================
 // DataChannel 傳輸邏輯
 // =================================================================
 const createDataChannel = (peerConnection: RTCPeerConnection) => {
-  return new Promise<RTCDataChannel | string>(async (res) => {
+  setState({ progress: "初始化 DataChannel 中" });
+
+  const promise = new Promise<RTCDataChannel>((resolve, reject) => {
+    // 設計為一個 RTC 連線只會有一個 DataChannel，因此設置
+    // negotiated: true 時，只要 id 相同就能直接建立連線 (對稱寫法)，利用該機制來共用函數
     const dataChannel = peerConnection.createDataChannel("data", { negotiated: true, id: 0 });
-    dataChannel.onopen = () => res(dataChannel);
-    dataChannel.onerror = () => res("DataChannel 在連接前就發生錯誤");
-    dataChannel.onclose = () => res("DataChannel 因未知原因提早關閉");
+
+    dataChannel.onopen = () => resolve(dataChannel);
+    dataChannel.onerror = () => reject(new Error("DataChannel failed to open"));
+    dataChannel.onclose = () => reject(new Error("DataChannel closed unexpectedly"));
   });
+
+  return {
+    getPromise() {
+      setState({ progress: "等待 DataChannel 開啟，連線建立中" });
+
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("DataChannel connection timed out")), 5000)
+      );
+      return Promise.race([promise, timeoutPromise]);
+    },
+  };
 };
 
 // =================================================================
 // 以 Host 或 Client 身份連線的流程
 // =================================================================
-type ConnectFunction = (
-  pc: RTCPeerConnection,
-  code: string,
-  report?: (message: string) => void
-) => Promise<null | string>;
+const connAsHost = async (peerConnection: RTCPeerConnection, code: string) => {
+  const dataChannel = createDataChannel(peerConnection);
 
-const connAsHost: ConnectFunction = async (pc, code, report) => {
-  const dataChannelPromise = createDataChannel(pc);
+  const localInfo = await createLocalDescription(peerConnection, "createOffer");
+  await sendSession({ code, type: "offer", body: localInfo });
 
-  report?.("建立連線中，準備創建本地描述");
-  const { data: body, error: err1 } = await createLocalDescription(pc, "createOffer");
-  if (err1 !== null) return err1;
+  const { description, candidates } = await getSession({ code, type: "answer" });
+  await createRemoteDescription(peerConnection, description);
+  await createRemoteCandidates(peerConnection, candidates);
 
-  report?.("創建本地描述完成，準備發送至伺服器");
-  const err2 = await sendSession({ code, type: "offer", body });
-  if (err2) return err2;
-
-  report?.("本地描述發送完成，等待對方回應");
-  const err3 = await pollSession(pc, { code, type: "answer" });
-  if (err3) return err3;
-
-  report?.("收到對方描述，連線建立中");
-  const result = await Promise.race([
-    dataChannelPromise,
-    new Promise<string>((r) => setTimeout(() => r("等待 DataChannel 超時"), 5000)),
-  ]);
-  if (typeof result === "string") return result;
-
-  // TODO: 可以開始使用 dataChannel 了
-
-  return null;
+  return await dataChannel.getPromise();
 };
 
-const connAsClient: ConnectFunction = async (pc, code, report) => {
-  const dataChannelPromise = createDataChannel(pc);
+const connAsClient = async (peerConnection: RTCPeerConnection, code: string) => {
+  const dataChannel = createDataChannel(peerConnection);
 
-  report?.("建立連線中，等待對方的描述");
-  const err1 = await pollSession(pc, { code, type: "offer" });
-  if (err1) return err1;
+  const { description, candidates } = await getSession({ code, type: "offer" });
+  await createRemoteDescription(peerConnection, description);
+  await createRemoteCandidates(peerConnection, candidates);
 
-  report?.("收到對方描述，準備創建本地描述");
-  const { data: body, error: err2 } = await createLocalDescription(pc, "createAnswer");
-  if (err2 !== null) return err2;
+  const localInfo = await createLocalDescription(peerConnection, "createAnswer");
+  await sendSession({ code, type: "answer", body: localInfo });
 
-  report?.("創建本地描述完成，準備發送至伺服器");
-  const err3 = await sendSession({ code, type: "answer", body });
-  if (err3) return err3;
-
-  report?.("本地描述發送完成，連線建立中");
-  const result = await Promise.race([
-    dataChannelPromise,
-    new Promise<string>((r) => setTimeout(() => r("等待 DataChannel 超時"), 5000)),
-  ]);
-  if (typeof result === "string") return result;
-
-  // TODO: 可以開始使用 dataChannel 了
-
-  return null;
+  return await dataChannel.getPromise();
 };
 
-export { createConnection, connAsHost, connAsClient };
+// ================================================================
+// API 入口
+// ================================================================
+const createWebRTC = async (role: "host" | "client", code: string) => {
+  if (getLock()) {
+    setState({ error: "connection has already been established or is in progress", status: "failed" });
+    return;
+  }
+  if (code.trim().length === 0) {
+    setState({ error: "code cannot be empty", status: "failed" });
+    return;
+  }
+
+  setState({ status: "connecting", history: [] });
+  const peerConnection = createConnection();
+  const connectFunction = role === "host" ? connAsHost : connAsClient;
+
+  const { data: dataChannel, error } = await tryCatch(connectFunction(peerConnection, code));
+  if (error) {
+    setState({ error: error.message, status: "failed" });
+    peerConnection.close();
+    return;
+  }
+
+  // TODO: 可以開始使用 dataChannel 了
+  setState({ status: "connected", progress: "連線建立完成" });
+  dataChannel.send("Hello from " + role);
+  dataChannel.onmessage = (event) => console.log("Received message:", event.data);
+};
+
+export { createWebRTC };
