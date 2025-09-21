@@ -220,6 +220,7 @@ const createWebRTC = async (role: "host" | "client", code: string) => {
   }
 
   const close = ensureClosePropagation(peerConnection, dataChannel);
+  bindDataChannelIPC(dataChannel);
   setState({ status: "connected", progress: "連線建立完成" });
 
   return close;
