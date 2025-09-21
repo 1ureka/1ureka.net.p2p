@@ -2,13 +2,15 @@ import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import { Box, Button, Paper, Typography } from "@mui/material";
 import { buttonContainedSx, buttonWithStartIconSx } from "./utils";
 import { useStepStore } from "@/store/steps";
+import { useWebRTC } from "@/store/webrtc";
 
-type Status = "connected" | "disconnected" | "connecting";
+type Status = "connected" | "disconnected" | "connecting" | "failed";
 const StatusIndicator = ({ module, status }: { module: string; status: Status }) => {
   const statusMap: Record<Status, { color: string; text: string }> = {
     connected: { color: "#4caf50", text: "已連接" },
-    disconnected: { color: "#f44336", text: "未連接" },
+    failed: { color: "#f44336", text: "連接失敗" },
     connecting: { color: "#ff9800", text: "連接中..." },
+    disconnected: { color: "#9e9e9e", text: "未連接" },
   } as const;
 
   const { color, text } = statusMap[status];
@@ -58,6 +60,7 @@ const StatusIndicator = ({ module, status }: { module: string; status: Status })
 
 const Footer = () => {
   const { current, steps, nextStep, prevStep } = useStepStore();
+  const webrtcStatus = useWebRTC((state) => state.status);
 
   return (
     <Paper
@@ -66,7 +69,7 @@ const Footer = () => {
         position: "relative",
         display: "grid",
         alignItems: "center",
-        gridTemplateColumns: "1fr 1fr",
+        gridTemplateColumns: "1fr auto 1fr",
         p: 2.5,
         px: 5,
         borderRadius: (theme) => `${theme.spacing(5)} ${theme.spacing(5)} 0 0`,
@@ -84,10 +87,10 @@ const Footer = () => {
         </Button>
       </Box>
 
-      {/* <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
-        <StatusIndicator module="WebRTC" status="connecting" />
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+        <StatusIndicator module="WebRTC" status={webrtcStatus} />
         <StatusIndicator module="Bridge" status="disconnected" />
-      </Box> */}
+      </Box>
 
       <Box sx={{ justifySelf: "flex-end" }}>
         <Button
