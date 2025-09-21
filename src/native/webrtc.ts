@@ -18,7 +18,7 @@ const createConnection = () => {
 };
 
 const createLocalCandidates = (peerConnection: RTCPeerConnection) => {
-  setState({ progress: "初始化本地 ICE Candidate 收集器中" });
+  setState({ log: "初始化本地 ICE Candidate 收集器中" });
   const candidates: string[] = [];
 
   const promise = new Promise<string[]>((resolve) => {
@@ -31,7 +31,7 @@ const createLocalCandidates = (peerConnection: RTCPeerConnection) => {
 
   return {
     getPromise() {
-      setState({ progress: "收集本地 ICE Candidate 中" });
+      setState({ log: "收集本地 ICE Candidate 中" });
       const timeout = new Promise<string[]>((resolve) => setTimeout(() => resolve([...candidates]), 5000));
       return Promise.race([promise, timeout]);
     },
@@ -41,17 +41,17 @@ const createLocalCandidates = (peerConnection: RTCPeerConnection) => {
 const createLocalDescription = async (peerConnection: RTCPeerConnection, method: "createOffer" | "createAnswer") => {
   const candidates = createLocalCandidates(peerConnection);
 
-  setState({ progress: "創建本地描述中" });
+  setState({ log: "創建本地描述中" });
   const description = await peerConnection[method]();
 
-  setState({ progress: "設置本地描述中" });
+  setState({ log: "設置本地描述中" });
   await peerConnection.setLocalDescription(description);
 
   return { description: JSON.stringify(description), candidates: await candidates.getPromise() };
 };
 
 const createRemoteCandidates = async (peerConnection: RTCPeerConnection, candidates: string[]) => {
-  setState({ progress: `添加 ${candidates.length} 個遠端 ICE Candidate 中` });
+  setState({ log: `添加 ${candidates.length} 個遠端 ICE Candidate 中` });
 
   const result = await Promise.all(
     candidates.map(async (candidate) => {
@@ -68,7 +68,7 @@ const createRemoteCandidates = async (peerConnection: RTCPeerConnection, candida
 };
 
 const createRemoteDescription = async (peerConnection: RTCPeerConnection, description: string) => {
-  setState({ progress: "設置遠端描述中" });
+  setState({ log: "設置遠端描述中" });
   await peerConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(description)));
 };
 
@@ -81,7 +81,7 @@ type Session = { code: string; type: "offer" | "answer"; body: SessionBody };
 
 const sendSession = async (session: Session) => {
   const { code, type, body } = session;
-  setState({ progress: `嘗試將 ${type} 發送至信令伺服器中` });
+  setState({ log: `嘗試將 ${type} 發送至信令伺服器中` });
 
   const res = await fetch(`${API_BASE}/${code}.${type}`, {
     method: "POST",
@@ -97,7 +97,7 @@ const getSession = async (session: Omit<Session, "body">) => {
 
   for (let attempts = 0; attempts < 20; attempts++) {
     try {
-      setState({ progress: `嘗試從信令伺服器取得 ${session.type} 中 (${attempts + 1}/20)` });
+      setState({ log: `嘗試從信令伺服器取得 ${session.type} 中 (${attempts + 1}/20)` });
 
       const res = await fetch(`${API_BASE}/${code}.${type}`);
       if (res.status !== 200) throw new Error(`failed to get ${type}, status code: ${res.status}`);
@@ -115,7 +115,7 @@ const getSession = async (session: Omit<Session, "body">) => {
 // DataChannel 傳輸邏輯
 // =================================================================
 const createDataChannel = (peerConnection: RTCPeerConnection) => {
-  setState({ progress: "初始化 DataChannel 中" });
+  setState({ log: "初始化 DataChannel 中" });
 
   const promise = new Promise<RTCDataChannel>((resolve, reject) => {
     // negotiated: true 時，只要 id 相同就能直接建立連線 (對稱寫法)，利用該機制來共用函數
@@ -127,7 +127,7 @@ const createDataChannel = (peerConnection: RTCPeerConnection) => {
 
   return {
     getPromise() {
-      setState({ progress: "等待 DataChannel 開啟，連線建立中" });
+      setState({ log: "等待 DataChannel 開啟，連線建立中" });
       const timeoutPromise = new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("DataChannel connection timed out")), 5000)
       );
@@ -227,7 +227,7 @@ const createWebRTC = async (role: Role, code: Code) => {
 
   const close = ensureClosePropagation(peerConnection, dataChannel);
   bindDataChannelIPC(dataChannel);
-  setState({ status: "connected", progress: "連線建立完成" });
+  setState({ status: "connected", log: "連線建立完成" });
 
   return close;
 };
