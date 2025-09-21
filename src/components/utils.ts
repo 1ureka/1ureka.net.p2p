@@ -12,3 +12,13 @@ export const buttonContainedSx = {
   "&:active": { scale: "0.97" },
   transition,
 };
+
+export const ellipsisSx = {
+  display: "-webkit-box",
+  WebkitLineClamp: 1,
+  WebkitBoxOrient: "vertical",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  wordBreak: "break-all",
+  whiteSpace: "pre-wrap",
+} as const;
