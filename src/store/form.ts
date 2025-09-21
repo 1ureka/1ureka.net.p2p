@@ -9,9 +9,9 @@ const PortSchema = z
 
 interface FormState {
   role: Role;
-  webrtcCode: number;
+  webrtcCode: string;
   webrtcCodeError: string | null;
-  tcpPort: number;
+  tcpPort: string;
   tcpPortError: string | null;
 
   current: number;
@@ -22,20 +22,20 @@ interface FormState {
   prevStep: () => void;
 
   setRole: (role: Role) => void;
-  setWebRTCCode: (code: number) => void;
-  setTcpPort: (port: number) => void;
+  setWebRTCCode: (code: string) => void;
+  setTcpPort: (port: string) => void;
 }
 
 const useFormStore = create<FormState>((set) => ({
   role: "host",
-  webrtcCode: 12345,
+  webrtcCode: "12345",
   webrtcCodeError: null,
-  tcpPort: 9000,
+  tcpPort: "9000",
   tcpPortError: null,
 
   current: 0,
   prev: 0,
-  steps: ["WebRTC 連接", "TCP 連接", "連線狀態概覽"],
+  steps: ["選擇角色", "WebRTC 連接", "TCP 連接"],
 
   nextStep: () =>
     set((state) => ({
@@ -50,20 +50,14 @@ const useFormStore = create<FormState>((set) => ({
 
   setRole: (role) => set(() => ({ role })),
   setWebRTCCode: (code) => {
-    const result = PortSchema.safeParse(code);
-    if (!result.success) {
-      set(() => ({ webrtcCodeError: result.error.message }));
-      return;
-    }
-    set(() => ({ webrtcCode: code, webrtcCodeError: null }));
+    const result = PortSchema.safeParse(Number(code));
+    if (!result.success) set(() => ({ webrtcCode: code, webrtcCodeError: result.error.issues[0].message }));
+    else set(() => ({ webrtcCode: code, webrtcCodeError: null }));
   },
   setTcpPort: (port) => {
-    const result = PortSchema.safeParse(port);
-    if (!result.success) {
-      set(() => ({ tcpPortError: result.error.message }));
-      return;
-    }
-    set(() => ({ tcpPort: port, tcpPortError: null }));
+    const result = PortSchema.safeParse(Number(port));
+    if (!result.success) set(() => ({ tcpPort: port, tcpPortError: result.error.message }));
+    else set(() => ({ tcpPort: port, tcpPortError: null }));
   },
 }));
 
