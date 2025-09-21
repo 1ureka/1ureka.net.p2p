@@ -22,7 +22,7 @@ const store = create<State>(() => ({
 }));
 
 const useWebRTC = store;
-export { useWebRTC };
+export { useWebRTC, type HistoryItem };
 
 // ===============================================================
 // 以下是給 native/webrtc.ts 使用的函式，更新狀態
