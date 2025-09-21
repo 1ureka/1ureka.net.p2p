@@ -1,86 +1,59 @@
-import { Box, Typography, Stack, Alert } from "@mui/material";
-import RouterRoundedIcon from "@mui/icons-material/RouterRounded";
-import ComputerRoundedIcon from "@mui/icons-material/ComputerRounded";
-// import { useFormStore, type Role } from "./utils";
-import { TextField } from "./TextField";
+import { Box, Button } from "@mui/material";
+import SendRoundedIcon from "@mui/icons-material/SendRounded";
 
-// const HostTextFields = () => {
-//   const { offer, answer, setOffer, setAnswer } = useFormStore();
+import { createWebRTC } from "@/native/webrtc";
+import { useWebRTC } from "@/store/webrtc";
+import { useFormStore } from "@/store/form";
 
-//   return (
-//     <>
-//       <Box>
-//         <Typography variant="subtitle1">Offer (SDP)</Typography>
-//         <TextField mode="copy" value={offer} onChange={setOffer} label="您的 offer 將在這裡顯示" disabled />
-//       </Box>
-//       <Box>
-//         <Typography variant="subtitle1" sx={{ mb: 1 }}>
-//           Answer (SDP)
-//         </Typography>
-//         <TextField mode="paste" value={answer} onChange={setAnswer} label="將對方的 answer 貼到這裡..." />
-//       </Box>
-//     </>
-//   );
-// };
-
-// const ClientTextFields = () => {
-//   const { offer, answer, setOffer, setAnswer } = useFormStore();
-
-//   return (
-//     <>
-//       <Box>
-//         <Typography variant="subtitle1" sx={{ mb: 1 }}>
-//           Offer (SDP)
-//         </Typography>
-//         <TextField mode="paste" value={offer} onChange={setOffer} label="將對方的 offer 貼到這裡..." />
-//       </Box>
-//       <Box>
-//         <Typography variant="subtitle1">Answer (SDP)</Typography>
-//         <TextField mode="copy" value={answer} onChange={setAnswer} label="您的 answer 將在這裡顯示" disabled />
-//       </Box>
-//     </>
-//   );
-// };
-
-// const HelperText = ({ role }: { role: Role }) => (
-//   <Alert
-//     severity="info"
-//     variant="outlined"
-//     sx={{ borderRadius: 2, borderStyle: "dashed", borderWidth: 2, borderColor: "#71A5BF50" }}
-//     icon={role === "host" ? <RouterRoundedIcon /> : <ComputerRoundedIcon />}
-//   >
-//     {role === "host"
-//       ? "作為主持方，請先將您的 offer 提供給對方，然後將對方回傳的 answer 貼上到右側欄位。"
-//       : "作為加入方，請先將對方的 offer 貼上到左側欄位，然後將您的 answer 提供給對方。"}
-//   </Alert>
-// );
-
-// TODO: 改成可輸入 port, 並可按下開始連線至 Bridge Server，當連接狀態不為 fail, disconnected 時，禁用連線按鈕，connecting 時顯示 loading={true}
-// const Step2 = () => {
-//   const { selectedRole } = useFormStore();
-
-//   return (
-//     <Stack spacing={3} sx={{ width: "100%" }}>
-//       <Box>
-//         <Typography variant="h5" sx={{ mb: 1 }}>
-//           交換 SDP 資訊
-//         </Typography>
-//         <Typography variant="body2" color="text.secondary">
-//           根據您選擇的角色，請在對應的欄位中輸入或複製相關的 SDP 資訊。主持方需要提供 offer，加入方需要提供 answer。
-//         </Typography>
-//       </Box>
-
-//       <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 3 }}>
-//         {selectedRole === "host" ? <HostTextFields /> : <ClientTextFields />}
-//       </Box>
-
-//       <HelperText role={selectedRole} />
-//     </Stack>
-//   );
-// };
+import { buttonContainedSx } from "./utils";
+import { CodeInput } from "@/components/step1/CodeInput";
+import { LogDisplay } from "@/components/step1/LogDisplay";
+import { StepDescription } from "./body/StepDescription";
 
 const Step2 = () => {
-  return <></>;
+  const { status, history } = useWebRTC();
+  const role = useFormStore((state) => state.role);
+  const code = useFormStore((state) => state.webrtcCode);
+  const codeError = useFormStore((state) => state.webrtcCodeError);
+  const setCode = useFormStore((state) => state.setWebRTCCode);
+
+  const handleConnect = () => {
+    if (codeError) return;
+    createWebRTC(role, code);
+  };
+
+  return (
+    <Box sx={{ width: 1, height: 1, display: "grid", gridTemplateRows: "auto 1fr", gap: 3 }}>
+      <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 3, alignItems: "flex-end" }}>
+        <StepDescription
+          title="WebRTC 連接"
+          description="請輸入連接代碼，這將會作為你們連接的憑證，然後建立 P2P 連接。"
+        />
+
+        <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 1, alignItems: "stretch" }}>
+          <CodeInput
+            value={code}
+            onChange={(value) => setCode(value)}
+            disabled={status === "connecting" || status === "connected"}
+            placeholder={role === "host" ? "輸入您要創建的連接代碼" : "輸入主持方提供的連接代碼"}
+            error={!!codeError}
+          />
+
+          <Button
+            onClick={handleConnect}
+            loading={status === "connecting"}
+            disabled={status === "connecting" || status === "connected" || !!codeError}
+            sx={{ ...buttonContainedSx, width: "auto", minWidth: 0 }}
+            variant="contained"
+          >
+            <SendRoundedIcon />
+          </Button>
+        </Box>
+      </Box>
+
+      <LogDisplay history={history} />
+    </Box>
+  );
 };
 
 export { Step2 };
