@@ -12,13 +12,11 @@ type WebRTCLogEntry = { level: "info" | "error"; message: string; timestamp: num
 type State = {
   status: WebRTCStatus;
   history: WebRTCLogEntry[];
-  error: WebRTCLogEntry | null; // 最後一次的錯誤訊息
 };
 
 const store = create<State>(() => ({
   status: "disconnected",
   history: [],
-  error: null,
 }));
 
 const useWebRTC = store;
@@ -29,7 +27,7 @@ export { useWebRTC, type WebRTCLogEntry };
 // ===============================================================
 type PrimitiveState = {
   status: WebRTCStatus;
-  progress: string;
+  log: string;
   error: string;
   history: never[]; // 只能清空
 };
@@ -42,15 +40,13 @@ const setState = (partial: Partial<PrimitiveState>) => {
   store.setState((prev) => {
     // 進度
     let history = prev.history;
-    if (partial.progress !== undefined) {
-      history = [...prev.history, { level: "info", message: partial.progress, timestamp: now }];
+    if (partial.log !== undefined) {
+      history = [...prev.history, { level: "info", message: partial.log, timestamp: now }];
     }
 
     // 錯誤
-    let error = prev.error;
     if (partial.error !== undefined) {
-      error = { level: "error", message: partial.error, timestamp: now };
-      history = [...history, error];
+      history = [...history, { level: "error", message: partial.error, timestamp: now }];
     }
 
     // 狀態
@@ -64,7 +60,7 @@ const setState = (partial: Partial<PrimitiveState>) => {
       history = [];
     }
 
-    return { status, history, error };
+    return { status, history };
   });
 };
 
