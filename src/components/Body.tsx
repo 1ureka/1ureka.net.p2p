@@ -1,7 +1,7 @@
 import { Box, Paper, Stack, Typography } from "@mui/material";
 import { Step1 } from "./steps/Step1";
 import { Step2 } from "./steps/Step2";
-import { Step3 } from "./Step3";
+import { Step3 } from "./steps/Step3";
 import { useFormStore } from "@/store/form";
 
 const Indicator = ({ steps, current }: { steps: string[]; current: number }) => {

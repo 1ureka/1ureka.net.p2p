@@ -10,7 +10,7 @@ const getRow = ({ level, timestamp, message }: WebRTCLogEntry) => {
   );
 };
 
-const LogDisplay = ({ history }: { history: WebRTCLogEntry[] }) => {
+const Step2Logs = ({ history }: { history: WebRTCLogEntry[] }) => {
   return (
     <Box
       sx={{
@@ -53,4 +53,4 @@ const LogDisplay = ({ history }: { history: WebRTCLogEntry[] }) => {
   );
 };
 
-export { LogDisplay };
+export { Step2Logs };

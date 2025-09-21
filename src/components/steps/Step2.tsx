@@ -6,9 +6,9 @@ import { useWebRTC } from "@/store/webrtc";
 import { useFormStore } from "@/store/form";
 
 import { buttonContainedSx } from "../utils";
-import { CodeInput } from "@/components/step1/CodeInput";
-import { LogDisplay } from "@/components/step1/LogDisplay";
 import { StepDescription } from "./StepDescription";
+import { StepInput } from "./StepInput";
+import { Step2Logs } from "./Step2Logs";
 
 const Step2 = () => {
   const { status, history } = useWebRTC();
@@ -31,7 +31,7 @@ const Step2 = () => {
         />
 
         <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 1, alignItems: "stretch" }}>
-          <CodeInput
+          <StepInput
             value={code}
             onChange={(value) => setCode(value)}
             disabled={status === "connecting" || status === "connected"}
@@ -51,7 +51,7 @@ const Step2 = () => {
         </Box>
       </Box>
 
-      <LogDisplay history={history} />
+      <Step2Logs history={history} />
     </Box>
   );
 };

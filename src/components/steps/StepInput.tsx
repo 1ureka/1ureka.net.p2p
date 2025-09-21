@@ -1,10 +1,10 @@
 import { TextField, type TextFieldProps } from "@mui/material";
 
-type CodeInputProps = Omit<TextFieldProps, "onChange"> & {
+type StepInputProps = Omit<TextFieldProps, "onChange"> & {
   onChange: (value: string) => void;
 };
 
-const CodeInput = ({ value, onChange, disabled, placeholder, error, helperText }: CodeInputProps) => {
+const StepInput = ({ value, onChange, disabled, placeholder, error, helperText }: StepInputProps) => {
   return (
     <TextField
       label="連接代碼"
@@ -30,4 +30,4 @@ const CodeInput = ({ value, onChange, disabled, placeholder, error, helperText }
   );
 };
 
-export { CodeInput };
+export { StepInput };
