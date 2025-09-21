@@ -1,7 +1,7 @@
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import { Box, Button, Paper, Typography } from "@mui/material";
 import { buttonContainedSx, buttonWithStartIconSx } from "./utils";
-import { useStepStore } from "@/store/steps";
+import { useFormStore } from "@/store/form";
 import { useWebRTC } from "@/store/webrtc";
 
 type Status = "connected" | "disconnected" | "connecting" | "failed";
@@ -59,7 +59,7 @@ const StatusIndicator = ({ module, status }: { module: string; status: Status })
 };
 
 const Footer = () => {
-  const { current, steps, nextStep, prevStep } = useStepStore();
+  const { current, steps, nextStep, prevStep } = useFormStore();
   const webrtcStatus = useWebRTC((state) => state.status);
 
   return (

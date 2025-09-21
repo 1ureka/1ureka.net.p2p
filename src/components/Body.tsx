@@ -2,7 +2,7 @@ import { Box, Paper, Stack, Typography } from "@mui/material";
 import { Step1 } from "./Step1";
 import { Step2 } from "./Step2";
 import { Step3 } from "./Step3";
-import { useStepStore } from "@/store/steps";
+import { useFormStore } from "@/store/form";
 
 const Indicator = ({ steps, current }: { steps: string[]; current: number }) => {
   return (
@@ -91,7 +91,7 @@ const StepWrapper = ({ children, stepIndex, currentIndex }: StepWrapperProps) =>
 };
 
 const Body = () => {
-  const { current, steps } = useStepStore();
+  const { current, steps } = useFormStore();
 
   return (
     <Box sx={{ position: "relative", flex: 1, display: "grid", placeItems: "center", minHeight: 0 }}>
