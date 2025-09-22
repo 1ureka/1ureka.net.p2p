@@ -19,7 +19,7 @@ export enum PacketEvent {
 }
 
 // 封包 Header 結構
-export interface PacketHeader {
+interface PacketHeader {
   flags: number; // bit0 = event (0=data,1=close), bit1-7 保留
   socketId: number; // 對應一條 TCP socket 連線 (0-65535)
   chunkId: number; // 一次完整訊息的唯一識別 (0-65535)
@@ -39,7 +39,7 @@ interface ReassemblerEntry {
 /**
  * 將 Header 和 payload 編碼成一個完整的封包
  */
-export function encodePacket(header: PacketHeader, payload: Buffer): Buffer {
+function encodePacket(header: PacketHeader, payload: Buffer): Buffer {
   if (payload.length !== header.payloadSize) {
     throw new Error(`Payload size mismatch: expected ${header.payloadSize}, got ${payload.length}`);
   }
@@ -83,7 +83,7 @@ export function encodePacket(header: PacketHeader, payload: Buffer): Buffer {
 /**
  * 將封包解碼成 Header 和 payload
  */
-export function decodePacket(packet: Buffer): { header: PacketHeader; payload: Buffer } {
+function decodePacket(packet: Buffer): { header: PacketHeader; payload: Buffer } {
   if (packet.length < HEADER_SIZE) {
     throw new Error(`Packet too small: expected at least ${HEADER_SIZE} bytes, got ${packet.length}`);
   }
@@ -122,59 +122,62 @@ export function decodePacket(packet: Buffer): { header: PacketHeader; payload: B
   // [11-] payload
   const payload = packet.subarray(offset);
 
-  const header: PacketHeader = {
-    flags,
-    socketId,
-    chunkId,
-    chunkIndex,
-    totalChunks,
-    payloadSize,
-  };
-
+  const header: PacketHeader = { flags, socketId, chunkId, chunkIndex, totalChunks, payloadSize };
   return { header, payload };
 }
 
 /**
- * 將大訊息切割成多個 chunk (Generator 函數)
+ * 建立 Chunker，用於將訊息切割成多個 chunk
  */
-export function* splitPayload(
-  socketId: number,
-  chunkId: number,
-  event: PacketEvent,
-  data: Buffer
-): Generator<Buffer, void, unknown> {
+export function createChunker(socketId: number) {
   if (socketId > MAX_SOCKET_ID) {
     throw new Error(`Socket ID ${socketId} exceeds maximum ${MAX_SOCKET_ID}`);
   }
 
-  if (chunkId > MAX_CHUNK_ID) {
-    throw new Error(`Chunk ID ${chunkId} exceeds maximum ${MAX_CHUNK_ID}`);
+  let currentChunkId = 0; // 在 closure 中維護的 chunk_id 計數器
+
+  /**
+   * 將大訊息切割成多個 chunk (Generator 函數)
+   */
+  function* splitPayload(event: PacketEvent, data: Buffer): Generator<Buffer, void, unknown> {
+    // 使用並遞增 chunk_id，循環使用 0~65535 (原因請參考 README.md，不需 review)
+    const chunkId = currentChunkId;
+    currentChunkId = (currentChunkId + 1) % (MAX_CHUNK_ID + 1);
+
+    // 計算需要多少個 chunk
+    const totalChunks = Math.max(1, Math.ceil(data.length / MAX_PAYLOAD_SIZE));
+
+    if (totalChunks > MAX_TOTAL_CHUNKS) {
+      throw new Error(`Data too large: requires ${totalChunks} chunks, maximum is ${MAX_TOTAL_CHUNKS}`);
+    }
+
+    // 生成每個 chunk
+    for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+      const start = chunkIndex * MAX_PAYLOAD_SIZE;
+      const end = Math.min(start + MAX_PAYLOAD_SIZE, data.length);
+      const payload = data.subarray(start, end);
+
+      const header: PacketHeader = {
+        flags: event,
+        socketId,
+        chunkId,
+        chunkIndex,
+        totalChunks,
+        payloadSize: payload.length,
+      };
+
+      yield encodePacket(header, payload);
+    }
   }
 
-  // 計算需要多少個 chunk
-  const totalChunks = Math.max(1, Math.ceil(data.length / MAX_PAYLOAD_SIZE));
-
-  if (totalChunks > MAX_TOTAL_CHUNKS) {
-    throw new Error(`Data too large: requires ${totalChunks} chunks, maximum is ${MAX_TOTAL_CHUNKS}`);
+  /**
+   * 取得目前的 chunk_id 值（用於偵錯）
+   */
+  function getCurrentChunkId(): number {
+    return currentChunkId;
   }
 
-  // 生成每個 chunk
-  for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
-    const start = chunkIndex * MAX_PAYLOAD_SIZE;
-    const end = Math.min(start + MAX_PAYLOAD_SIZE, data.length);
-    const payload = data.subarray(start, end);
-
-    const header: PacketHeader = {
-      flags: event,
-      socketId,
-      chunkId,
-      chunkIndex,
-      totalChunks,
-      payloadSize: payload.length,
-    };
-
-    yield encodePacket(header, payload);
-  }
+  return { splitPayload, getCurrentChunkId };
 }
 
 /**
