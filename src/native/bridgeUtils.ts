@@ -43,83 +43,36 @@ function tryConnect(win: BrowserWindow, port: number): Promise<boolean> {
   });
 }
 
-const MIN_POOL_SIZE = 10;
-const MAX_POOL_SIZE = 50;
+function tryListen(win: BrowserWindow, port: number): Promise<net.Server | null> {
+  const { reportLog, reportError, reportStatus } = createReporter("Bridge", win);
+  const server = net.createServer();
 
-function createConnectionPool(win: BrowserWindow, port: number) {
-  const { reportLog, reportWarn } = createReporter("ConnectionPool", win);
-  const availableSockets: net.Socket[] = [];
-  const activeSockets = new Map<number, net.Socket>();
+  return new Promise((resolve) => {
+    // 設置超時，如果 1 秒內無法監聽則認為失敗
+    const timeout = setTimeout(() => {
+      server.close();
+      reportStatus("failed");
+      reportError({ message: `Failed to listen on TCP server at localhost:${port} - timeout` });
+      resolve(null);
+    }, 1000);
 
-  function getPoolStats() {
-    return `Active: ${activeSockets.size}, Available: ${availableSockets.length}`;
-  }
-
-  function cleanupSocket(socket: net.Socket) {
-    socket.destroy();
-
-    const availIndex = availableSockets.indexOf(socket);
-    if (availIndex >= 0) availableSockets.splice(availIndex, 1);
-
-    activeSockets.forEach((s, id) => {
-      if (s === socket) activeSockets.delete(id);
-    });
-  }
-
-  function createSocket(): net.Socket {
-    const socket = net.connect(port, "127.0.0.1");
-
-    socket.on("error", () => {
-      reportWarn({ message: `TCP socket to localhost:${port} encountered an error and closing` });
-      cleanupSocket(socket);
+    server.on("error", (error) => {
+      clearTimeout(timeout);
+      server.close();
+      reportStatus("failed");
+      reportError({ message: `Failed to listen on TCP server at localhost:${port}`, data: { error } });
+      resolve(null);
     });
 
-    socket.on("close", () => {
-      cleanupSocket(socket); // 避免外部自行 close 時無法更新到 closure 內的 array and map
+    server.on("listening", () => {
+      clearTimeout(timeout);
+      reportStatus("connected");
+      reportLog({ message: `Successfully listened on TCP server at localhost:${port}` });
+      resolve(server);
     });
 
-    return socket;
-  }
-
-  function fillSocketPool() {
-    while (availableSockets.length < MIN_POOL_SIZE) {
-      availableSockets.push(createSocket());
-    }
-  }
-
-  function getSocket(id: number) {
-    reportLog({ message: `Acquiring socket for client ${id}. ${getPoolStats()}` });
-    let socket: net.Socket | null = null;
-    let status: "HIT" | "MISS" = "MISS";
-
-    if (activeSockets.has(id)) {
-      socket = activeSockets.get(id)!;
-      status = "HIT";
-    } else if (availableSockets.length > 0) {
-      socket = availableSockets.pop()!;
-      activeSockets.set(id, socket);
-    } else if (activeSockets.size < MAX_POOL_SIZE) {
-      socket = createSocket();
-      activeSockets.set(id, socket);
-    }
-
-    fillSocketPool();
-    return { socket, status } as const;
-  }
-
-  function releaseSocket(id: number) {
-    reportLog({ message: `Releasing socket for client ${id}. ${getPoolStats()}` });
-    const socket = activeSockets.get(id);
-    if (!socket) return;
-
-    cleanupSocket(socket);
-    fillSocketPool();
-  }
-
-  fillSocketPool();
-  reportLog({ message: `Initialized connection pool. ${getPoolStats()}` });
-
-  return { getSocket, releaseSocket };
+    server.listen(port, "127.0.0.1");
+  });
 }
 
-export { checkLock, tryConnect, createConnectionPool };
+export { checkLock, tryConnect, tryListen };
