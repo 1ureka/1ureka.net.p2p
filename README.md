@@ -85,56 +85,39 @@ flowchart TD
 ```mermaid
 flowchart TD
 
-  A["New socket"] --> B["socket.on('data')"]
+  subgraph Host
+    H1["IPC/RTC 收到 CONNECT (來自 Client)"]
+    H1 --> H2["net.connect() 到真實 TCP 服務"]
+  end
+
+  subgraph Client
+    C1["TCP Server 收到 connection (來自外部應用)"]
+    C1 --> C2["指派 socketId，並發送 CONNECT 封包給 Host"]
+  end
+
+  H2 & C2 --> A["createSocketLifecycle.bind(socket)"]
+
+  A --> B["socket.on('data')"]
 
   B --> C["socket.on('error')"]
-  B --> D["ipc/rtc 收到 CLOSE"]
+  B --> D["IPC/RTC 收到對方 CLOSE"]
 
   C --> E["socket.destroy()"]
   D --> E["socket.destroy()"]
 
   E --> F["socket.on('close')"]
-
-  F --> G{"Host or Client?"}
-  G -->|Host| H["releaseSocket(socketId)"]
-  G -->|Client| I["delete from Map"]
-
-  H --> J["cleaned"]
-  I --> J["cleaned"]
+  F --> G["釋放資源並發送 CLOSE 封包給對方"]
 ```
 
 ### Socket 的資源釋放策略
 
-1. **Host 端**
-   - `socket.on("close")`：
-     - 發送 `CLOSE` 封包給對端，觸發對端 (Client) 同步關閉。
-     - 呼叫 `releaseSocket(socketId)`，從連線池移除。
+- `socket.on("close")`：
+  - 發送 `CLOSE` 封包給對端，確保對端同步關閉。
+  - 呼叫 `Map.delete(socketId)`，從連線池移除。
 
-   - `ipc.on("bridge.data.tcp")` 收到 `CLOSE` 封包：
-     - 呼叫 `getSocket(socketId)`，取得對應的 socket。
-     - 若 socket 有效，呼叫 `socket.destroy()`，觸發 `close` 事件，並進行上述清理。
+- `ipc.on("bridge.data.rtc")` 收到 `CLOSE` 封包：
+  - 呼叫 `Map.get(socketId)`，取得對應的 socket。
+  - 若 socket 有效，呼叫 `socket.destroy()`，觸發 `close` 事件，並進行上述清理。
 
-   - `socket.on("error")` (由 `createConnectionPool` 註冊)：
-     - 主動 `socket.destroy()`，確保觸發 `close`，並進行上述清理。
-
-   - `getSocket(socketId)` 回傳無效（資源耗盡）：
-     - 發送 `CLOSE` 封包給對端，對端接受後也會 close。 // TODO: 目前還沒實作
-     - 沒有創建 socket。
-
-2. **Client 端**
-   - `socket.on("close")`：
-
-   - 發送 `CLOSE` 封包給對端，觸發對端 (Host) 同步關閉。
-   - 呼叫 `clientSockets.delete(socketId)`，從 Map 移除。
-
-   - `ipc.on("bridge.data.webrtc")` 收到 `CLOSE` 封包：
-     - 呼叫 `getSocket(socketId)`，取得對應的 socket。
-     - 若 socket 有效，呼叫 `socket.destroy()`，觸發 `close` 事件，並進行上述清理。
-
-   - `socket.on("error")`：
-     - 主動 `socket.destroy()`，確保觸發 `close`，並進行上述清理。
-
-   - socketId 達到上限 (`> 65535`)：
-     - 直接 `socket.destroy()`，拒絕新連線，確保觸發 `close`，並進行上述清理。
-
-註：感謝 `socket.close()` 的設計是冪等的 (idempotent)，因此多次呼叫不會有問題。
+- `socket.on("error")`：
+  - 主動 `socket.destroy()`，確保觸發 `close`，並進行上述清理。
