@@ -16,11 +16,12 @@ const MAX_SOCKET_ID = 65535; // socket_id 的最大值
 export enum PacketEvent {
   DATA = 0,
   CLOSE = 1,
+  CONNECT = 2,
 }
 
 // 封包 Header 結構
 interface PacketHeader {
-  flags: number; // bit0 = event (0=data,1=close), bit1-7 保留
+  event: PacketEvent; // 事件類型 (0=DATA, 1=CLOSE, 2=CONNECT, …)
   socketId: number; // 對應一條 TCP socket 連線 (0-65535)
   chunkId: number; // 一次完整訊息的唯一識別 (0-65535)
   chunkIndex: number; // 本片段序號 (0-65535)
@@ -51,8 +52,8 @@ function encodePacket(header: PacketHeader, payload: Buffer): Buffer {
   const packet = Buffer.allocUnsafe(HEADER_SIZE + payload.length);
   let offset = 0;
 
-  // [0] flags (1 byte)
-  packet.writeUInt8(header.flags, offset++);
+  // [0] event (1 byte)
+  packet.writeUInt8(header.event, offset++);
 
   // [1-2] socket_id (2 bytes)
   packet.writeUInt16BE(header.socketId, offset);
@@ -90,8 +91,8 @@ function decodePacket(packet: Buffer): { header: PacketHeader; payload: Buffer }
 
   let offset = 0;
 
-  // [0] flags
-  const flags = packet.readUInt8(offset++);
+  // [0] event
+  const event = packet.readUInt8(offset++);
 
   // [1-2] socket_id
   const socketId = packet.readUInt16BE(offset);
@@ -122,7 +123,7 @@ function decodePacket(packet: Buffer): { header: PacketHeader; payload: Buffer }
   // [11-] payload
   const payload = packet.subarray(offset);
 
-  const header: PacketHeader = { flags, socketId, chunkId, chunkIndex, totalChunks, payloadSize };
+  const header: PacketHeader = { event, socketId, chunkId, chunkIndex, totalChunks, payloadSize };
   return { header, payload };
 }
 
@@ -156,16 +157,9 @@ export function createChunker(socketId: number) {
       const start = chunkIndex * MAX_PAYLOAD_SIZE;
       const end = Math.min(start + MAX_PAYLOAD_SIZE, data.length);
       const payload = data.subarray(start, end);
+      const payloadSize = payload.length;
 
-      const header: PacketHeader = {
-        flags: event,
-        socketId,
-        chunkId,
-        chunkIndex,
-        totalChunks,
-        payloadSize: payload.length,
-      };
-
+      const header: PacketHeader = { event, socketId, chunkId, chunkIndex, totalChunks, payloadSize };
       yield encodePacket(header, payload);
     }
   }
@@ -201,8 +195,7 @@ export function createReassembler() {
    */
   function processPacket(packet: Buffer): { socketId: number; event: PacketEvent; data: Buffer } | null {
     const { header, payload } = decodePacket(packet);
-    const { socketId, chunkId, chunkIndex, totalChunks, flags } = header;
-    const event = flags & 1; // bit0 為事件類型
+    const { socketId, chunkId, chunkIndex, totalChunks, event } = header;
 
     // 如果只有一個 chunk，直接回傳
     if (totalChunks === 1) {
