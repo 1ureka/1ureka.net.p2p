@@ -6,9 +6,35 @@
 
 ## 架構設計
 
-<!-- TODO -->
+TODO: 簡述架構，主要聚焦在 TCP over WebRTC 的橋接機制上，不須談到太多 UI 相關的內容。
 
-TODO
+### 架構圖
+
+```mermaid
+sequenceDiagram
+    participant App as TCP Client (本地應用)
+    participant CB as Client Bridge
+    participant DC as WebRTC DataChannel
+    participant HB as Host Bridge
+    participant Srv as TCP Server (本地服務)
+
+    App->>CB: TCP connect()
+    CB->>CB: 分配 socketId (0..65535)
+    App->>CB: socket.write(data)
+    CB->>CB: Chunker 切片 (header + payload)
+    CB->>DC: 封裝後的 buffer
+
+    DC->>HB: 收到 buffer
+    HB->>HB: Reassembler 重組
+    HB->>Srv: socket.write(data)
+
+    Srv->>HB: 回應資料
+    HB->>HB: Chunker 切片
+    HB->>DC: 封裝後的 buffer
+    DC->>CB: 收到 buffer
+    CB->>CB: Reassembler 重組
+    CB->>App: socket.write(data)
+```
 
 ## 封包設計
 
