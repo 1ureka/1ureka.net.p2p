@@ -49,7 +49,7 @@ const MAX_POOL_SIZE = 50;
 function createConnectionPool(win: BrowserWindow, port: number) {
   const { reportLog, reportWarn } = createReporter("ConnectionPool", win);
   const availableSockets: net.Socket[] = [];
-  const activeSockets = new Map<string, net.Socket>();
+  const activeSockets = new Map<number, net.Socket>();
 
   function getPoolStats() {
     return `Active: ${activeSockets.size}, Available: ${availableSockets.length}`;
@@ -87,7 +87,7 @@ function createConnectionPool(win: BrowserWindow, port: number) {
     }
   }
 
-  function getSocket(id: string) {
+  function getSocket(id: number) {
     reportLog({ message: `Acquiring socket for client ${id}. ${getPoolStats()}` });
     let socket: net.Socket | null = null;
     let status: "HIT" | "MISS" = "MISS";
@@ -107,7 +107,7 @@ function createConnectionPool(win: BrowserWindow, port: number) {
     return { socket, status } as const;
   }
 
-  function releaseSocket(id: string) {
+  function releaseSocket(id: number) {
     reportLog({ message: `Releasing socket for client ${id}. ${getPoolStats()}` });
     const socket = activeSockets.get(id);
     if (!socket) return;
