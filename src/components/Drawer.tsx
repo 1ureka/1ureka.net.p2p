@@ -1,13 +1,16 @@
-// TODO: Drawer, TCP Bridge / WebRTC tabs, log list
-
-import { Box, Chip, Drawer, Typography, type DrawerProps } from "@mui/material";
-import { useState } from "react";
+import { Box, Button, Drawer, Typography, type DrawerProps } from "@mui/material";
 import { buttonContainedSx } from "./utils";
-// import { BridgeLogList } from "./BridgeLogList";
+import StorageRoundedIcon from "@mui/icons-material/StorageRounded";
+import ComputerRoundedIcon from "@mui/icons-material/ComputerRounded";
 
-// TODO: 不再分兩個 tab，改成單個日誌區域就好
 const LogDrawer = ({ open, onClose }: DrawerProps) => {
-  const [tab, setTab] = useState<"webrtc" | "bridge">("webrtc");
+  const handleStartTestServer = () => {
+    window.electron.send("test.server");
+  };
+
+  const handleStartTestClient = () => {
+    window.electron.send("test.client");
+  };
 
   return (
     <Drawer
@@ -26,45 +29,50 @@ const LogDrawer = ({ open, onClose }: DrawerProps) => {
         },
       }}
     >
-      <Box sx={{ mb: 2 }}>
-        <Typography variant="h6">日誌紀錄</Typography>
-        <Typography variant="body2" sx={{ color: "text.secondary" }}>
-          包含 WebRTC 及橋接服務的運行日誌。
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+        <Typography variant="h6" component="h2" sx={{ mb: 2 }}>
+          測試工具
         </Typography>
-      </Box>
 
-      <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-        <Chip
-          label="WebRTC"
-          color={tab === "webrtc" ? "primary" : "default"}
-          onClick={() => setTab("webrtc")}
-          sx={{
-            ...buttonContainedSx,
-            "&:hover": { scale: "1.05", bgcolor: tab === "webrtc" ? "primary.light" : undefined },
-          }}
-        />
-        <Chip
-          label="橋接服務"
-          color={tab === "bridge" ? "primary" : "default"}
-          onClick={() => setTab("bridge")}
-          sx={{
-            ...buttonContainedSx,
-            "&:hover": { scale: "1.05", bgcolor: tab === "bridge" ? "primary.light" : undefined },
-          }}
-        />
-      </Box>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <Button
+            variant="contained"
+            startIcon={<StorageRoundedIcon />}
+            onClick={handleStartTestServer}
+            sx={{
+              ...buttonContainedSx,
+              justifyContent: "flex-start",
+              py: 1.5,
+              px: 2,
+            }}
+          >
+            <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", ml: 1 }}>
+              <Typography variant="button">啟動測試服務器</Typography>
+              <Typography variant="caption" sx={{ opacity: 0.8, textTransform: "none" }}>
+                開啟 TestServer 進行連接測試
+              </Typography>
+            </Box>
+          </Button>
 
-      {/* 日誌內容區域 */}
-      <Box sx={{ mt: 3, flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        {tab === "webrtc" && (
-          <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              WebRTC 日誌功能開發中...
-            </Typography>
-          </Box>
-        )}
-
-        {/* {tab === "bridge" && <BridgeLogList />} */}
+          <Button
+            variant="contained"
+            startIcon={<ComputerRoundedIcon />}
+            onClick={handleStartTestClient}
+            sx={{
+              ...buttonContainedSx,
+              justifyContent: "flex-start",
+              py: 1.5,
+              px: 2,
+            }}
+          >
+            <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", ml: 1 }}>
+              <Typography variant="button">啟動測試客戶端</Typography>
+              <Typography variant="caption" sx={{ opacity: 0.8, textTransform: "none" }}>
+                開啟 TestClient 連接到服務器
+              </Typography>
+            </Box>
+          </Button>
+        </Box>
       </Box>
     </Drawer>
   );

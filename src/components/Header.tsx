@@ -31,7 +31,7 @@ const Header = () => {
 
       <Box>
         <Button startIcon={<NotesRoundedIcon />} sx={buttonWithStartIconSx} onClick={() => setOpen(true)}>
-          展開日誌
+          測試工具
         </Button>
         <LogDrawer open={open} onClose={() => setOpen(false)} />
       </Box>
