@@ -137,11 +137,61 @@ const createDataChannel = (peerConnection: RTCPeerConnection) => {
 };
 
 const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
-  // TODO: 實作 DataChannel <=> IPC 的雙向綁定
-  const testCode = crypto.randomUUID();
-  console.log(`DataChannel opened, test code: ${testCode}`);
-  dataChannel.send(`Hello from data channel! This is a test message with code: ${testCode}`);
-  dataChannel.onmessage = (event) => console.log("Received message:", event.data);
+  // 暫時用於測試 DataChannel 是否可用
+  //   const testCode = crypto.randomUUID();
+  //   console.log(`DataChannel opened, test code: ${testCode}`);
+  //   dataChannel.send(`Hello from data channel! This is a test message with code: ${testCode}`);
+  //   dataChannel.onmessage = (event) => console.log("Received message:", event.data);
+
+  // DataChannel → IPC: 當 DataChannel 收到資料時，轉發到主程序的橋接邏輯
+  dataChannel.onmessage = (event) => {
+    try {
+      const buffer = event.data;
+      if (buffer instanceof ArrayBuffer) {
+        window.electron.send("bridge.data.rtc", new Uint8Array(buffer));
+      } else if (ArrayBuffer.isView(buffer)) {
+        window.electron.send("bridge.data.rtc", buffer);
+      } else {
+        throw new Error("Invalid data type received from DataChannel");
+      }
+    } catch (error) {
+      console.error("Failed to process DataChannel message:", error);
+    }
+  };
+
+  // IPC → DataChannel: 監聽來自主程序的資料並透過 DataChannel 發送
+  const handleIPCMessage = (buffer: unknown) => {
+    try {
+      if (dataChannel.readyState !== "open") {
+        console.warn("DataChannel is not open. Cannot send data.");
+        return;
+      }
+      if (buffer instanceof ArrayBuffer) {
+        dataChannel.send(buffer);
+      } else if (ArrayBuffer.isView(buffer)) {
+        dataChannel.send(buffer as ArrayBufferView<ArrayBuffer>);
+      } else {
+        throw new Error("Invalid data type received from IPC");
+      }
+    } catch (error) {
+      console.error("Failed to send data through DataChannel:", error);
+    }
+  };
+
+  // 註冊 IPC 監聽器
+  window.electron.on("bridge.data.tcp", handleIPCMessage);
+
+  // 設置清理函數，當 DataChannel 關閉時移除監聽器
+  dataChannel.onclose = () => {
+    window.electron.off("bridge.data.tcp", handleIPCMessage);
+    setState({ status: "disconnected" });
+  };
+
+  dataChannel.onerror = (error) => {
+    console.error("DataChannel error:", error);
+    window.electron.off("bridge.data.tcp", handleIPCMessage);
+    setState({ status: "failed", error: "DataChannel encountered an error" });
+  };
 };
 
 // =================================================================
