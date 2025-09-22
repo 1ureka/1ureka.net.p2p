@@ -69,7 +69,7 @@ async function createHostBridge(win: BrowserWindow, port: number) {
 
   ipcMain.on("bridge.data.rtc", (_, buffer: Buffer) => {
     // TODO: tryCatch
-    const msg = reassembler.processPacket(buffer);
+    const msg = reassembler.processPacket(Buffer.from(buffer));
     if (!msg) return;
 
     const { socketId, event, data } = msg;
@@ -167,7 +167,7 @@ function createClientBridge(win: BrowserWindow, port: number) {
 
   ipcMain.on("bridge.data.rtc", (_e, buffer: Buffer) => {
     // TODO: tryCatch
-    const msg = reassembler.processPacket(buffer);
+    const msg = reassembler.processPacket(Buffer.from(buffer));
     if (!msg) return;
 
     const { socketId, event, data } = msg;
