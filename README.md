@@ -12,8 +12,6 @@ TODO
 
 ## 封包設計
 
-### 背景
-
 在 **TCP over WebRTC** 的橋接中，為了支援多 socket、多訊息，以及避免因訊息過大導致傳輸失敗，實作了一個 **自訂 Header + Chunker 機制**。
 
 - **Header**：提供必要的中繼資訊（socket 分流、訊息標識、事件型別）。
