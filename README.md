@@ -4,7 +4,10 @@
 
 1ureka P2P 橋接工具是一個基於 Electron 的桌面應用程式，主要功能是在兩個對等端之間建立 WebRTC 連接，並提供 TCP 與 WebRTC 之間的數據橋接服務，使傳統的基於 TCP 的應用程式能夠透過 P2P 網路進行通信。
 
----
+## 架構設計
+
+<!-- TODO -->
+TODO
 
 ## 封包設計
 
@@ -23,9 +26,9 @@ Offset   Size   Field          Type      說明
 [0]      1      flags          Uint8     bit0 = event (0=data,1=close)
                                          (bit1~7 保留)
 [1–2]    2      socket_id      Uint16    對應一條 TCP socket 連線
-                                         (因為當真的有數萬條連線時，DataChannel 也不太可能負荷得了，因此範圍足夠)
+                                         (真的有數萬條連線 DataChannel 也不可能負荷，因此範圍足夠)
 [3–4]    2      chunk_id       Uint16    一次完整訊息的唯一識別
-                                         (因為 ordered=true，實際不太可能同時多個 chunk 未組完，因此範圍足夠)
+                                         (WebRTC ordered=true 不太可能同時多個 chunk 未組完，因此範圍足夠)
 [5–6]    2      chunk_index    Uint16    本片段序號
 [7–8]    2      total_chunks   Uint16    總片段數
                                          (65535 片段 * 65525 bytes = ~4GB)
