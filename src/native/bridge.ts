@@ -5,16 +5,13 @@ import net from "net";
 import { ipcMain, type BrowserWindow } from "electron";
 import { createReporter } from "./bridgeReport";
 import { checkLock, createConnectionPool, tryConnect } from "./bridgeUtils";
+import { createChunker, createReassembler, PacketEvent } from "./packet";
 
 // 注意
 // 1. 一個 Electron App 只能有一個 Bridge (Host 或 Client)，已透過 lock 機制實作
 // 2. 一個 Electron App 只會有一個 BrowserWindow，已透過關閉視窗就等同關閉 App 的方式實作
-
-type RTCMessage = {
-  clientId: string;
-  data: Buffer;
-  event: "data" | "close";
-};
+// 3. 只要 createBridge 成功，該應用就不會提供關閉功能，若要關閉會透過關閉 Electron App 的方式
+// (因此對於成功後的資源清理，不需要特別處理，因為關閉 App 就會自動清理)
 
 // any TCP service ⇄1 Electron (net.connect) ⇄2 WebRTC ⇄3 remote client
 // ⇄1: 連線池管理，之後會將 RTCMessage 變成帶有 header 的純 Buffer，因此也會包含封包處理
@@ -37,50 +34,62 @@ async function createHostBridge(win: BrowserWindow, port: number) {
   // ==================== 建立連線池 ====================
 
   const { getSocket, releaseSocket } = createConnectionPool(win, port);
+  const reassembler = createReassembler();
 
   /** 當無法取得閒置連線時的處理 */
-  function handlePoolMax(clientId: string) {
-    reportError({ message: `No available TCP socket for new client ${clientId}` });
-    win.webContents.send("bridge.data.tcp", { clientId, event: "error", data: Buffer.from("server busy") });
+  function handlePoolMax(socketId: number) {
+    reportError({ message: `No available TCP socket for new socket ${socketId}` });
   }
 
   // ==================== 處理來自多 socket 與 WebRTC 的雙向溝通 ====================
 
-  function handleConnection(socket: net.Socket, clientId: string) {
-    reportLog({ message: `New client ${clientId} connected.` });
+  function handleConnection(socket: net.Socket, socketId: number) {
+    reportLog({ message: `New socket ${socketId} connected.` });
+    const { splitPayload } = createChunker(socketId);
 
     socket.on("data", (chunk) => {
-      win.webContents.send("bridge.data.tcp", { clientId, event: "data", data: chunk });
+      // TODO: tryCatch
+      for (const packet of splitPayload(PacketEvent.DATA, chunk)) {
+        win.webContents.send("bridge.data.tcp", packet);
+      }
+    });
+
+    socket.on("close", () => {
+      // TODO: tryCatch
+      for (const packet of splitPayload(PacketEvent.CLOSE, Buffer.alloc(0))) {
+        win.webContents.send("bridge.data.tcp", packet);
+      }
+
+      releaseSocket(socketId);
+      reportWarn({ message: `TCP socket closed by local server for socket ${socketId}` });
     });
 
     // error 由 connectionPool 處理， connectionPool 會在錯誤時 destroy 因此會觸發 close
-
-    socket.on("close", () => {
-      win.webContents.send("bridge.data.tcp", { clientId, event: "close", data: Buffer.alloc(0) });
-      releaseSocket(clientId);
-      reportWarn({ message: `TCP socket closed by local server for client ${clientId}` });
-    });
   }
 
-  ipcMain.on("bridge.data.rtc", (_, msg: RTCMessage) => {
-    const { clientId, data, event } = msg;
-    const { status, socket } = getSocket(clientId);
+  ipcMain.on("bridge.data.rtc", (_, buffer: Buffer) => {
+    // TODO: tryCatch
+    const msg = reassembler.processPacket(buffer);
+    if (!msg) return;
+
+    const { socketId, event, data } = msg;
+    const { status, socket } = getSocket(socketId);
 
     if (!socket) {
-      return handlePoolMax(clientId);
+      return handlePoolMax(socketId);
     }
 
     if (status === "MISS") {
-      handleConnection(socket, clientId);
+      handleConnection(socket, socketId);
     }
 
-    if (event === "data" && socket.writable) {
+    if (event === PacketEvent.DATA && socket.writable) {
       socket.write(data);
     }
 
-    if (event === "close") {
+    if (event === PacketEvent.CLOSE) {
       socket.destroy();
-      reportLog({ message: `TCP socket closed by remote client for client ${clientId}` });
+      reportLog({ message: `TCP socket closed by remote client for socket ${socketId}` });
     }
   });
 }
@@ -104,11 +113,13 @@ function createClientBridge(win: BrowserWindow, port: number) {
   // ==================== 連線 TCP Proxy Server ====================
 
   const server = net.createServer().listen(port, "127.0.0.1");
+  const reassembler = createReassembler();
 
   server.on("error", (error) => {
     reportStatus("failed");
     reportError({ message: `TCP server listen error on port ${port}`, data: { error } });
     server.close();
+    reassembler.cleanup();
   });
 
   server.on("listening", () => {
@@ -118,40 +129,58 @@ function createClientBridge(win: BrowserWindow, port: number) {
 
   // ==================== 處理來自多 socket 與 WebRTC 的雙向溝通 ====================
 
-  const clientSockets = new Map<string, net.Socket>();
+  const clientSockets = new Map<number, net.Socket>();
+  let socketCount = 0;
 
   server.on("connection", (socket) => {
-    const clientId = crypto.randomUUID();
-    clientSockets.set(clientId, socket);
+    const socketId = socketCount++;
+    if (socketId > 65535) {
+      reportError({ message: `Exceeded maximum socket ID limit of 65535` });
+      return socket.destroy(); // 超過 socket_id 最大值，拒絕連線
+    }
+
+    const { splitPayload } = createChunker(socketId);
+    clientSockets.set(socketId, socket);
 
     socket.on("error", () => {
       socket.destroy(); // 觸發 close 事件，close 事件會通知對方 (Host)
-      reportWarn({ message: `TCP socket for client ${clientId} encountered an error and closing` });
+      reportWarn({ message: `TCP socket for socket ${socketId} encountered an error and closing` });
     });
 
     socket.on("data", (chunk) => {
-      win.webContents.send("bridge.data.tcp", { clientId, data: chunk, event: "data" });
+      // TODO: tryCatch
+      for (const packet of splitPayload(PacketEvent.DATA, chunk)) {
+        win.webContents.send("bridge.data.tcp", packet);
+      }
     });
 
     socket.on("close", () => {
-      win.webContents.send("bridge.data.tcp", { clientId, data: Buffer.alloc(0), event: "close" });
-      clientSockets.delete(clientId);
+      // TODO: tryCatch
+      for (const packet of splitPayload(PacketEvent.CLOSE, Buffer.alloc(0))) {
+        win.webContents.send("bridge.data.tcp", packet);
+      }
+
+      clientSockets.delete(socketId);
+      reportWarn({ message: `TCP socket closed by remote server for socket ${socketId}` });
     });
   });
 
-  ipcMain.on("bridge.data.rtc", (_e, msg: RTCMessage) => {
-    const { clientId, data, event } = msg;
+  ipcMain.on("bridge.data.rtc", (_e, buffer: Buffer) => {
+    // TODO: tryCatch
+    const msg = reassembler.processPacket(buffer);
+    if (!msg) return;
 
-    const socket = clientSockets.get(clientId);
+    const { socketId, event, data } = msg;
+    const socket = clientSockets.get(socketId);
     if (!socket) return;
 
-    if (event === "data" && socket.writable) {
+    if (event === PacketEvent.DATA && socket.writable) {
       socket.write(data);
     }
 
-    if (event === "close") {
+    if (event === PacketEvent.CLOSE) {
       socket.destroy();
-      reportLog({ message: `TCP socket closed by remote server for client ${clientId}` });
+      reportLog({ message: `TCP socket closed by remote server for socket ${socketId}` });
     }
   });
 }
