@@ -1,3 +1,5 @@
+// code review 時，要確保這裡的代碼都是 nodeJS, browser 都能用的
+
 type Success<T> = { data: T; error: null };
 type Failure<E> = { data: null; error: E };
 type Result<T, E = Error> = Success<T> | Failure<E>;
