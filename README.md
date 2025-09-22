@@ -6,6 +6,38 @@
 
 ## 架構設計
 
+```mermaid
+flowchart LR
+    subgraph Client["本地機器 (Client)"]
+        direction LR
+        App["TCP Client (遊戲 / 瀏覽器等)"]
+        subgraph CBridge["Client Bridge (主進程)"]
+            CPool["socketId 分配 / Chunker / Reassembler"]
+        end
+        subgraph CWebRTC["WebRTC 模組 (渲染進程)"]
+            CRTC["DataChannel 傳輸"]
+        end
+        App <---> CBridge
+        CBridge <---> CWebRTC
+    end
+
+    subgraph Host["遠端機器 (Host)"]
+        direction LR
+        Srv["TCP Server (遊戲伺服器 / HTTP 等)"]
+        subgraph HBridge["Host Bridge (主進程)"]
+            HPool["TCP 連線管理 / Chunker / Reassembler"]
+        end
+        subgraph HWebRTC["WebRTC 模組 (渲染進程)"]
+            HRTC["DataChannel 傳輸"]
+        end
+        HWebRTC <---> HBridge
+        HBridge <---> Srv
+    end
+
+    %% P2P 通道
+    CWebRTC <---> HWebRTC
+```
+
 本工具採用 **雙進程架構**，透過 Electron 的 IPC 機制實現 TCP 與 WebRTC 之間的數據橋接，各自負責不同的網路層級處理：
 
 ### WebRTC 模組 (渲染進程)
@@ -33,7 +65,7 @@
 
 所有模組透過 **Electron IPC** 和 **自訂封包格式** 協同工作，實現完整的 TCP over WebRTC 隧道，讓兩端的傳統 TCP 應用程式能夠透過 P2P 網路進行通信。
 
-### 架構圖
+### 單次往返
 
 ```mermaid
 sequenceDiagram
