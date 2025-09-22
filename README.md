@@ -6,7 +6,32 @@
 
 ## 架構設計
 
-TODO: 簡述架構，主要聚焦在 TCP over WebRTC 的橋接機制上，不須談到太多 UI 相關的內容。
+本工具採用 **雙進程架構**，透過 Electron 的 IPC 機制實現 TCP 與 WebRTC 之間的數據橋接，各自負責不同的網路層級處理：
+
+### WebRTC 模組 (渲染進程)
+
+負責 P2P 連線的建立與數據傳輸。特別利用 **Electron 的跨平台特性**，讓 WebRTC API 能在桌面環境下穩定運行，省去自行安裝 WebRTC 依賴的麻煩。主要功能包括：
+
+- **信令交換**：透過中央信令伺服器 (1ureka.vercel.app) 交換 SDP offer/answer 和 ICE candidates
+- **IPC 橋接**：監聽來自主進程的 `bridge.data.tcp` 事件，並將接收到的 WebRTC 數據透過 `bridge.data.rtc` 事件轉發給主進程
+
+### Bridge 模組 (主進程)
+
+負責 TCP 與 WebRTC 之間的數據轉換與傳輸，負責：
+
+- **數據轉發**
+  將來自 WebRTC 的 `DATA` 封包解包後寫入對應的 TCP socket
+- **生命週期追蹤**
+  監聽 TCP socket 的 `error`、`data`、`close` 事件，並透過自製封包格式通知對端
+
+根據應用場景分為兩個子模組：
+
+- **Client Bridge**
+  建立一個**假的 TCP 服務**讓本地應用程式連接，會為每個新連線分配唯一的 `socketId` ，並呼叫 `CONNECT` 封包通知 Host 建立對應的 socket 連線
+- **Host Bridge**
+  負責連接到本地**真實的 TCP 服務**。當接收到來自 Client 的連線請求時，建立新的對應 TCP socket 連線到指定 port
+
+所有模組透過 **Electron IPC** 和 **自訂封包格式** 協同工作，實現完整的 TCP over WebRTC 隧道，讓兩端的傳統 TCP 應用程式能夠透過 P2P 網路進行通信。
 
 ### 架構圖
 
@@ -62,14 +87,14 @@ Offset   Size   Field          Type      說明
 
 ## 生命週期與資源管理
 
-核心函數 `createHostBridge` 與 `createClientBridge` 並未提供顯式的 `close()` 或 `clean()` API，原因是 **Bridge 的生命週期與應用程式本身綁定**：
+核心函數 `createHostBridge`, `createClientBridge`, `createWebRTC` 並未提供顯式的 `close()` 或 `clean()` API，原因是 **核心功能的生命週期與應用程式本身綁定**：
 
-- 一旦進入 `connected` 狀態，Bridge 就會持續存在，直到 Electron App 被關閉。
+- 一旦進入 `connected` 狀態，該層就會持續存在，直到 Electron App 被關閉。
 - 使用者若要斷開連線，只需關閉整個應用程式，所有資源會隨進程自動釋放。
 
-然而，在 **進入 `connected` 之前** 的階段（`connecting` → `failed`），仍然會進行資源釋放，以避免資源洩漏或殘留。
+然而，在 **進入 `connected` 之前** 的階段（`connecting` → `failed`），以及連線中的 sockets 管理，仍然會進行資源釋放，以避免資源洩漏或殘留。
 
-### Bridge 生命週期
+### WebRTC, Bridge 生命週期
 
 ```mermaid
 flowchart TD
