@@ -4,6 +4,7 @@
 import { tryCatch } from "@/utils";
 import { z } from "zod";
 import { getLock, setState } from "@/store/webrtc";
+import { createDataChannelSender } from "./webrtcUtils";
 
 // 採用 Vanilla ICE， review 時請 **不准** 提議 Trickle ICE，vercel edge call 很貴
 const API_BASE = "https://1ureka.vercel.app/api/webrtc";
@@ -142,6 +143,7 @@ const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
   //   console.log(`DataChannel opened, test code: ${testCode}`);
   //   dataChannel.send(`Hello from data channel! This is a test message with code: ${testCode}`);
   //   dataChannel.onmessage = (event) => console.log("Received message:", event.data);
+  const sender = createDataChannelSender(dataChannel);
 
   // DataChannel → IPC: 當 DataChannel 收到資料時，轉發到主程序的橋接邏輯
   dataChannel.onmessage = (event) => {
@@ -152,29 +154,25 @@ const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
       } else if (ArrayBuffer.isView(buffer)) {
         window.electron.send("bridge.data.rtc", buffer);
       } else {
-        throw new Error("Invalid data type received from DataChannel");
+        setState({ error: "Received invalid data type from DataChannel" });
       }
     } catch (error) {
-      console.error("Failed to process DataChannel message:", error);
+      setState({ error: "Failed to process data received from DataChannel" });
     }
   };
 
   // IPC → DataChannel: 監聽來自主程序的資料並透過 DataChannel 發送
   const handleIPCMessage = (buffer: unknown) => {
     try {
-      if (dataChannel.readyState !== "open") {
-        console.warn("DataChannel is not open. Cannot send data.");
-        return;
-      }
       if (buffer instanceof ArrayBuffer) {
-        dataChannel.send(buffer);
+        sender.push(buffer);
       } else if (ArrayBuffer.isView(buffer)) {
-        dataChannel.send(buffer as ArrayBufferView<ArrayBuffer>);
+        sender.push(buffer as ArrayBufferView<ArrayBuffer>);
       } else {
-        throw new Error("Invalid data type received from IPC");
+        setState({ error: "Received invalid data type from IPC" });
       }
     } catch (error) {
-      console.error("Failed to send data through DataChannel:", error);
+      setState({ error: "Failed to send data through DataChannel" });
     }
   };
 
@@ -184,13 +182,10 @@ const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
   // 設置清理函數，當 DataChannel 關閉時移除監聽器
   dataChannel.onclose = () => {
     window.electron.off("bridge.data.tcp", handleIPCMessage);
-    setState({ status: "disconnected" });
   };
 
   dataChannel.onerror = (error) => {
-    console.error("DataChannel error:", error);
     window.electron.off("bridge.data.tcp", handleIPCMessage);
-    setState({ status: "failed", error: "DataChannel encountered an error" });
   };
 };
 
