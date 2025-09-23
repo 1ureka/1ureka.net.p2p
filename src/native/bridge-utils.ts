@@ -25,13 +25,13 @@ function tryConnect(win: BrowserWindow, port: number): Promise<boolean> {
     return Promise.resolve(false);
   }
 
-  const socket = net.connect(port, "127.0.0.1").setTimeout(1000);
+  const socket = net.connect(port, "::").setTimeout(1000);
 
   return new Promise((resolve) => {
-    socket.on("error", () => {
+    socket.on("error", (error) => {
       socket.destroy();
       reportStatus("failed");
-      reportError({ message: `Failed to connect to TCP server at localhost:${port}` });
+      reportError({ message: `Failed to connect to TCP server at localhost:${port}`, data: { error } });
       resolve(false);
     });
 
@@ -86,7 +86,7 @@ function tryListen(win: BrowserWindow, port: number): Promise<net.Server | null>
       resolve(server);
     });
 
-    server.listen(port, "127.0.0.1");
+    server.listen(port, "::");
   });
 }
 

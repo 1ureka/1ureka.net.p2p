@@ -93,7 +93,7 @@ async function createHostBridge(win: BrowserWindow, port: number) {
         return;
       }
 
-      const socket = net.connect(port, "127.0.0.1");
+      const socket = net.connect(port, "::");
       socketLifecycle.bind(socket, socketId);
     }
 
