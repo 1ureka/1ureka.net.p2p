@@ -3,8 +3,8 @@
 
 import net from "net";
 import { ipcMain, type BrowserWindow } from "electron";
-import { createReporter } from "./bridgeReport";
-import { checkLock, tryConnect, tryListen } from "./bridgeUtils";
+import { createReporter } from "./bridge-report";
+import { checkLock, tryConnect, tryListen } from "./bridge-utils";
 import { createChunker, createReassembler, PacketEvent } from "./packet";
 
 /**

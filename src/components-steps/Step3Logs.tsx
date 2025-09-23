@@ -1,6 +1,6 @@
 import { Box, Typography } from "@mui/material";
 import { AnimatePresence, motion } from "motion/react";
-import type { BridgeLogEntry } from "@/native/bridgeReport";
+import type { BridgeLogEntry } from "@/native/bridge-report";
 import { ellipsisSx } from "@/components/utils";
 
 const formatData = (data: Record<string, unknown>) => {

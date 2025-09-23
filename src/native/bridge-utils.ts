@@ -1,5 +1,5 @@
 import net from "net";
-import { createReporter, getLock } from "./bridgeReport";
+import { createReporter, getLock } from "./bridge-report";
 import type { BrowserWindow } from "electron";
 
 function checkLock(win: BrowserWindow): boolean {
