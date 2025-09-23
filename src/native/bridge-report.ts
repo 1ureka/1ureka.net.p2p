@@ -22,6 +22,12 @@ const store = createStore<State>(() => ({
 
 const getLock = () => store.getState().status === "connecting" || store.getState().status === "connected";
 
+const getReportMethods = (level: "info" | "warn" | "error") => {
+  if (level === "info") return console.log;
+  if (level === "warn") return console.warn;
+  return console.error;
+};
+
 const createReporter = (module: string, win: BrowserWindow) => {
   const reportLog = (entry: Omit<BridgeLogEntry, "level" | "timestamp" | "module">) =>
     report({ ...entry, level: "info" });
@@ -30,19 +36,16 @@ const createReporter = (module: string, win: BrowserWindow) => {
   const reportWarn = (entry: Omit<BridgeLogEntry, "level" | "timestamp" | "module">) =>
     report({ ...entry, level: "warn" });
 
-  const reportMethods = { info: console.log, warn: console.warn, error: console.error };
-
   const report = (entry: Omit<BridgeLogEntry, "timestamp" | "module">) => {
     const timestamp = Date.now();
     const logEntry: BridgeLogEntry = { ...entry, module, timestamp };
 
+    const { level, message, data } = logEntry;
+    getReportMethods(level)(module, level.toUpperCase(), message, data ?? "");
+
     store.setState((prev) => {
       const history = [...prev.history, logEntry].slice(-100);
       win.webContents.send("bridge.history", history);
-
-      const { level, message, data } = logEntry;
-      reportMethods[level](module, level.toUpperCase(), message, data ?? "");
-
       return { ...prev, history };
     });
   };
