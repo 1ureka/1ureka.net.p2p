@@ -2,7 +2,17 @@
 
 ## 專案概述
 
-1ureka P2P 橋接工具是一個基於 Electron 的桌面應用程式，主要功能是在兩個對等端之間建立 WebRTC 連接，並提供 TCP 與 WebRTC 之間的數據橋接服務，使傳統的基於 TCP 的應用程式能夠透過 P2P 網路進行通信。
+1ureka P2P 橋接工具是一個基於 Electron 的桌面應用程式，主要功能是在兩個對等端之間建立 WebRTC 連接，並提供 TCP 與 WebRTC 之間的數據橋接服務，使傳統的基於 TCP 的應用程式能夠透過 P2P 網路進行通訊，應用分為兩種模式：
+
+1. **Host 模式 (服務提供者)**：
+   - 將任意本地 TCP 服務（如遊戲伺服器、HTTP 伺服器等）透過 WebRTC 暴露給遠端客戶端
+   - 管理多個並發 TCP 連線
+   - 支援連線監控與狀態回報
+
+2. **Client 模式 (服務使用者)**：
+   - 在本地建立假 TCP 伺服器，接受本地應用程式連線
+   - 假 TCP 伺服器將本地應用程式的 TCP 連線透過 WebRTC 轉發到遠端 Host
+   - 支援多個本地應用程式同時連線
 
 ## 架構設計
 
@@ -44,28 +54,31 @@ flowchart
 
 負責 P2P 連線的建立與數據傳輸。特別利用 **Electron 的跨平台特性**，讓 WebRTC API 能在桌面環境下穩定運行，省去自行安裝 WebRTC 依賴的麻煩。主要功能包括：
 
-- **信令交換**：透過中央信令伺服器 (1ureka.vercel.app) 交換 SDP offer/answer 和 ICE candidates
-- **IPC 橋接**：監聽來自主進程的 `bridge.data.tcp` 事件，並將接收到的 WebRTC 數據透過 `bridge.data.rtc` 事件轉發給主進程
+- **信令交換**
+  透過中央信令伺服器 (1ureka.vercel.app) 交換 SDP offer/answer 和 ICE candidates
+- **IPC 橋接**
+  監聽來自主進程的 `bridge.data.tcp` 事件，並將接收到的 WebRTC 數據透過 `bridge.data.rtc` 事件轉發給主進程
+- **數據緩衝**
+  TODO: 說明 src/native/webrtcUtils.ts
 
 ### Bridge 模組 (主進程)
 
 負責 TCP 與 WebRTC 之間的數據轉換與傳輸，負責：
 
+- **連線管理**
+  Client 接收到新的 TCP 連線請求時，會為其分配唯一的 `socketId` ，並傳送 `CONNECT` 封包通知 Host 建立對應的 socket 連線
 - **數據轉發**
   將來自 WebRTC 的 `DATA` 封包解包後寫入對應的 TCP socket
 - **生命週期追蹤**
-  監聽 TCP socket 的 `error`、`data`、`close` 事件，並透過自製封包格式通知對端
-
-根據應用場景分為兩個子模組：
-
-- **Client Bridge**
-  建立一個**假的 TCP 服務**讓本地應用程式連接，會為每個新連線分配唯一的 `socketId` ，並呼叫 `CONNECT` 封包通知 Host 建立對應的 socket 連線
-- **Host Bridge**
-  負責連接到本地**真實的 TCP 服務**。當接收到來自 Client 的連線請求時，建立新的對應 TCP socket 連線到指定 port
+  監聽 TCP socket 的 `error`、`data`、`close` 事件，傳送 `DATA` 或 `CLOSE` 封包給對端
+- **資源管理**
+  當 socket 自身發生 `error` 或 `close` 時，會自動釋放相關資源，對端則會因為收到 `CLOSE` 封包而釋放對應資源
 
 所有模組透過 **Electron IPC** 和 **自訂封包格式** 協同工作，實現完整的 TCP over WebRTC 隧道，讓兩端的傳統 TCP 應用程式能夠透過 P2P 網路進行通信。
 
-### 單次往返
+### 流程圖
+
+以下是單次 TCP 請求從本地應用程式到本地服務器的數據流向：
 
 ```mermaid
 sequenceDiagram
