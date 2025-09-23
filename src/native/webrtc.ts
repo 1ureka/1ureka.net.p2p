@@ -182,10 +182,12 @@ const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
   // 設置清理函數，當 DataChannel 關閉時移除監聽器
   dataChannel.onclose = () => {
     window.electron.off("bridge.data.tcp", handleIPCMessage);
+    sender.close();
   };
 
   dataChannel.onerror = (error) => {
     window.electron.off("bridge.data.tcp", handleIPCMessage);
+    sender.close();
   };
 };
 

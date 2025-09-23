@@ -47,6 +47,9 @@ function createDataChannelSender(dataChannel: RTCDataChannel, threshold = 64 * 1
       queue.push(chunk);
       drainQueue();
     },
+    close() {
+      queue.length = 0;
+    },
   };
 }
 
