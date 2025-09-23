@@ -17,8 +17,8 @@ const createSocketLifecycle = (sockets: Map<number, net.Socket>, win: BrowserWin
     reportLog({ message: `New socket ${socketId} connected.` });
     sockets.set(socketId, socket);
 
-    const { splitPayload } = createChunker(socketId);
-    for (const packet of splitPayload(PacketEvent.CONNECT, Buffer.alloc(0))) {
+    const { generateChunks } = createChunker(socketId);
+    for (const packet of generateChunks(PacketEvent.CONNECT, Buffer.alloc(0))) {
       win.webContents.send("bridge.data.tcp", packet);
     }
 
@@ -32,7 +32,7 @@ const createSocketLifecycle = (sockets: Map<number, net.Socket>, win: BrowserWin
 
     socket.on("data", (chunk) => {
       try {
-        for (const packet of splitPayload(PacketEvent.DATA, chunk)) {
+        for (const packet of generateChunks(PacketEvent.DATA, chunk)) {
           win.webContents.send("bridge.data.tcp", packet);
         }
       } catch (error) {
@@ -42,7 +42,7 @@ const createSocketLifecycle = (sockets: Map<number, net.Socket>, win: BrowserWin
 
     socket.on("close", () => {
       try {
-        for (const packet of splitPayload(PacketEvent.CLOSE, Buffer.alloc(0))) {
+        for (const packet of generateChunks(PacketEvent.CLOSE, Buffer.alloc(0))) {
           win.webContents.send("bridge.data.tcp", packet);
         }
       } catch (error) {

@@ -1,10 +1,3 @@
-/**
- * 封包處理模組
- *
- * 支援將 TCP 訊息封裝成帶有 Header 的 chunk，並在對端重組還原
- * Header 格式詳見 README.md
- */
-
 // Header 常數定義
 const HEADER_SIZE = 11; // 11 bytes 固定 header 大小
 const MAX_PAYLOAD_SIZE = 65525; // 最大 payload 大小 (65535 - HEADER_SIZE + 1)
@@ -19,7 +12,7 @@ export enum PacketEvent {
   CONNECT = 2,
 }
 
-// 封包 Header 結構
+// 封包 Header 結構，格式詳見 README.md
 interface PacketHeader {
   event: PacketEvent; // 事件類型 (0=DATA, 1=CLOSE, 2=CONNECT, …)
   socketId: number; // 對應一條 TCP socket 連線 (0-65535)
@@ -33,7 +26,6 @@ interface PacketHeader {
 interface ReassemblerEntry {
   chunks: Map<number, Buffer>; // chunkIndex -> payload
   totalChunks: number;
-  receivedChunks: number;
   createdAt: number; // timestamp for cleanup
 }
 
@@ -130,24 +122,32 @@ function decodePacket(packet: Buffer): { header: PacketHeader; payload: Buffer }
 /**
  * 建立 Chunker，用於將訊息切割成多個 chunk
  */
-export function createChunker(socketId: number) {
-  if (socketId > MAX_SOCKET_ID) {
-    throw new Error(`Socket ID ${socketId} exceeds maximum ${MAX_SOCKET_ID}`);
-  }
-
-  let currentChunkId = 0; // 在 closure 中維護的 chunk_id 計數器
+function createChunker(socketId: number) {
+  type GeneratorReturnType = Generator<Buffer, void, unknown>;
+  type Counter = number;
+  let currentCount: Counter = 0;
 
   /**
-   * 將大訊息切割成多個 chunk (Generator 函數)
+   * 使用並遞增指定 socket 的 currentCount，循環使用 0~65535 (原因請參考 README.md，不需 review)
    */
-  function* splitPayload(event: PacketEvent, data: Buffer): Generator<Buffer, void, unknown> {
-    // 使用並遞增 chunk_id，循環使用 0~65535 (原因請參考 README.md，不需 review)
-    const chunkId = currentChunkId;
-    currentChunkId = (currentChunkId + 1) % (MAX_CHUNK_ID + 1);
+  const getCurrentCount = (): number => {
+    const count = currentCount;
+    currentCount = (currentCount + 1) % (MAX_CHUNK_ID + 1);
+    return count;
+  };
+
+  /**
+   * 將單個大訊息切割成多個 chunk ，每次使用時會消耗一次內部的 chunk_id (Generator 函數)
+   */
+  const generateChunks = function* (event: PacketEvent, data: Buffer): GeneratorReturnType {
+    if (socketId < 0 || socketId > MAX_SOCKET_ID) {
+      throw new Error(`Socket ID ${socketId} exceeds maximum ${MAX_SOCKET_ID}`);
+    }
+
+    const chunkId = getCurrentCount();
 
     // 計算需要多少個 chunk
     const totalChunks = Math.max(1, Math.ceil(data.length / MAX_PAYLOAD_SIZE));
-
     if (totalChunks > MAX_TOTAL_CHUNKS) {
       throw new Error(`Data too large: requires ${totalChunks} chunks, maximum is ${MAX_TOTAL_CHUNKS}`);
     }
@@ -162,119 +162,97 @@ export function createChunker(socketId: number) {
       const header: PacketHeader = { event, socketId, chunkId, chunkIndex, totalChunks, payloadSize };
       yield encodePacket(header, payload);
     }
-  }
+  };
 
-  /**
-   * 取得目前的 chunk_id 值（用於偵錯）
-   */
-  function getCurrentChunkId(): number {
-    return currentChunkId;
-  }
+  return { generateChunks };
+}
 
-  return { splitPayload, getCurrentChunkId };
+/**
+ * 建立重組器映射，用於管理未完成的重組任務
+ */
+function createReassemblerMap(entryTimeout: number) {
+  const map = new Map<string, ReassemblerEntry>(); // key: `${socketId}:${chunkId}`
+
+  const prune = () => {
+    const now = Date.now();
+    for (const [key, entry] of map.entries()) {
+      if (now - entry.createdAt > entryTimeout) map.delete(key);
+    }
+  };
+
+  const get = (socketId: number, chunkId: number, totalChunks: number): ReassemblerEntry => {
+    const key = `${socketId}:${chunkId}`;
+    let entry = map.get(key);
+    if (!entry || entry.totalChunks !== totalChunks) {
+      entry = { chunks: new Map(), totalChunks, createdAt: Date.now() };
+      map.set(key, entry);
+    }
+    return entry;
+  };
+
+  const getStats = () => ({
+    size: map.size,
+    entries: Array.from(map.entries()).map(([key, entry]) => ({
+      key,
+      receivedChunks: entry.chunks.size,
+      totalChunks: entry.totalChunks,
+      age: Date.now() - entry.createdAt,
+    })),
+  });
+
+  const remove = (socketId: number, chunkId: number) => {
+    const key = `${socketId}:${chunkId}`;
+    map.delete(key);
+  };
+
+  const clear = () => map.clear();
+
+  return { get, remove, clear, getStats, prune };
 }
 
 /**
  * 建立重組器，用於將接收到的 chunk 重組成完整訊息
  */
-export function createReassembler() {
-  const reassemblerMap = new Map<string, ReassemblerEntry>(); // key: `${socketId}:${chunkId}`
-  const CLEANUP_INTERVAL = 30000; // 30秒清理一次
-  const ENTRY_TIMEOUT = 60000; // 60秒未完成的項目會被清理
-
-  // 定期清理超時的重組項目
-  const cleanupTimer = setInterval(() => {
-    const now = Date.now();
-    for (const [key, entry] of reassemblerMap.entries()) {
-      if (now - entry.createdAt > ENTRY_TIMEOUT) reassemblerMap.delete(key);
-    }
-  }, CLEANUP_INTERVAL);
+function createReassembler() {
+  const reassemblerMap = createReassemblerMap(60000); // 60秒未完成的項目會被清理
 
   /**
    * 處理接收到的封包，如果完整訊息重組完成則回傳完整資料
    */
   function processPacket(packet: Buffer): { socketId: number; event: PacketEvent; data: Buffer } | null {
+    reassemblerMap.prune();
+
     const { header, payload } = decodePacket(packet);
     const { socketId, chunkId, chunkIndex, totalChunks, event } = header;
-
-    // 如果只有一個 chunk，直接回傳
     if (totalChunks === 1) {
       return { socketId, event, data: payload };
     }
 
-    // 多 chunk 情況，需要重組
-    const key = `${socketId}:${chunkId}`;
-
-    // 取得或建立重組項目
-    let entry = reassemblerMap.get(key);
-    if (!entry) {
-      entry = { chunks: new Map(), totalChunks, receivedChunks: 0, createdAt: Date.now() };
-      reassemblerMap.set(key, entry);
-    }
-
-    // 檢查 totalChunks 是否一致
-    if (entry.totalChunks !== totalChunks) {
-      // 清理並重新開始
-      reassemblerMap.delete(key);
-      entry = { chunks: new Map(), totalChunks, receivedChunks: 0, createdAt: Date.now() };
-      reassemblerMap.set(key, entry);
-    }
-
-    // 如果已經有這個 chunk，忽略（避免重複）
-    if (entry.chunks.has(chunkIndex)) {
+    const entry = reassemblerMap.get(socketId, chunkId, totalChunks);
+    entry.chunks.set(chunkIndex, payload);
+    if (entry.chunks.size !== totalChunks) {
       return null;
     }
 
-    // 儲存 chunk
-    entry.chunks.set(chunkIndex, payload);
-    entry.receivedChunks++;
+    // 重組完整訊息
+    const chunks = Array.from(entry.chunks.entries())
+      .sort(([a], [b]) => a - b)
+      .map(([, buf]) => buf);
 
-    // 檢查是否完整
-    if (entry.receivedChunks === totalChunks) {
-      // 重組完整訊息
-      const chunks: Buffer[] = [];
-      for (let i = 0; i < totalChunks; i++) {
-        const chunk = entry.chunks.get(i);
-        if (!chunk) {
-          // 這不應該發生，但為了安全起見
-          reassemblerMap.delete(key);
-          return null;
-        }
-        chunks.push(chunk);
-      }
-
-      // 清理
-      reassemblerMap.delete(key);
-
-      return { socketId, event, data: Buffer.concat(chunks) };
+    // 理論上不應該發生，但保險起見還是檢查
+    if (chunks.length !== totalChunks) {
+      reassemblerMap.remove(socketId, chunkId);
+      return null;
     }
 
-    // 還沒重組完成
-    return null;
+    // 清理並回傳完整訊息
+    reassemblerMap.remove(socketId, chunkId);
+    return { socketId, event, data: Buffer.concat(chunks) };
   }
 
-  /**
-   * 清理重組器資源
-   */
-  function cleanup() {
-    clearInterval(cleanupTimer);
-    reassemblerMap.clear();
-  }
-
-  /**
-   * 取得目前重組器統計資訊
-   */
-  function getStats() {
-    return {
-      pendingReassembly: reassemblerMap.size,
-      entries: Array.from(reassemblerMap.entries()).map(([key, entry]) => ({
-        key,
-        receivedChunks: entry.receivedChunks,
-        totalChunks: entry.totalChunks,
-        age: Date.now() - entry.createdAt,
-      })),
-    };
-  }
-
-  return { processPacket, cleanup, getStats };
+  // 暴露統計資訊和清理函數
+  const { getStats, clear } = reassemblerMap;
+  return { processPacket, close: clear, getStats };
 }
+
+export { createChunker, createReassembler };
