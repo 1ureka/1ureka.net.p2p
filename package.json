@@ -1,8 +1,8 @@
 {
-  "name": "1ureka.template",
-  "productName": "1ureka.template",
+  "name": "1ureka.net.p2p",
+  "productName": "1ureka.net.p2p",
   "version": "1.0.0",
-  "description": "My Electron application description",
+  "description": "An Electron desktop app that bridges TCP and WebRTC, making any TCP service instantly P2P-capable.",
   "main": ".vite/build/main.js",
   "scripts": {
     "start": "electron-forge start",
