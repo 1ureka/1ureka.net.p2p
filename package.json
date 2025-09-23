@@ -10,7 +10,7 @@
     "make": "electron-forge make",
     "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx .",
-    "test": "vitest --config vitest.config.mjs",
+    "test": "vitest run --config vitest.config.mjs",
     "clean": "node -e \"['out','.vite','dist'].forEach(d=>require('fs').rmSync(d,{recursive:true,force:true}))\""
   },
   "keywords": [],
