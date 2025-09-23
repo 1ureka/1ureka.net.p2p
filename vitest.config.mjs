@@ -5,5 +5,6 @@ export default defineConfig({
     include: ["src/native-test/**/*.test.ts"],
     globals: false,
     environment: "node",
+    slowTestThreshold: 1000,
   },
 });

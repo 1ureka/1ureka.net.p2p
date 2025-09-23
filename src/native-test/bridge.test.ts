@@ -13,7 +13,7 @@ class MockElectronApp {
   private sendRTC(data: Buffer) {
     setTimeout(() => {
       this.peerApp?.receiveRTC("bridge.data.rtc", data);
-    }, 100);
+    }, 50);
   }
 
   private receiveRTC(channel: string, data: Buffer) {
@@ -31,8 +31,8 @@ class MockElectronApp {
 }
 
 // TODO: 增加反向，也就是 server 先關閉
-describe("Bridge end-to-end", () => {
-  it("test", async () => {
+describe("橋接端到端測試", () => {
+  it("應該能透過橋接成功完成 echo", async () => {
     const IpcMain_H = new EventEmitter();
     const IpcMain_C = new EventEmitter();
 
@@ -71,6 +71,7 @@ describe("Bridge end-to-end", () => {
     tcpClient.destroy();
     echoServer.close();
 
-    await new Promise((res) => setTimeout(res, 1000));
+    // 用於看 socket close 的 log，確保橋接端有正確關閉
+    await new Promise((res) => setTimeout(res, 500));
   }, 5000);
 });
