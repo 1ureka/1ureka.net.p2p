@@ -6,6 +6,7 @@ import { setState } from "@/store/webrtc";
  */
 function createDataChannelSender(dataChannel: RTCDataChannel, threshold = 64 * 1024) {
   const queue: (ArrayBuffer | ArrayBufferView<ArrayBuffer>)[] = [];
+  let closed = false;
   let draining = false;
 
   dataChannel.bufferedAmountLowThreshold = threshold;
@@ -16,6 +17,7 @@ function createDataChannelSender(dataChannel: RTCDataChannel, threshold = 64 * 1
 
     if (dataChannel.readyState !== "open") {
       setState({ error: "Received data when DataChannel is not open" });
+      draining = false;
       return;
     }
 
@@ -37,18 +39,24 @@ function createDataChannelSender(dataChannel: RTCDataChannel, threshold = 64 * 1
     draining = false;
   }
 
-  dataChannel.addEventListener("bufferedamountlow", () => {
+  const onBufferedAmountLow = () => {
     draining = false;
     drainQueue();
-  });
+  };
+
+  dataChannel.addEventListener("bufferedamountlow", onBufferedAmountLow);
 
   return {
     push(chunk: ArrayBuffer | ArrayBufferView<ArrayBuffer>) {
+      if (closed) return;
       queue.push(chunk);
       drainQueue();
     },
     close() {
+      if (closed) return;
+      closed = true;
       queue.length = 0;
+      dataChannel.removeEventListener("bufferedamountlow", onBufferedAmountLow);
     },
   };
 }
