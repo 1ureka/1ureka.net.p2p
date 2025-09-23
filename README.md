@@ -59,7 +59,7 @@ flowchart
 - **IPC 橋接**
   監聽來自主進程的 `bridge.data.tcp` 事件，並將接收到的 WebRTC 數據透過 `bridge.data.rtc` 事件轉發給主進程
 - **數據緩衝**
-  TODO: 說明 src/native/webrtcUtils.ts
+  透過實作內部佇列和緩衝區監控，確保在 DataChannel 緩衝區滿時不會因為阻塞而導致速度變慢
 
 ### Bridge 模組 (主進程)
 
