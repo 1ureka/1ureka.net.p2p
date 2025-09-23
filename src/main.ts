@@ -1,9 +1,7 @@
 import { app, BrowserWindow, Menu, ipcMain } from "electron";
 import path from "node:path";
 import started from "electron-squirrel-startup";
-import { createClientBridge, createHostBridge } from "./native/bridge";
-import { TestClient } from "./native-test/client";
-import { TestServer } from "./native-test/server";
+import { createBridge } from "./native/bridge";
 
 Menu.setApplicationMenu(null);
 
@@ -30,21 +28,11 @@ const createWindow = () => {
   mainWindow.webContents.openDevTools();
 
   ipcMain.on("bridge.start.host", (event, port) => {
-    createHostBridge(mainWindow, port);
+    createBridge(mainWindow, port, "host");
   });
 
   ipcMain.on("bridge.start.client", (event, port) => {
-    createClientBridge(mainWindow, port);
-  });
-
-  ipcMain.on("test.server", () => {
-    const server = new TestServer();
-    server.start();
-  });
-
-  ipcMain.on("test.client", () => {
-    const client = new TestClient();
-    client.connect();
+    createBridge(mainWindow, port, "client");
   });
 };
 
