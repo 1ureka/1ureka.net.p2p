@@ -150,17 +150,20 @@ async function createClientBridge(win: BrowserWindow, port: number) {
 
     const { socketId, event, data } = msg;
     const socket = sockets.get(socketId);
-    if (!socket) {
-      reportError({ message: `Socket ${socketId} does not exist, cannot process incoming packet.` });
-      return;
-    }
 
-    if (event === PacketEvent.DATA && socket.writable) {
+    if (event === PacketEvent.DATA) {
+      if (!socket) {
+        return reportError({ message: `Socket ${socketId} does not exist, cannot process incoming packet.` });
+      }
+      if (!socket.writable) {
+        return reportError({ message: `Socket ${socketId} is not writable, cannot process incoming packet.` });
+      }
+
       socket.write(data);
     }
 
     if (event === PacketEvent.CLOSE) {
-      socket.destroy();
+      socket?.destroy();
       reportLog({ message: `TCP socket closed by remote server for socket ${socketId}` });
     }
   });
