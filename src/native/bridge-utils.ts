@@ -17,6 +17,14 @@ function checkLock(win: BrowserWindow): boolean {
 
 function tryConnect(win: BrowserWindow, port: number): Promise<boolean> {
   const { reportLog, reportError, reportStatus } = createReporter("Bridge", win);
+
+  // 驗證 port 範圍
+  if (port < 0 || port > 65535 || !Number.isInteger(port)) {
+    reportStatus("failed");
+    reportError({ message: `Invalid port number: ${port}. Port must be between 0 and 65535` });
+    return Promise.resolve(false);
+  }
+
   const socket = net.connect(port, "127.0.0.1").setTimeout(1000);
 
   return new Promise((resolve) => {
@@ -46,6 +54,13 @@ function tryConnect(win: BrowserWindow, port: number): Promise<boolean> {
 function tryListen(win: BrowserWindow, port: number): Promise<net.Server | null> {
   const { reportLog, reportError, reportStatus } = createReporter("Bridge", win);
   const server = net.createServer();
+
+  // 驗證 port 範圍
+  if (port < 0 || port > 65535 || !Number.isInteger(port)) {
+    reportStatus("failed");
+    reportError({ message: `Invalid port number: ${port}. Port must be between 0 and 65535` });
+    return Promise.resolve(null);
+  }
 
   return new Promise((resolve) => {
     // 設置超時，如果 1 秒內無法監聽則認為失敗
