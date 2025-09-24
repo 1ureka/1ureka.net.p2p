@@ -255,12 +255,8 @@ const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
   const sender = createDataChannelSender(dataChannel);
 
   // register
-  dataChannel.onmessage = (event) => {
-    /* ...轉發到 IPC... */
-  };
-  const handleIPCMessage = (buffer: unknown) => {
-    /* ...轉發到 DataChannel... */
-  };
+  dataChannel.onmessage = (event) => /* ...轉發到 IPC... */;
+  const handleIPCMessage = (buffer: unknown) => /* ...轉發到 DataChannel... */;
   window.electron.on("bridge.data.tcp", handleIPCMessage);
 
   // unregister
@@ -272,5 +268,21 @@ const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
     window.electron.off("bridge.data.tcp", handleIPCMessage);
     sender.close();
   };
+};
+```
+
+### 範例：DataChannel 流量監控
+
+```ts
+const bindDataChannelMonitor = (dataChannel, onUpdate) => {
+  // register
+  dataChannel.addEventListener("message", (e) =>  /* 計算輸入流量 */ );
+  const originalSend = dataChannel.send.bind(dataChannel);
+  dataChannel.send = (data) =>  /* 計算輸出流量 */, originalSend(data);
+
+  // unregister
+  const cleanup = () => { dataChannel.send = originalSend; /* 移除監聽 */ };
+  dataChannel.addEventListener("close", cleanup);
+  dataChannel.addEventListener("error", cleanup);
 };
 ```
