@@ -1,6 +1,3 @@
-// store/webrtc.ts, store/bridge.ts 是用於讓 UI 知道目前的連線狀態
-// native/webrtc.ts, native/bridge.ts 是用於處理實際的連線邏輯
-
 import { tryCatch } from "@/utils";
 import { z } from "zod";
 import { getLock, setState } from "@/store/webrtc";
@@ -138,11 +135,6 @@ const createDataChannel = (peerConnection: RTCPeerConnection) => {
 };
 
 const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
-  // 暫時用於測試 DataChannel 是否可用
-  //   const testCode = crypto.randomUUID();
-  //   console.log(`DataChannel opened, test code: ${testCode}`);
-  //   dataChannel.send(`Hello from data channel! This is a test message with code: ${testCode}`);
-  //   dataChannel.onmessage = (event) => console.log("Received message:", event.data);
   const sender = createDataChannelSender(dataChannel);
 
   // DataChannel → IPC: 當 DataChannel 收到資料時，轉發到主程序的橋接邏輯
