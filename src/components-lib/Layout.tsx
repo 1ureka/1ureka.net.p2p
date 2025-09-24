@@ -1,6 +1,8 @@
+import { ellipsisSx } from "@/components/utils";
 import { type PaperProps, Paper } from "@mui/material";
 import { type BoxProps, Box } from "@mui/material";
 import { type ButtonProps, Button } from "@mui/material";
+import { type TypographyProps, Typography } from "@mui/material";
 
 const defaultLayoutSx = { display: "grid", gap: 0.5 } as const;
 
@@ -38,10 +40,41 @@ const LayoutButton = ({ sx, ...props }: ButtonProps) => {
       variant="contained"
       disableElevation
       fullWidth
-      sx={{ "&:hover": { bgcolor: "primary.light" }, p: 1, mt: 1, ...sx }}
+      sx={{ "&:hover": { bgcolor: "primary.light" }, p: 1, my: 1, ...sx }}
       {...props}
     />
   );
 };
 
-export { LayoutColumn, LayoutRow, LayoutBox, LayoutButton };
+const LayoutTitle = ({ sx, ...props }: TypographyProps) => {
+  return (
+    <Typography
+      variant="body1"
+      component="h2"
+      sx={{
+        color: "text.primary",
+        ...ellipsisSx,
+        ...sx,
+      }}
+      {...props}
+    />
+  );
+};
+
+const LayoutText = ({ sx, ...props }: TypographyProps) => {
+  return (
+    <Typography
+      variant="body2"
+      component="p"
+      sx={{
+        color: "text.secondary",
+        ...ellipsisSx,
+        WebkitLineClamp: 2,
+        ...sx,
+      }}
+      {...props}
+    />
+  );
+};
+
+export { LayoutColumn, LayoutRow, LayoutBox, LayoutButton, LayoutTitle, LayoutText };

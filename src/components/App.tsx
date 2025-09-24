@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { LayoutBox, LayoutButton } from "@/components-lib/Layout";
-import { EnumState, NumberState } from "@/components-lib/Prop";
+import { LayoutBox, LayoutButton, LayoutRow, LayoutText, LayoutTitle } from "@/components-lib/Layout";
+import { EnumProperty, NumberProperty } from "@/components-lib/Property";
 
 enum Mode {
   ADD = "ADD",
@@ -14,7 +14,12 @@ const App = () => {
 
   return (
     <LayoutBox sx={{ width: 450, margin: "auto", mt: 5 }}>
-      <EnumState
+      <LayoutRow>
+        <LayoutTitle>Pick role</LayoutTitle>
+      </LayoutRow>
+      <LayoutText>This is a simple app demonstrating the use of custom properties and layout components.</LayoutText>
+
+      <EnumProperty
         id="mode"
         value={mode}
         onChange={(newMode) => setMode(newMode)}
@@ -25,7 +30,7 @@ const App = () => {
         ]}
       />
 
-      <NumberState value={value} onChange={(newValue) => setValue(newValue)} />
+      <NumberProperty value={value} onChange={(newValue) => setValue(newValue)} />
 
       <LayoutButton onClick={() => alert(`Current mode: ${mode}`)}>Show Mode</LayoutButton>
     </LayoutBox>

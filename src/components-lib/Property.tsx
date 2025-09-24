@@ -3,16 +3,16 @@ import { LayoutBox, LayoutRow } from "./Layout";
 import { useRef, useState, useCallback, useEffect } from "react";
 import { motion } from "motion/react";
 import { theme } from "@/renderer";
-import { transition } from "@/components/utils";
+import { ellipsisSx, transition } from "@/components/utils";
 
-type EnumStateProps<T extends string> = {
+type EnumProps<T extends string> = {
   id: string;
   value: T;
   onChange: (newValue: T) => void;
   items: { value: T; label: string }[];
 };
 
-const EnumState = <T extends string>({ id, value, onChange, items }: EnumStateProps<T>) => {
+const EnumProperty = <T extends string>({ id, value, onChange, items }: EnumProps<T>) => {
   return (
     <LayoutBox sx={{ p: 0.5 }}>
       <LayoutRow sx={{ gap: 0.5 }}>
@@ -22,7 +22,9 @@ const EnumState = <T extends string>({ id, value, onChange, items }: EnumStatePr
             onClick={() => onChange(item.value)}
             sx={{ py: 1, borderRadius: 1, "&:hover": { bgcolor: "action.hover" }, transition }}
           >
-            <Typography variant="button">{item.label}</Typography>
+            <Typography variant="button" sx={ellipsisSx}>
+              {item.label}
+            </Typography>
             {item.value === value && (
               <motion.div
                 layout
@@ -43,18 +45,18 @@ const EnumState = <T extends string>({ id, value, onChange, items }: EnumStatePr
   );
 };
 
-type NumberStateProps = {
+type NumberProps = {
   value: number;
-  onChange: (newValue: number) => void;
+  onChange: (value: number) => void;
 };
 
-const NumberState = ({ value, onChange }: NumberStateProps) => {
+const NumberProperty = ({ value, onChange }: NumberProps) => {
   return (
     <Input
       value={value}
       onChange={(e) => {
-        const newValue = Number(e.target.value);
-        onChange(newValue);
+        const value = Number(e.target.value);
+        onChange(value);
       }}
       size="small"
       fullWidth
@@ -74,4 +76,4 @@ const NumberState = ({ value, onChange }: NumberStateProps) => {
   );
 };
 
-export { EnumState, NumberState };
+export { EnumProperty, NumberProperty };
