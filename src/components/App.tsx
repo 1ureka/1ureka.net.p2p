@@ -1,6 +1,8 @@
 import LanRoundedIcon from "@mui/icons-material/LanRounded";
 import { Box, Typography } from "@mui/material";
 import { useFormStore } from "@/store/form";
+import { useBridge } from "@/store/bridge";
+import { useWebRTC } from "@/store/webrtc";
 import type { Role } from "@/native/webrtc";
 
 import { LayoutBox, LayoutButton, LayoutColumn, LayoutRow } from "@/components-lib/Layout";
@@ -28,6 +30,7 @@ const WebRTCPanel = () => {
   const setRole = useFormStore((state) => state.setRole);
   const code = useFormStore((state) => state.code);
   const setCode = useFormStore((state) => state.setCode);
+  const status = useWebRTC((state) => state.status);
 
   const items: Array<{ value: Role; label: string }> = [
     { value: "host", label: "Host" },
@@ -37,7 +40,7 @@ const WebRTCPanel = () => {
   return (
     <LayoutBox>
       <LayoutRow sx={{ alignItems: "center", gridTemplateColumns: "auto 1fr" }}>
-        <ConnectionIndicator status="disconnected" />
+        <ConnectionIndicator status={status} />
         <LayoutTitle>P2P configuration</LayoutTitle>
       </LayoutRow>
 
@@ -55,11 +58,12 @@ const WebRTCPanel = () => {
 const BridgePanel = () => {
   const port = useFormStore((state) => state.port);
   const setPort = useFormStore((state) => state.setPort);
+  const status = useBridge((state) => state.status);
 
   return (
     <LayoutBox>
       <LayoutRow sx={{ alignItems: "center", gridTemplateColumns: "auto 1fr" }}>
-        <ConnectionIndicator status="disconnected" />
+        <ConnectionIndicator status={status} />
         <LayoutTitle>TCP port</LayoutTitle>
       </LayoutRow>
 
@@ -82,7 +86,7 @@ const LogPanel = () => {
         events.
       </LayoutText>
 
-      <LayoutBox sx={{ my: 1 }}>
+      <LayoutBox sx={{ my: 1, "& > div": { gridTemplateRows: "1fr" } }}>
         <ConnectionLogs />
       </LayoutBox>
     </LayoutBox>
