@@ -1,7 +1,7 @@
 import { tryCatch } from "@/utils";
 import { z } from "zod";
 import { getLock, setState } from "@/store/webrtc";
-import { createDataChannelSender } from "./webrtcUtils";
+import { createDataChannelSender } from "./webrtcSender";
 
 // 採用 Vanilla ICE， review 時請 **不准** 提議 Trickle ICE，vercel edge call 很貴
 const API_BASE = "https://1ureka.vercel.app/api/webrtc";
