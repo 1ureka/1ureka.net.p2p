@@ -206,3 +206,71 @@ stateDiagram-v2
     cleanup : 釋放資源並發送 CLOSE 封包給對方
   }
 ```
+
+## WebRTC 架構
+
+在實作上，WebRTC 的連線過程分散於許多步驟：建立 `RTCPeerConnection`、建立唯一的 `RTCDataChannel`、收集與設置 ICE Candidate、設置遠端描述等等。
+為了讓生命週期清楚，專案封裝了一個 **唯一連線的 Session API**：
+
+```ts
+const { getDataChannel, getLocal, setRemote, close } = createWebRTCSession();
+```
+
+- **`getDataChannel(timeout)`**
+  等待唯一的 DataChannel 開啟，並允許設置超時。
+
+- **`getLocal(method, timeout)`**
+  建立並設定本地 SDP（offer 或 answer），同時收集 ICE Candidate（可設置等待時間）。
+
+- **`setRemote(description, candidates)`**
+  設置遠端的 SDP 與 ICE Candidate。
+
+- **`close()`**
+  關閉 PeerConnection 與 DataChannel（冪等，不需擔心重複呼叫）。
+
+> 這層 Session 封裝會在一開始就初始化 **DataChannel** 與 **ICE Candidate 收集**，避免使用者忘記步驟。
+> 其責任是確保 **唯一的 WebRTC 連線生命週期**，上層只需要專注於角色（Host/Client）的流程。
+
+### 插件式綁定（bindXXX）規範
+
+在 WebRTC 模組中，常見的操作如 **DataChannel ↔ IPC 綁定**、**監控流量**、**記錄監控資訊**，都可以被抽象為「插件」。
+為了確保生命週期清晰，每個 `bindXXX` 函數必須遵循以下規範：
+
+- **自給自足**：
+  呼叫 `bindXXX(...)` 即表示完成了該插件的整個註冊過程。呼叫者無需額外呼叫 `unregister` 或 `close`。
+- **責任範圍**：
+  - `register` → 在 `onmessage`、`monkey patch send` 等事件中掛載需要的邏輯。
+  - `unregister` → 必須在 `onclose` / `onerror` 自動移除監聽器、釋放自己創建的資源。
+
+- **框架保證**：
+  核心 `createWebRTCSession` 已經保證整體連線的 **主生命週期**，插件只需管理「自己多出來的部分」。
+- **類似 Blender 插件機制**：
+  - Blender 規範每個插件必須有 `register/unregister`。
+  - 在這裡，`bindXXX` 就是自帶 register/unregister 的函式，應用本身不需要知道如何清理。
+
+### 範例：DataChannel 與 IPC 綁定
+
+```ts
+const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
+  const sender = createDataChannelSender(dataChannel);
+
+  // register
+  dataChannel.onmessage = (event) => {
+    /* ...轉發到 IPC... */
+  };
+  const handleIPCMessage = (buffer: unknown) => {
+    /* ...轉發到 DataChannel... */
+  };
+  window.electron.on("bridge.data.tcp", handleIPCMessage);
+
+  // unregister
+  dataChannel.onclose = () => {
+    window.electron.off("bridge.data.tcp", handleIPCMessage);
+    sender.close();
+  };
+  dataChannel.onerror = () => {
+    window.electron.off("bridge.data.tcp", handleIPCMessage);
+    sender.close();
+  };
+};
+```
