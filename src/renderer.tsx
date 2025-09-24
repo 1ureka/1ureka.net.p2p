@@ -2,34 +2,23 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
-import { Stack } from "@mui/material";
 
-import "./renderer.css";
+import "@/renderer.css";
+import { App } from "@/components/App";
 
-import { Background } from "./components/Background";
-import { Header } from "./components/Header";
-import { Footer } from "./components/Footer";
-import { Body } from "./components/Body";
-
-const App = () => {
-  return (
-    <Stack sx={{ position: "fixed", inset: 0 }}>
-      <Background />
-      <Header />
-      <Body />
-      <Footer />
-    </Stack>
-  );
-};
-
-const theme = createTheme({
+export const theme = createTheme({
   palette: {
     mode: "dark",
     primary: { main: "#71A5BF" },
-    background: { default: "#202020", paper: "#202020" },
+    background: { default: "#3C3C3C", paper: "#0005" },
   },
-  typography: { fontFamily: `"jf openhuninn"`, fontSize: 14, button: { fontSize: "1rem" } },
+  typography: {
+    fontFamily: `"Comfortaa", "jf openhuninn"`,
+    fontSize: 14,
+    button: { textTransform: "none", lineHeight: 1.2 },
+  },
   spacing: "0.5rem",
+  shape: { borderRadius: 6 },
 });
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
