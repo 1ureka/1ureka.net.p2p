@@ -29,7 +29,7 @@ const LayoutBox = ({ children, sx, ...props }: PaperProps) => {
       {...props}
       sx={{ position: "relative", p: 1.5, border: "2px solid", borderColor: "divider", ...sx }}
     >
-      <LayoutColumn>{children}</LayoutColumn>
+      <LayoutColumn sx={{ height: 1 }}>{children}</LayoutColumn>
     </Paper>
   );
 };
