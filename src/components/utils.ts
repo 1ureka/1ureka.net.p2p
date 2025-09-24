@@ -19,6 +19,5 @@ export const ellipsisSx = {
   WebkitBoxOrient: "vertical",
   overflow: "hidden",
   textOverflow: "ellipsis",
-  wordBreak: "break-all",
   whiteSpace: "pre-wrap",
 } as const;

@@ -8,7 +8,7 @@ const defaultLayoutSx = { display: "grid", gap: 0.5 } as const;
 
 const LayoutColumn = ({ children, sx, ...props }: BoxProps) => {
   return (
-    <Box {...props} sx={{ ...defaultLayoutSx, gridAutoFlow: "row", ...sx }}>
+    <Box {...props} sx={{ ...defaultLayoutSx, gridAutoFlow: "row", gridAutoRows: "min-content", ...sx }}>
       {children}
     </Box>
   );
@@ -68,8 +68,9 @@ const LayoutText = ({ sx, ...props }: TypographyProps) => {
       component="p"
       sx={{
         color: "text.secondary",
+        "& b": { fontWeight: "bold", color: "text.primary" },
         ...ellipsisSx,
-        WebkitLineClamp: 2,
+        WebkitLineClamp: 3,
         ...sx,
       }}
       {...props}
