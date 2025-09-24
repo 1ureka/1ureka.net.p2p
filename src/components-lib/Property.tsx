@@ -6,7 +6,16 @@ import { motion } from "motion/react";
 
 import { theme } from "@/renderer";
 import { LayoutBox, LayoutRow } from "@/components-lib/Layout";
-import { ellipsisSx, transition } from "@/components/utils";
+
+const transition = "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)";
+const ellipsisSx = {
+  display: "-webkit-box",
+  WebkitLineClamp: 1,
+  WebkitBoxOrient: "vertical",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "pre-wrap",
+} as const;
 
 type EnumProps<T extends string> = {
   id: string;
@@ -208,4 +217,5 @@ const NumberProperty = ({ value, onChange, ...props }: NumberProps) => {
   );
 };
 
+export { transition, ellipsisSx };
 export { EnumProperty, NumberProperty };
