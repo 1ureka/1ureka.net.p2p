@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { Box, Typography } from "@mui/material";
 import LanRoundedIcon from "@mui/icons-material/LanRounded";
+import { Box, Typography } from "@mui/material";
+import { useFormStore } from "@/store/form";
+import type { Role } from "@/native/webrtc";
 
 import { LayoutBox, LayoutButton, LayoutColumn, LayoutRow } from "@/components-lib/Layout";
 import { LayoutText, LayoutTitle } from "@/components-lib/Layout";
@@ -9,7 +10,6 @@ import { EnumProperty, NumberProperty } from "@/components-lib/Property";
 import { Background } from "@/components/Background";
 import { ConnectionIndicator } from "@/components/ConnectionIndicator";
 import { ConnectionLogs } from "@/components/ConnectionLogs";
-import type { Role } from "@/native/webrtc";
 
 const Title = () => (
   <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3, p: 1.5 }}>
@@ -24,8 +24,10 @@ const Title = () => (
 );
 
 const WebRTCPanel = () => {
-  const [role, setRole] = useState<Role>("host");
-  const [code, setCode] = useState(1024);
+  const role = useFormStore((state) => state.role);
+  const setRole = useFormStore((state) => state.setRole);
+  const code = useFormStore((state) => state.code);
+  const setCode = useFormStore((state) => state.setCode);
 
   const items: Array<{ value: Role; label: string }> = [
     { value: "host", label: "Host" },
@@ -51,7 +53,8 @@ const WebRTCPanel = () => {
 };
 
 const BridgePanel = () => {
-  const [port, setPort] = useState(8080);
+  const port = useFormStore((state) => state.port);
+  const setPort = useFormStore((state) => state.setPort);
 
   return (
     <LayoutBox>
