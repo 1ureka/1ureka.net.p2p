@@ -176,7 +176,7 @@ const ensureClosePropagation = (peerConnection: RTCPeerConnection, dataChannel: 
   const close = () => {
     peerConnection.close(); // 根據 w3c ED，其是冪等，因此不需擔心重複呼叫
     // 整段代碼都不該直接呼叫 dataChannel.close()，因為 DataChannel 的生命週期應該被 PeerConnection 綁定
-    setState({ status: "disconnected" });
+    setState({ status: "disconnected", log: "WebRTC connection closed" });
   };
 
   peerConnection.onconnectionstatechange = () => {
