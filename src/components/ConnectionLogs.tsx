@@ -5,6 +5,7 @@ import { ellipsisSx } from "@/components-lib/Property";
 import { useBridge } from "@/store/bridge";
 import { useWebRTC } from "@/store/webrtc";
 import type { ConnectionLogEntry } from "@/store/type";
+import { LayoutBox } from "@/components-lib/Layout";
 
 const formatData = (data: Record<string, unknown>) => {
   try {
@@ -12,10 +13,10 @@ const formatData = (data: Record<string, unknown>) => {
     if (data.error && typeof data.error === "object") {
       const error = data.error as any;
       if (error.message) {
-        return `錯誤: ${error.message}`;
+        return `Error: ${error.message}`;
       }
       if (error.code) {
-        return `錯誤代碼: ${error.code}`;
+        return `Error code: ${error.code}`;
       }
     }
 
@@ -80,19 +81,17 @@ const ConnectionLogs = () => {
         display: "flex",
         flexDirection: "column",
         justifyContent: "flex-end",
-        bgcolor: "background.paper",
         borderRadius: 2,
         p: 1.5,
+        height: 1,
       }}
     >
       {history.length === 0 && (
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}
-        >
-          連接日誌將顯示在此處
-        </Typography>
+        <LayoutBox sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}>
+          <Typography variant="body2" sx={{ textAlign: "center", color: "text.secondary" }}>
+            errors and logs will be displayed here during the connection process.
+          </Typography>
+        </LayoutBox>
       )}
       <AnimatePresence>
         {history.map((item, index) => (
