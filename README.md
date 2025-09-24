@@ -216,18 +216,6 @@ stateDiagram-v2
 const { getDataChannel, getLocal, setRemote, close } = createWebRTCSession();
 ```
 
-- **`getDataChannel(timeout)`**
-  等待唯一的 DataChannel 開啟，並允許設置超時。
-
-- **`getLocal(method, timeout)`**
-  建立並設定本地 SDP（offer 或 answer），同時收集 ICE Candidate（可設置等待時間）。
-
-- **`setRemote(description, candidates)`**
-  設置遠端的 SDP 與 ICE Candidate。
-
-- **`close()`**
-  關閉 PeerConnection 與 DataChannel（冪等，不需擔心重複呼叫）。
-
 > 這層 Session 封裝會在一開始就初始化 **DataChannel** 與 **ICE Candidate 收集**，避免使用者忘記步驟。
 > 其責任是確保 **唯一的 WebRTC 連線生命週期**，上層只需要專注於角色（Host/Client）的流程。
 
