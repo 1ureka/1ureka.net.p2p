@@ -1,29 +1,22 @@
 import { create } from "zustand";
+import type { ConnectionStatus, ConnectionLogEntry } from "@/store/type";
 
 // ===============================================================
 // 以下是給 UI 使用的 hook， readonly
 // ===============================================================
-type WebRTCStatus = "disconnected" | "connected" | "failed" | "connecting";
-type WebRTCLogEntry = { level: "info" | "error"; message: string; timestamp: number };
-
-type State = {
-  status: WebRTCStatus;
-  history: WebRTCLogEntry[];
-};
-
-const store = create<State>(() => ({
+const store = create<{ status: ConnectionStatus; history: ConnectionLogEntry[] }>(() => ({
   status: "disconnected",
   history: [],
 }));
 
 const useWebRTC = store;
-export { useWebRTC, type WebRTCLogEntry };
+export { useWebRTC };
 
 // ===============================================================
 // 以下是給 native/webrtc.ts 使用的函式，更新狀態
 // ===============================================================
 type PrimitiveState = {
-  status: WebRTCStatus;
+  status: ConnectionStatus;
   log: string;
   error: string;
   history: never[]; // 只能清空
@@ -38,12 +31,12 @@ const setState = (partial: Partial<PrimitiveState>) => {
     // 進度
     let history = prev.history;
     if (partial.log !== undefined) {
-      history = [...prev.history, { level: "info", message: partial.log, timestamp: now }];
+      history = [...prev.history, { module: "webrtc", level: "info", message: partial.log, timestamp: now }];
     }
 
     // 錯誤
     if (partial.error !== undefined) {
-      history = [...history, { level: "error", message: partial.error, timestamp: now }];
+      history = [...history, { module: "webrtc", level: "error", message: partial.error, timestamp: now }];
     }
 
     // 狀態

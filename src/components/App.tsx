@@ -5,48 +5,7 @@ import type { Role } from "@/native/webrtc";
 import { Background } from "./Background";
 import { Box, Typography } from "@mui/material";
 import LanRoundedIcon from "@mui/icons-material/LanRounded";
-
-type Status = "connected" | "disconnected" | "connecting" | "failed";
-const StatusIndicator = ({ module, status }: { module: string; status: Status }) => {
-  const statusMap: Record<Status, { color: string; text: string }> = {
-    connected: { color: "#4caf50", text: "已連接" },
-    failed: { color: "#f44336", text: "連接失敗" },
-    connecting: { color: "#ff9800", text: "連接中..." },
-    disconnected: { color: "#9e9e9e", text: "未連接" },
-  } as const;
-
-  const { color } = statusMap[status];
-
-  return (
-    <Box
-      sx={{
-        width: 12,
-        aspectRatio: "1/1",
-        borderRadius: 99,
-        bgcolor: color,
-        position: "relative",
-        animation: "ping 1.5s ease-in-out infinite",
-        "&::before": {
-          content: '""',
-          position: "absolute",
-          inset: 0,
-          borderRadius: 99,
-          bgcolor: color,
-          opacity: 0.5,
-          animation: "ping-ring 1.5s ease-in-out infinite",
-        },
-        "@keyframes ping": {
-          "0%, 100%": { opacity: 1 },
-          "50%": { opacity: 0.5 },
-        },
-        "@keyframes ping-ring": {
-          "0%": { transform: "scale(1)", opacity: 0.9 },
-          "100%": { transform: "scale(2.5)", opacity: 0 },
-        },
-      }}
-    />
-  );
-};
+import { ConnectionIndicator } from "./ConnectionIndicator";
 
 const App = () => {
   const [mode, setMode] = useState<Role>("host");
@@ -72,14 +31,12 @@ const App = () => {
 
         <LayoutBox>
           <LayoutRow sx={{ alignItems: "center", gridTemplateColumns: "auto 1fr" }}>
-            <Box sx={{ display: "grid", placeItems: "center", width: 32 }}>
-              <StatusIndicator module="WebRTC" status="disconnected" />
-            </Box>
+            <ConnectionIndicator status="disconnected" />
             <LayoutTitle>P2P configuration</LayoutTitle>
           </LayoutRow>
           <LayoutText>
             Choose <b>Host</b> if you run the service, <b>Client</b> if you want to access it. and enter the
-            <b>same signaling code</b> on both sides.
+            <b> same signaling code</b> on both sides.
           </LayoutText>
 
           <EnumProperty
@@ -97,9 +54,7 @@ const App = () => {
 
         <LayoutBox>
           <LayoutRow sx={{ alignItems: "center", gridTemplateColumns: "auto 1fr" }}>
-            <Box sx={{ display: "grid", placeItems: "center", width: 32 }}>
-              <StatusIndicator module="WebRTC" status="disconnected" />
-            </Box>
+            <ConnectionIndicator status="disconnected" />
             <LayoutTitle>TCP port</LayoutTitle>
           </LayoutRow>
           <LayoutText>
