@@ -12,7 +12,7 @@ type Session = { code: string; type: "offer" | "answer"; body: SessionBody };
 
 const sendSession = async (session: Session) => {
   const { code, type, body } = session;
-  setState({ log: `嘗試將 ${type} 發送至信令伺服器中` });
+  setState({ log: `Attempting to send ${type} to signaling server` });
 
   const res = await fetch(`${API_BASE}/${code}.${type}`, {
     method: "POST",
@@ -28,7 +28,7 @@ const getSession = async (session: Omit<Session, "body">) => {
 
   for (let attempts = 0; attempts < 20; attempts++) {
     try {
-      setState({ log: `嘗試從信令伺服器取得 ${session.type} 中 (${attempts + 1}/20)` });
+      setState({ log: `Attempting to get ${session.type} from signaling server (${attempts + 1}/20)` });
 
       const res = await fetch(`${API_BASE}/${code}.${type}`);
       if (res.status !== 200) throw new Error(`failed to get ${type}, status code: ${res.status}`);
