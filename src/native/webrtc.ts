@@ -1,99 +1,14 @@
-import { tryCatch } from "@/utils";
 import { getLock, setState } from "@/store/webrtc";
 import { createDataChannelSender } from "@/native/webrtcSender";
 import { getSession, sendSession } from "@/native/signaling";
+import { createWebRTCSession } from "@/native/webrtcUtils";
 
-// 採用 Vanilla ICE， review 時請 **不准** 提議 Trickle ICE，vercel edge call 很貴
+type Role = "host" | "client";
+type Code = string;
 
-// =================================================================
-// 本地 WebRTC 處理邏輯
-// =================================================================
-const createConnection = () => {
-  return new RTCPeerConnection({
-    iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }],
-  });
-};
-
-const createLocalCandidates = (peerConnection: RTCPeerConnection) => {
-  setState({ log: "初始化本地 ICE Candidate 收集器中" });
-  const candidates: string[] = [];
-
-  const promise = new Promise<string[]>((resolve) => {
-    peerConnection.onicecandidate = (event) => {
-      const candidate = event.candidate;
-      if (candidate) candidates.push(JSON.stringify(candidate.toJSON()));
-      else resolve([...candidates]); // 當 candidate 為 null 時，表示 ICE 收集完成
-    };
-  });
-
-  return {
-    getPromise() {
-      setState({ log: "收集本地 ICE Candidate 中" });
-      const timeout = new Promise<string[]>((resolve) => setTimeout(() => resolve([...candidates]), 5000));
-      return Promise.race([promise, timeout]);
-    },
-  };
-};
-
-const createLocalDescription = async (peerConnection: RTCPeerConnection, method: "createOffer" | "createAnswer") => {
-  const candidates = createLocalCandidates(peerConnection);
-
-  setState({ log: "創建本地描述中" });
-  const description = await peerConnection[method]();
-
-  setState({ log: "設置本地描述中" });
-  await peerConnection.setLocalDescription(description);
-
-  return { description: JSON.stringify(description), candidates: await candidates.getPromise() };
-};
-
-const createRemoteCandidates = async (peerConnection: RTCPeerConnection, candidates: string[]) => {
-  setState({ log: `添加 ${candidates.length} 個遠端 ICE Candidate 中` });
-
-  const result = await Promise.all(
-    candidates.map(async (candidate) => {
-      try {
-        await peerConnection.addIceCandidate(new RTCIceCandidate(JSON.parse(candidate)));
-        return true;
-      } catch {
-        return false;
-      }
-    })
-  );
-
-  if (result.every((r) => r === false)) throw new Error(`failed to add any ICE Candidate`);
-};
-
-const createRemoteDescription = async (peerConnection: RTCPeerConnection, description: string) => {
-  setState({ log: "設置遠端描述中" });
-  await peerConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(description)));
-};
-
-// =================================================================
-// DataChannel 傳輸邏輯
-// =================================================================
-const createDataChannel = (peerConnection: RTCPeerConnection) => {
-  setState({ log: "初始化 DataChannel 中" });
-
-  const promise = new Promise<RTCDataChannel>((resolve, reject) => {
-    // negotiated: true 時，只要 id 相同就能直接建立連線 (對稱寫法)，利用該機制來共用函數
-    const dataChannel = peerConnection.createDataChannel("data", { negotiated: true, id: 0 });
-    dataChannel.onopen = () => resolve(dataChannel);
-    dataChannel.onerror = () => reject(new Error("DataChannel failed to open"));
-    dataChannel.onclose = () => reject(new Error("DataChannel closed unexpectedly"));
-  });
-
-  return {
-    getPromise() {
-      setState({ log: "等待 DataChannel 開啟，連線建立中" });
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("DataChannel connection timed out")), 5000)
-      );
-      return Promise.race([promise, timeoutPromise]);
-    },
-  };
-};
-
+/**
+ * 綁定 DataChannel 與 IPC 的雙向資料橋接
+ */
 const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
   const sender = createDataChannelSender(dataChannel);
 
@@ -131,7 +46,7 @@ const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
   // 註冊 IPC 監聽器
   window.electron.on("bridge.data.tcp", handleIPCMessage);
 
-  // 設置清理函數，當 DataChannel 關閉時移除監聽器
+  // 設置清理函數，當 DataChannel 關閉時移除監聽器與關閉 sender
   dataChannel.onclose = () => {
     window.electron.off("bridge.data.tcp", handleIPCMessage);
     sender.close();
@@ -143,92 +58,66 @@ const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
   };
 };
 
-// =================================================================
-// 生命週期管理，創建與關閉
-// =================================================================
-const connAsHost = async (peerConnection: RTCPeerConnection, code: string) => {
-  const dataChannel = createDataChannel(peerConnection);
-
-  const localInfo = await createLocalDescription(peerConnection, "createOffer");
-  await sendSession({ code, type: "offer", body: localInfo });
-
-  const { description, candidates } = await getSession({ code, type: "answer" });
-  await createRemoteDescription(peerConnection, description);
-  await createRemoteCandidates(peerConnection, candidates);
-
-  return await dataChannel.getPromise();
-};
-
-const connAsClient = async (peerConnection: RTCPeerConnection, code: string) => {
-  const dataChannel = createDataChannel(peerConnection);
-
-  const { description, candidates } = await getSession({ code, type: "offer" });
-  await createRemoteDescription(peerConnection, description);
-  await createRemoteCandidates(peerConnection, candidates);
-
-  const localInfo = await createLocalDescription(peerConnection, "createAnswer");
-  await sendSession({ code, type: "answer", body: localInfo });
-
-  return await dataChannel.getPromise();
-};
-
-const ensureClosePropagation = (peerConnection: RTCPeerConnection, dataChannel: RTCDataChannel) => {
-  const close = () => {
-    peerConnection.close(); // 根據 w3c ED，其是冪等，因此不需擔心重複呼叫
-    // 整段代碼都不該直接呼叫 dataChannel.close()，因為 DataChannel 的生命週期應該被 PeerConnection 綁定
-    setState({ status: "disconnected", log: "WebRTC connection closed" });
-  };
-
-  peerConnection.onconnectionstatechange = () => {
-    if (["closed", "disconnected", "failed"].includes(peerConnection.connectionState)) {
-      close();
-    }
-  };
-
-  dataChannel.onclose = () => close();
-  dataChannel.onerror = () => close();
-
-  return close;
-};
-
-// =================================================================
-// API 入口
-// =================================================================
-type Role = "host" | "client";
-type Code = string;
-
 /**
  * 創建一個 唯一 的 WebRTC 連線，且 DataChannel 的生命週期會被 PeerConnection 綁定
- * @param role 主機 (host) 或 客戶端 (client)
- * @param code 用於信令伺服器的代碼，必須非空
- * @returns 成功時回傳 close 函數，失敗時會更新狀態並回傳 undefined
  */
 const createWebRTC = async (role: Role, code: Code) => {
+  // 開始前檢查
+
   if (getLock()) {
-    setState({ error: "connection has already been established or is in progress", status: "failed" });
+    setState({ status: "failed", error: "Connection has already been established or is in progress" });
     return;
   }
   if (code.trim().length === 0) {
-    setState({ error: "code cannot be empty", status: "failed" });
+    setState({ status: "failed", error: "Code cannot be empty" });
     return;
   }
 
   setState({ status: "connecting", history: [] });
-  const peerConnection = createConnection();
-  const connectFunction = role === "host" ? connAsHost : connAsClient;
+  const { getDataChannel, getLocal, setRemote, close } = createWebRTCSession();
 
-  const { data: dataChannel, error } = await tryCatch(connectFunction(peerConnection, code));
-  if (error) {
-    setState({ error: error.message, status: "failed" });
-    peerConnection.close();
-    return;
+  // setup WebRTC connection
+
+  try {
+    if (role === "host") {
+      const localInfo = await getLocal("createOffer", 5000);
+      await sendSession({ code, type: "offer", body: localInfo });
+
+      const { description, candidates } = await getSession({ code, type: "answer" });
+      await setRemote(description, candidates);
+    }
+
+    if (role === "client") {
+      const { description, candidates } = await getSession({ code, type: "offer" });
+      await setRemote(description, candidates);
+
+      const localInfo = await getLocal("createAnswer", 5000);
+      await sendSession({ code, type: "answer", body: localInfo });
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      setState({ status: "failed", error: error.message });
+    } else {
+      setState({ status: "failed", error: "An unknown error occurred during WebRTC setup" });
+    }
+    close();
   }
 
-  const close = ensureClosePropagation(peerConnection, dataChannel);
-  bindDataChannelIPC(dataChannel);
-  setState({ status: "connected", log: "連線建立完成" });
+  // wait for DataChannel to open
 
-  return close;
+  try {
+    const dataChannel = await getDataChannel(5000);
+    bindDataChannelIPC(dataChannel);
+
+    setState({ status: "connected", log: "連線建立完成" });
+    return close;
+  } catch (error) {
+    if (error instanceof Error) {
+      setState({ status: "failed", error: error.message });
+    } else {
+      setState({ status: "failed", error: "An unknown error occurred during WebRTC connection establishment" });
+    }
+  }
 };
 
 export { createWebRTC, type Role, type Code };
