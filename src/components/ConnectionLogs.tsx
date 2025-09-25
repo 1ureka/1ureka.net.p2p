@@ -1,7 +1,11 @@
-import { Box, Typography } from "@mui/material";
 import { AnimatePresence, motion } from "motion/react";
-import type { BridgeLogEntry } from "@/native/bridge-report";
-import { ellipsisSx } from "@/components/utils";
+import { Box, Typography } from "@mui/material";
+import { ellipsisSx } from "@/components-lib/Property";
+
+import { useBridge } from "@/store/bridge";
+import { useWebRTC } from "@/store/webrtc";
+import type { ConnectionLogEntry } from "@/store/type";
+import { LayoutBox } from "@/components-lib/Layout";
 
 const formatData = (data: Record<string, unknown>) => {
   try {
@@ -9,10 +13,10 @@ const formatData = (data: Record<string, unknown>) => {
     if (data.error && typeof data.error === "object") {
       const error = data.error as any;
       if (error.message) {
-        return `錯誤: ${error.message}`;
+        return `Error: ${error.message}`;
       }
       if (error.code) {
-        return `錯誤代碼: ${error.code}`;
+        return `Error code: ${error.code}`;
       }
     }
 
@@ -33,7 +37,7 @@ const formatData = (data: Record<string, unknown>) => {
   }
 };
 
-const getColor = (level: BridgeLogEntry["level"]) => {
+const getColor = (level: ConnectionLogEntry["level"]) => {
   switch (level) {
     case "error":
       return "error.main";
@@ -44,18 +48,18 @@ const getColor = (level: BridgeLogEntry["level"]) => {
   }
 };
 
-const getRow = ({ level, timestamp, message, module, data }: BridgeLogEntry) => {
+const getRow = ({ level, timestamp, message, module, data }: ConnectionLogEntry) => {
   const dataString = data ? formatData(data) : null;
 
   return (
     <Box sx={{ mb: 0.5 }}>
-      <Typography variant="body2" sx={{ color: getColor(level) }}>
-        {`[${new Date(timestamp).toLocaleTimeString()}] [${module}] ${message}`}
+      <Typography variant="body2" sx={{ color: getColor(level), fontFamily: "Ubuntu" }}>
+        {`[${new Date(timestamp).toLocaleTimeString()}] [${module.toUpperCase()}] ${message}`}
       </Typography>
       {dataString && (
         <Typography
           variant="caption"
-          sx={{ color: "text.disabled", ml: 1, fontFamily: "monospace", ...ellipsisSx, WebkitLineClamp: 2 }}
+          sx={{ fontFamily: "Ubuntu", color: "text.disabled", ml: 1, ...ellipsisSx, WebkitLineClamp: 2 }}
         >
           {dataString}
         </Typography>
@@ -64,33 +68,34 @@ const getRow = ({ level, timestamp, message, module, data }: BridgeLogEntry) => 
   );
 };
 
-const Step3Logs = ({ history }: { history: BridgeLogEntry[] }) => {
+const ConnectionLogs = () => {
+  const history1 = useBridge((state) => state.history);
+  const history2 = useWebRTC((state) => state.history);
+  const history = [...history1, ...history2].sort((a, b) => a.timestamp - b.timestamp);
+
   return (
     <Box
       sx={{
         position: "relative",
         overflow: "hidden",
         display: "flex",
-        flexDirection: "column",
+        flexDirection: "column-reverse",
         justifyContent: "flex-end",
-        bgcolor: "background.paper",
         borderRadius: 2,
         p: 1.5,
-        border: 1,
-        borderColor: "divider",
+        height: 1,
+        fontFamily: "Ubuntu",
       }}
     >
       {history.length === 0 && (
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", userSelect: "none" }}
-        >
-          TCP 連接日誌將顯示在此處
-        </Typography>
+        <LayoutBox sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}>
+          <Typography variant="body2" sx={{ fontFamily: "Ubuntu", textAlign: "center", color: "text.secondary" }}>
+            errors and logs will be displayed here during the connection process.
+          </Typography>
+        </LayoutBox>
       )}
       <AnimatePresence>
-        {history.slice(-7).map((item, index) => (
+        {history.map((item, index) => (
           <motion.div
             key={item.timestamp + item.message + index}
             layout
@@ -107,4 +112,4 @@ const Step3Logs = ({ history }: { history: BridgeLogEntry[] }) => {
   );
 };
 
-export { Step3Logs };
+export { ConnectionLogs };

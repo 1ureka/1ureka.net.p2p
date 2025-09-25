@@ -1,19 +1,11 @@
 import { create } from "zustand";
-import type { BridgeLogEntry, BridgeStatus } from "@/native/bridge-report";
+import type { ConnectionStatus, ConnectionLogEntry } from "@/store/type";
 
-// ===============================================================
-// 以下是給 UI 使用的 hook， readonly
-// ===============================================================
-type State = {
-  status: BridgeStatus;
-  history: BridgeLogEntry[];
-};
-
-const useBridge = create<State>((set) => {
-  window.electron.on("bridge.status", (status: BridgeStatus) => {
+const useBridge = create<{ status: ConnectionStatus; history: ConnectionLogEntry[] }>((set) => {
+  window.electron.on("bridge.status", (status: ConnectionStatus) => {
     set((prev) => ({ ...prev, status }));
   });
-  window.electron.on("bridge.history", (history: BridgeLogEntry[]) => {
+  window.electron.on("bridge.history", (history: ConnectionLogEntry[]) => {
     set((prev) => ({ ...prev, history }));
   });
 

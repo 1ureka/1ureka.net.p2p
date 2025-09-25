@@ -57,7 +57,7 @@ const createWebRTCSession = () => {
   const close = () => {
     peerConnection.close(); // 根據 w3c ED，其是冪等，因此不需擔心重複呼叫
     setState({
-      status: "disconnected",
+      status: "failed",
       log: "RTCPeerConnection and associated DataChannel have been safely closed and resources released",
     });
   };

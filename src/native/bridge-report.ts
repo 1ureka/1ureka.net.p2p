@@ -1,21 +1,8 @@
 import type { BrowserWindow } from "electron";
 import { createStore } from "zustand/vanilla";
+import type { ConnectionStatus, ConnectionLogEntry } from "@/store/type";
 
-type BridgeStatus = "disconnected" | "connected" | "failed" | "connecting";
-type BridgeLogEntry = {
-  level: "info" | "warn" | "error";
-  module: string;
-  message: string;
-  timestamp: number;
-  data?: Record<string, unknown>;
-};
-
-type State = {
-  status: BridgeStatus;
-  history: BridgeLogEntry[];
-};
-
-const store = createStore<State>(() => ({
+const store = createStore<{ status: ConnectionStatus; history: ConnectionLogEntry[] }>(() => ({
   status: "disconnected",
   history: [],
 }));
@@ -29,16 +16,16 @@ const getReportMethods = (level: "info" | "warn" | "error") => {
 };
 
 const createReporter = (module: string, win: BrowserWindow) => {
-  const reportLog = (entry: Omit<BridgeLogEntry, "level" | "timestamp" | "module">) =>
+  const reportLog = (entry: Omit<ConnectionLogEntry, "level" | "timestamp" | "module">) =>
     report({ ...entry, level: "info" });
-  const reportError = (entry: Omit<BridgeLogEntry, "level" | "timestamp" | "module">) =>
+  const reportError = (entry: Omit<ConnectionLogEntry, "level" | "timestamp" | "module">) =>
     report({ ...entry, level: "error" });
-  const reportWarn = (entry: Omit<BridgeLogEntry, "level" | "timestamp" | "module">) =>
+  const reportWarn = (entry: Omit<ConnectionLogEntry, "level" | "timestamp" | "module">) =>
     report({ ...entry, level: "warn" });
 
-  const report = (entry: Omit<BridgeLogEntry, "timestamp" | "module">) => {
+  const report = (entry: Omit<ConnectionLogEntry, "timestamp" | "module">) => {
     const timestamp = Date.now();
-    const logEntry: BridgeLogEntry = { ...entry, module, timestamp };
+    const logEntry: ConnectionLogEntry = { ...entry, module, timestamp };
 
     const { level, message, data } = logEntry;
     getReportMethods(level)(module, level.toUpperCase(), message, data ?? "");
@@ -50,7 +37,7 @@ const createReporter = (module: string, win: BrowserWindow) => {
     });
   };
 
-  const reportStatus = (status: BridgeStatus) => {
+  const reportStatus = (status: ConnectionStatus) => {
     store.setState((prev) => {
       if (status === prev.status) return { ...prev };
       win.webContents.send("bridge.status", status);
@@ -66,4 +53,4 @@ const createReporter = (module: string, win: BrowserWindow) => {
   return { reportLog, reportError, reportWarn, reportStatus, clearHistory };
 };
 
-export { createReporter, getLock, type BridgeStatus, type BridgeLogEntry };
+export { createReporter, getLock };

@@ -101,6 +101,7 @@ const createWebRTC = async (role: Role, code: Code) => {
       setState({ status: "failed", error: "An unknown error occurred during WebRTC setup" });
     }
     close();
+    return;
   }
 
   // wait for DataChannel to open
