@@ -1,15 +1,19 @@
 import { z } from "zod";
 import { setState } from "@/store/webrtc";
 
-// =================================================================
-// 交換 WebRTC 訊息邏輯
-// =================================================================
+/**
+ * 信令伺服器相關的 url, schema 與型別
+ */
 const API_BASE = "https://1ureka.vercel.app/api/webrtc";
 const SessionBodySchema = z.object({ description: z.string(), candidates: z.array(z.string()) });
 
 type SessionBody = z.infer<typeof SessionBodySchema>;
 type Session = { code: string; type: "offer" | "answer"; body: SessionBody };
+type GetSessionParams = Omit<Session, "body"> & { attempts: number };
 
+/**
+ * 發送 SDP 與 ICE Candidate 的函數
+ */
 const sendSession = async (session: Session) => {
   const { code, type, body } = session;
   setState({ log: `Attempting to send ${type} to signaling server` });
@@ -23,12 +27,15 @@ const sendSession = async (session: Session) => {
   if (res.status !== 204) throw new Error(`failed to send ${type}, status code: ${res.status}`);
 };
 
-const getSession = async (session: Omit<Session, "body">) => {
-  const { code, type } = session;
+/**
+ * 獲取 SDP 與 ICE Candidate 的函數
+ */
+const getSession = async (params: GetSessionParams) => {
+  const { code, type, attempts } = params;
 
-  for (let attempts = 0; attempts < 20; attempts++) {
+  for (let attempt = 0; attempt < attempts; attempt++) {
     try {
-      setState({ log: `Attempting to get ${session.type} from signaling server (${attempts + 1}/20)` });
+      setState({ log: `Attempting to get ${type} from signaling server (${attempt + 1}/${attempts})` });
 
       const res = await fetch(`${API_BASE}/${code}.${type}`);
       if (res.status !== 200) throw new Error(`failed to get ${type}, status code: ${res.status}`);

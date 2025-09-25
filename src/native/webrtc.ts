@@ -1,10 +1,21 @@
 import { getLock, setState } from "@/store/webrtc";
-import { createDataChannelSender } from "@/native/webrtcSender";
 import { getSession, sendSession } from "@/native/signaling";
-import { createWebRTCSession } from "@/native/webrtcUtils";
+import { createDataChannelSender } from "@/native/webrtc-sender";
+import { createWebRTCSession } from "@/native/webrtc-utils";
 
+/**
+ * WebRTC 參數類型
+ */
 type Role = "host" | "client";
 type Code = string;
+
+type WebRTCParams = {
+  role: Role;
+  code: string;
+  timeoutLocalCandidate?: number; // 收集 ice candidate 的最大等待時間（毫秒）
+  timeoutDataChannel?: number; // 等待 DataChannel 開啟的最大時間（毫秒）
+  signalingMaxAttempts?: number; // 信令伺服器請求的最大重試次數
+};
 
 /**
  * 綁定 DataChannel 與 IPC 的雙向資料橋接
@@ -61,7 +72,10 @@ const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
 /**
  * 創建一個 唯一 的 WebRTC 連線，且 DataChannel 的生命週期會被 PeerConnection 綁定
  */
-const createWebRTC = async (role: Role, code: Code) => {
+const createWebRTC = async (params: WebRTCParams) => {
+  const { role, code } = params;
+  const { timeoutLocalCandidate = 2000, timeoutDataChannel = 5000, signalingMaxAttempts = 20 } = params;
+
   // 開始前檢查
 
   if (getLock()) {
@@ -80,18 +94,20 @@ const createWebRTC = async (role: Role, code: Code) => {
 
   try {
     if (role === "host") {
-      const localInfo = await getLocal("createOffer", 5000);
+      const localInfo = await getLocal("createOffer", timeoutLocalCandidate);
       await sendSession({ code, type: "offer", body: localInfo });
 
-      const { description, candidates } = await getSession({ code, type: "answer" });
+      const attempts = signalingMaxAttempts;
+      const { description, candidates } = await getSession({ code, type: "answer", attempts });
       await setRemote(description, candidates);
     }
 
     if (role === "client") {
-      const { description, candidates } = await getSession({ code, type: "offer" });
+      const attempts = signalingMaxAttempts;
+      const { description, candidates } = await getSession({ code, type: "offer", attempts });
       await setRemote(description, candidates);
 
-      const localInfo = await getLocal("createAnswer", 5000);
+      const localInfo = await getLocal("createAnswer", timeoutLocalCandidate);
       await sendSession({ code, type: "answer", body: localInfo });
     }
   } catch (error) {
@@ -107,7 +123,7 @@ const createWebRTC = async (role: Role, code: Code) => {
   // wait for DataChannel to open
 
   try {
-    const dataChannel = await getDataChannel(5000);
+    const dataChannel = await getDataChannel(timeoutDataChannel);
     bindDataChannelIPC(dataChannel);
 
     setState({ status: "connected", log: "連線建立完成" });

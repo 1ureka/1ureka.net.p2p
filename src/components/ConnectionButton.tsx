@@ -11,7 +11,7 @@ const ConnectionButton = () => {
   const code = useFormStore((state) => state.code);
 
   const handleConnect = useCallback(async () => {
-    const result = await createWebRTC(role, String(code));
+    const result = await createWebRTC({ role, code: String(code) });
     if (result) window.electron.send(`bridge.start.${role}`, port);
   }, [code, port, role]);
 
