@@ -7,8 +7,6 @@ import { bindDataChannelIPC } from "@/native/webrtc-ipc";
  * WebRTC 參數類型
  */
 type Role = "host" | "client";
-type Code = string;
-
 type WebRTCParams = {
   role: Role;
   code: string;
@@ -85,4 +83,4 @@ const createWebRTC = async (params: WebRTCParams) => {
   }
 };
 
-export { createWebRTC, type Role, type Code };
+export { createWebRTC, type Role };

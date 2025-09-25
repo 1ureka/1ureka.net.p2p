@@ -2,52 +2,69 @@ import { EventEmitter } from "events";
 import { vi, describe, it, expect } from "vitest";
 import net from "net";
 
-class MockElectronApp {
-  peerApp?: MockElectronApp;
+type MockElectronApp = {
   ipcMain: EventEmitter;
+  browserWindow: { webContents: { send: (channel: string, data: Buffer) => void } };
+  setPeer: (app: MockElectronApp) => void;
+};
 
-  constructor(ipcMain: EventEmitter) {
-    this.ipcMain = ipcMain;
-  }
+/**
+ * 建立一個模擬的 Electron App，模擬渲染進程的 WebRTC DataChannel 資料傳輸
+ */
+const createMockElectronApp = () => {
+  const ipcMain = new EventEmitter();
+  let peerApp: MockElectronApp | null = null;
 
-  private sendRTC(data: Buffer) {
-    setTimeout(() => {
-      this.peerApp?.receiveRTC("bridge.data.rtc", data);
-    }, 50);
-  }
+  const setPeer = (app: MockElectronApp) => {
+    peerApp = app;
+  };
 
-  private receiveRTC(channel: string, data: Buffer) {
-    this.ipcMain.emit(channel, null, data);
-  }
+  const sendToPeer = (data: Buffer) => {
+    setTimeout(() => peerApp?.ipcMain.emit("bridge.data.rtc", null, data), 50);
+  };
 
-  webContents = {
-    send: (channel: string, data: Buffer) => {
-      if (channel === "bridge.data.tcp") {
-        this.sendRTC(data);
-      }
-      // 剩下的 channel 通常用於顯示 UI、log 等等，不在測試範圍內
+  const browserWindow = {
+    webContents: {
+      send: (channel: string, data: Buffer) => {
+        if (channel === "bridge.data.tcp") {
+          sendToPeer(data);
+        } else {
+          // 應用中的其他 主進程與渲染進程 的通訊事件，與該 e2e 測試無關，故不處理
+        }
+      },
     },
   };
-}
 
-// TODO: 增加反向，也就是 server 先關閉
-describe("橋接端到端測試", () => {
-  it("應該能透過橋接成功完成 echo", async () => {
-    const IpcMain_H = new EventEmitter();
-    const IpcMain_C = new EventEmitter();
+  return { ipcMain, browserWindow, setPeer };
+};
 
-    vi.resetModules();
-    vi.doMock("electron", () => ({ ipcMain: IpcMain_H, BrowserWindow: vi.fn() }));
-    const { createHostBridge } = await import("../native/bridge");
+/**
+ * 建立可用於 e2e 測試的兩個模擬 Electron App
+ */
+const createEnvironment = async () => {
+  const hostApp = createMockElectronApp();
+  const clientApp = createMockElectronApp();
 
-    vi.resetModules();
-    vi.doMock("electron", () => ({ ipcMain: IpcMain_C, BrowserWindow: vi.fn() }));
-    const { createClientBridge } = await import("../native/bridge");
+  hostApp.setPeer(clientApp);
+  clientApp.setPeer(hostApp);
 
-    const BrowserWindow_H = new MockElectronApp(IpcMain_H as any);
-    const BrowserWindow_C = new MockElectronApp(IpcMain_C as any);
-    BrowserWindow_H.peerApp = BrowserWindow_C;
-    BrowserWindow_C.peerApp = BrowserWindow_H;
+  vi.resetModules();
+  vi.doMock("electron", () => ({ ipcMain: hostApp.ipcMain, BrowserWindow: vi.fn() }));
+  const { createHostBridge } = await import("../native/bridge");
+
+  vi.resetModules();
+  vi.doMock("electron", () => ({ ipcMain: clientApp.ipcMain, BrowserWindow: vi.fn() }));
+  const { createClientBridge } = await import("../native/bridge");
+
+  return {
+    createHostBridge: (port: number) => createHostBridge(hostApp.browserWindow as any, port),
+    createClientBridge: (port: number) => createClientBridge(clientApp.browserWindow as any, port),
+  };
+};
+
+describe("Bridge 主模組", () => {
+  it("[e2e] [echo] [client→server] [client 先關閉]", async () => {
+    const { createHostBridge, createClientBridge } = await createEnvironment();
 
     // 真實 Echo Server
     const echoServer = net.createServer((socket) => socket.on("data", (d) => socket.write(d)));
@@ -55,8 +72,8 @@ describe("橋接端到端測試", () => {
     const echoPort = (echoServer.address() as any).port;
 
     // 啟動 bridges
-    await createHostBridge(BrowserWindow_H as any, echoPort);
-    await createClientBridge(BrowserWindow_C as any, 6000);
+    await createHostBridge(echoPort);
+    await createClientBridge(6000);
 
     // 測試程式的 TCP client → 連到 clientBridge fake server
     const tcpClient = net.connect(6000, "127.0.0.1");
@@ -74,4 +91,6 @@ describe("橋接端到端測試", () => {
     // 用於看 socket close 的 log，確保橋接端有正確關閉
     await new Promise((res) => setTimeout(res, 500));
   }, 5000);
+
+  // TODO:  it("[e2e] [echo] [server→client] [server 先關閉]", async () => {}, 5000);
 });
