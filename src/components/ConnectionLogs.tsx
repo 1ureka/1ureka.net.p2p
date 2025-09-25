@@ -48,13 +48,17 @@ const getColor = (level: ConnectionLogEntry["level"]) => {
   }
 };
 
-const getRow = ({ level, timestamp, message, module, data }: ConnectionLogEntry) => {
+const getRow = (params: ConnectionLogEntry & { current: boolean }) => {
+  const { level, timestamp, current, module, data } = params;
   const dataString = data ? formatData(data) : null;
+  const message =
+    (current ? ">> " : "   ") +
+    `[${new Date(timestamp).toLocaleTimeString()}] [${module.toUpperCase()}] ${params.message}`;
 
   return (
     <Box sx={{ mb: 0.5 }}>
-      <Typography variant="body2" sx={{ color: getColor(level), fontFamily: "Ubuntu" }}>
-        {`[${new Date(timestamp).toLocaleTimeString()}] [${module.toUpperCase()}] ${message}`}
+      <Typography variant="body2" sx={{ color: getColor(level), fontFamily: "Ubuntu", ...ellipsisSx }}>
+        {message}
       </Typography>
       {dataString && (
         <Typography
@@ -99,12 +103,12 @@ const ConnectionLogs = () => {
           <motion.div
             key={item.timestamp + item.message + index}
             layout
-            initial={{ opacity: 0, scale: 0.8, x: -20 }}
+            initial={{ opacity: 0, scale: 0.95, x: -20 }}
             animate={{ opacity: 1, scale: 1, x: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
           >
-            {getRow(item)}
+            {getRow({ ...item, current: index === history.length - 1 })}
           </motion.div>
         ))}
       </AnimatePresence>
