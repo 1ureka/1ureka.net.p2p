@@ -4,7 +4,7 @@ import { type BoxProps, Box } from "@mui/material";
 import { type ButtonProps, Button } from "@mui/material";
 import { type TypographyProps, Typography } from "@mui/material";
 
-const defaultLayoutSx = { display: "grid", gap: 0.5 } as const;
+const defaultLayoutSx = { display: "grid", gap: 0.5, minHeight: 0 } as const;
 
 const LayoutColumn = ({ children, sx, ...props }: BoxProps) => {
   return (
@@ -27,7 +27,7 @@ const LayoutBox = ({ children, sx, ...props }: PaperProps) => {
     <Paper
       elevation={0}
       {...props}
-      sx={{ position: "relative", p: 1.5, border: "2px solid", borderColor: "divider", ...sx }}
+      sx={{ position: "relative", p: 1.5, border: "2px solid", borderColor: "divider", minHeight: 0, ...sx }}
     >
       <LayoutColumn sx={{ height: 1 }}>{children}</LayoutColumn>
     </Paper>

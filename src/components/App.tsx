@@ -88,7 +88,7 @@ const LogPanel = () => {
         events.
       </LayoutText>
 
-      <LayoutBox sx={{ my: 1, "& > div": { gridTemplateRows: "1fr" }, height: "75dvh" }}>
+      <LayoutBox sx={{ my: 1, "& > div": { gridTemplateRows: "1fr" } }}>
         <ConnectionLogs />
       </LayoutBox>
     </LayoutBox>
@@ -110,7 +110,7 @@ const App = () => (
       <WebRTCPanel />
       <BridgePanel />
     </LayoutColumn>
-    <LayoutColumn>
+    <LayoutColumn sx={{ gridTemplateRows: "1fr", height: 1 }}>
       <LogPanel />
     </LayoutColumn>
   </LayoutRow>
