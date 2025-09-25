@@ -1,17 +1,19 @@
 import LanRoundedIcon from "@mui/icons-material/LanRounded";
 import { Box, Typography } from "@mui/material";
+
 import { useFormStore } from "@/store/form";
 import { useBridge } from "@/store/bridge";
 import { useWebRTC } from "@/store/webrtc";
 import type { Role } from "@/native/webrtc";
 
-import { LayoutBox, LayoutButton, LayoutColumn, LayoutRow } from "@/components-lib/Layout";
+import { LayoutBox, LayoutColumn, LayoutRow } from "@/components-lib/Layout";
 import { LayoutText, LayoutTitle } from "@/components-lib/Layout";
 import { EnumProperty, NumberProperty } from "@/components-lib/Property";
 
 import { Background } from "@/components/Background";
 import { ConnectionIndicator } from "@/components/ConnectionIndicator";
 import { ConnectionLogs } from "@/components/ConnectionLogs";
+import { ConnectionButton } from "@/components/ConnectionButton";
 
 const Title = () => (
   <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3, p: 1.5 }}>
@@ -72,7 +74,7 @@ const BridgePanel = () => {
       </LayoutText>
 
       <NumberProperty value={port} onChange={(value) => setPort(value)} step={1} min={1025} max={65535} />
-      <LayoutButton>Connect</LayoutButton>
+      <ConnectionButton />
     </LayoutBox>
   );
 };
@@ -86,7 +88,7 @@ const LogPanel = () => {
         events.
       </LayoutText>
 
-      <LayoutBox sx={{ my: 1, "& > div": { gridTemplateRows: "1fr" } }}>
+      <LayoutBox sx={{ my: 1, "& > div": { gridTemplateRows: "1fr" }, height: "75dvh" }}>
         <ConnectionLogs />
       </LayoutBox>
     </LayoutBox>
@@ -108,7 +110,9 @@ const App = () => (
       <WebRTCPanel />
       <BridgePanel />
     </LayoutColumn>
-    <LogPanel />
+    <LayoutColumn>
+      <LogPanel />
+    </LayoutColumn>
   </LayoutRow>
 );
 
