@@ -54,7 +54,7 @@ const getRow = ({ level, timestamp, message, module, data }: ConnectionLogEntry)
   return (
     <Box sx={{ mb: 0.5 }}>
       <Typography variant="body2" sx={{ color: getColor(level) }}>
-        {`[${new Date(timestamp).toLocaleTimeString()}] [${module}] ${message}`}
+        {`[${new Date(timestamp).toLocaleTimeString()}] [${module.toUpperCase()}] ${message}`}
       </Typography>
       {dataString && (
         <Typography
