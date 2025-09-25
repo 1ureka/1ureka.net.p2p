@@ -53,13 +53,13 @@ const getRow = ({ level, timestamp, message, module, data }: ConnectionLogEntry)
 
   return (
     <Box sx={{ mb: 0.5 }}>
-      <Typography variant="body2" sx={{ color: getColor(level) }}>
+      <Typography variant="body2" sx={{ color: getColor(level), fontFamily: "Ubuntu" }}>
         {`[${new Date(timestamp).toLocaleTimeString()}] [${module.toUpperCase()}] ${message}`}
       </Typography>
       {dataString && (
         <Typography
           variant="caption"
-          sx={{ color: "text.disabled", ml: 1, fontFamily: "monospace", ...ellipsisSx, WebkitLineClamp: 2 }}
+          sx={{ fontFamily: "Ubuntu", color: "text.disabled", ml: 1, ...ellipsisSx, WebkitLineClamp: 2 }}
         >
           {dataString}
         </Typography>
@@ -79,16 +79,17 @@ const ConnectionLogs = () => {
         position: "relative",
         overflow: "hidden",
         display: "flex",
-        flexDirection: "column",
+        flexDirection: "column-reverse",
         justifyContent: "flex-end",
         borderRadius: 2,
         p: 1.5,
         height: 1,
+        fontFamily: "Ubuntu",
       }}
     >
       {history.length === 0 && (
         <LayoutBox sx={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}>
-          <Typography variant="body2" sx={{ textAlign: "center", color: "text.secondary" }}>
+          <Typography variant="body2" sx={{ fontFamily: "Ubuntu", textAlign: "center", color: "text.secondary" }}>
             errors and logs will be displayed here during the connection process.
           </Typography>
         </LayoutBox>
