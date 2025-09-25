@@ -63,7 +63,7 @@
 
 # 應用架構
 
-本工具採用 **雙進程架構**，透過 Electron 的 IPC 機制實現 TCP 與 WebRTC 之間的數據橋接，各自負責不同的網路層級處理：
+專案採用 **雙進程架構**，透過 Electron 的 IPC 機制實現 TCP 與 WebRTC 之間的數據橋接，各自負責不同的網路層級處理：
 
 - **WebRTC 模組（渲染進程）**
   專注於 P2P 連線的建立與維護，處理信令交換、ICE 候選收集，以及資料在 DataChannel 上的傳遞。
@@ -192,4 +192,100 @@ Offset   Size   Field          Type      說明
 
 # 核心模組：WebRTC
 
-<!-- TODO -->
+WebRTC 模組是 **1ureka.net.p2p 的 P2P 實現基礎**，主要負責：
+
+1. 建立並維護 **Peer-to-Peer 連線**。
+2. 提供唯一的 **RTCDataChannel** 作為 TCP 隧道的承載管道。
+3. 對外封裝為簡單的 **Session API**，確保生命週期清晰。
+4. 提供 **插件式擴展**，用於資料轉發、監控或統計。
+
+## 為什麼需要 WebRTC 模組？
+
+雖然 Node.js/Electron 中也可以透過 TCP/UDP 直連，但在 **NAT/防火牆** 環境下往往不可行。WebRTC 的出現，正好解決了這個問題：
+
+- **NAT Traversal**：WebRTC 內建 ICE (STUN/TURN) 機制，能在不同網路環境下盡可能建立直連。
+- **可靠性**：DataChannel 基於 **SCTP over DTLS over UDP**，具備重傳、順序保證、分片處理等功能。
+- **安全性**：所有資料皆透過 DTLS 加密，避免中途攔截。
+
+但同時 WebRTC 的 API 相對繁瑣：
+
+- 建立連線需要 SDP offer/answer、ICE candidates 的交換。
+- 必須正確初始化 DataChannel，並監控其狀態。
+
+因此，專案內封裝了一層 **Session API**，確保初始化、生命週期管理的簡單性。
+
+## Session API
+
+專案採用 **Vanilla ICE 流程**，並將 **RTCPeerConnection** 與 **RTCDataChannel** 綁定在同一個生命週期，抽象為 **「Session」**。
+
+這樣做的原因是：
+
+- 專案並不是要實作完整的 RTC 應用（例如多媒體傳輸、多條 DataChannel）。
+- 專案只需要 **一條穩定的資料通道** 來承載 TCP 封包。
+
+```ts
+const { getDataChannel, getLocal, setRemote, close } = createWebRTCSession();
+```
+
+> 這層 Session 封裝會在一開始就初始化 **DataChannel** 與 **ICE Candidate 收集**。
+> 同時將 **RTCPeerConnection** 與 **RTCDataChannel** 綁定在一起，上層只需要專注於角色（Host/Client）的流程。
+
+## 插件式綁定
+
+為了避免 WebRTC API 過於耦合，專案採用「插件式綁定」的方式，常見的操作如 **DataChannel ↔ IPC 綁定**、**監控流量**、**記錄監控資訊**，都可以被抽象為「插件」。
+為了確保生命週期清晰，每個 `bindDataChannelX` 函數必須遵循以下規範：
+
+- **自給自足**：
+  呼叫 `bindDataChannelX(...)` 即表示完成了該插件的整個註冊過程。呼叫者無需額外呼叫 `unregister` 或 `close`。
+- **責任範圍**：
+  - `register` → 在 `onmessage`、`monkey patch send` 等事件中掛載需要的邏輯。
+  - `unregister` → 必須在 `onclose` / `onerror` 自動移除監聽器、釋放自己創建的資源。
+
+- **框架保證**：
+  核心 `createWebRTCSession` 已經保證整體連線的 **主生命週期**，插件只需管理「自己多出來的部分」。
+- **類似 Blender 插件機制**：
+  - Blender 規範每個插件必須有 `register/unregister`。
+  - 在這裡，`bindDataChannelX` 就是自帶 register/unregister 的函式，應用本身不需要知道如何清理。
+
+### 範例：DataChannel 與 IPC 綁定
+
+```ts
+const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
+  const sender = createDataChannelSender(dataChannel);
+
+  // register
+  dataChannel.onmessage = (event) => /* ...轉發到 IPC... */;
+  const handleIPCMessage = (buffer: unknown) => /* ...轉發到 DataChannel... */;
+  window.electron.on("bridge.data.tcp", handleIPCMessage);
+
+  // unregister
+  dataChannel.onclose = () => {
+    window.electron.off("bridge.data.tcp", handleIPCMessage);
+    sender.close();
+  };
+  dataChannel.onerror = () => {
+    window.electron.off("bridge.data.tcp", handleIPCMessage);
+    sender.close();
+  };
+};
+```
+
+### 範例：DataChannel 流量監控
+
+```ts
+const bindDataChannelMonitor = (dataChannel, onUpdate) => {
+  // register
+  dataChannel.addEventListener("message", (e) =>  /* 計算輸入流量 */ );
+  const originalSend = dataChannel.send.bind(dataChannel);
+  dataChannel.send = (data) =>  /* 計算輸出流量 */, originalSend(data);
+
+  // unregister
+  const cleanup = () => { dataChannel.send = originalSend; /* 移除監聽 */ };
+  dataChannel.addEventListener("close", cleanup);
+  dataChannel.addEventListener("error", cleanup);
+};
+```
+
+## 信令 (Signaling)
+
+TODO
