@@ -8,9 +8,9 @@
 
 ---
 
-## 如何使用？
+# 如何使用？
 
-### 下載與啟動
+## 下載與啟動
 
 1. 前往 Releases 頁面下載最新的 **zip 壓縮檔**。
 2. 解壓縮後，資料夾內會包含 `1ureka.net.p2p.exe`。
@@ -18,7 +18,7 @@
    - **所有應用資料（設定、快取、Session 資訊）**都會存在於解壓縮後的資料夾中，不會寫入系統。
    - 想要**移除應用**，只需刪除整個資料夾即可，無需額外清理。
 
-### 選擇 Host 或 Client
+## 選擇 Host 或 Client
 
 啟動應用後，首先需要選擇角色：
 
@@ -47,12 +47,12 @@
 
   - 送出 Join 請求後，若 Host 同意，Session 即建立完成。
 
-### 斷線與資源管理
+## 斷線與資源管理
 
 - 若想中斷連線，**只需關閉應用程式**。
 - 所有的 Session、TCP 連線與資源都會隨應用程式進程釋放，不會殘留任何背景程序或隱藏服務。
 
-### 一對多
+## 一對多
 
 1ureka.net.p2p 的 Session 本質是一對一設計，但若要達到 **一個 Host 同時服務多個 Client**，可以：
 
@@ -61,7 +61,7 @@
 
 ---
 
-## 應用架構
+# 應用架構
 
 本工具採用 **雙進程架構**，透過 Electron 的 IPC 機制實現 TCP 與 WebRTC 之間的數據橋接，各自負責不同的網路層級處理：
 
@@ -75,7 +75,7 @@
 
 這兩個模組互相合作，使得本地 TCP 服務能透過 P2P 的方式被另一端直接存取。
 
-### 流程圖
+## 流程圖
 
 以下是單次 TCP 資料流從本地應用程式到本地服務器的數據流向範例：
 
@@ -107,7 +107,7 @@ sequenceDiagram
 
 ---
 
-## 核心模組：Bridge
+# 核心模組：Bridge
 
 Bridge 是應用的 **核心轉換模組**，位於 **Bridge ↔ WebRTC ↔ Bridge** 的兩端：
 
@@ -119,7 +119,7 @@ Bridge 是應用的 **核心轉換模組**，位於 **Bridge ↔ WebRTC ↔ Brid
   - 接收來自本地應用程式的 TCP 請求，將其封裝後透過 WebRTC 發送給 Host。
   - 在本地維護多個「假 TCP socket」，確保應用程式以為自己在連線真實伺服器。
 
-### 為什麼需要 Bridge？
+## 為什麼需要 Bridge？
 
 要理解 Bridge 的存在，必須先理解 **TCP socket 的本質**：
 
@@ -139,7 +139,7 @@ Bridge 是應用的 **核心轉換模組**，位於 **Bridge ↔ WebRTC ↔ Brid
 
 **Bridge 的角色**，就是建立這個「模擬層」，把 DataChannel 變成一個「可承載多個 TCP socket 的虛擬線路」。
 
-### 邏輯 Socket
+## 邏輯 Socket
 
 Bridge 透過自製協定中的 **socketId 與 event** 將單一 DataChannel 切分為多條邏輯 TCP 連線：
 
@@ -157,11 +157,11 @@ Bridge 透過自製協定中的 **socketId 與 event** 將單一 DataChannel 切
 
 > 邏輯 socket 在 Bridge 裡是一個「狀態機」，對應到真實 TCP socket 的生命周期。
 
-### 協定設計
+## 協定設計
 
 在 Bridge 的多工架構下，需要一個自訂協定，確保 **多連線、多訊息、多片段** 都能正確傳輸。
 
-#### 封包結構
+### 封包結構
 
 ```
 Offset   Size   Field          Type      說明
@@ -175,7 +175,7 @@ Offset   Size   Field          Type      說明
 [11– ]   N      payload        Uint8[]   真正的 TCP 資料
 ```
 
-#### 補充說明
+### 補充說明
 
 - **payload_size 的設計**
   - DataChannel 單次訊息的實務上限約 **65535 bytes**。
@@ -190,6 +190,6 @@ Offset   Size   Field          Type      說明
 
 ---
 
-## 核心模組：WebRTC
+# 核心模組：WebRTC
 
 <!-- TODO -->
