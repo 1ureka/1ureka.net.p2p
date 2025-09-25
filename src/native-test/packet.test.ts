@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-explicit-any */
+
 import { createChunker, createReassembler, PacketEvent } from "../native/packet";
 import { describe, test, expect } from "vitest";
 

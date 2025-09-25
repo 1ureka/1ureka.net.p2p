@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { EventEmitter } from "events";
 import { vi, describe, it, expect } from "vitest";
 import net from "net";

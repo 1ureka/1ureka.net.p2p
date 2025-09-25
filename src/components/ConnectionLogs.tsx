@@ -11,13 +11,9 @@ const formatData = (data: Record<string, unknown>) => {
   try {
     // 檢查是否是 Error 物件
     if (data.error && typeof data.error === "object") {
-      const error = data.error as any;
-      if (error.message) {
-        return `Error: ${error.message}`;
-      }
-      if (error.code) {
-        return `Error code: ${error.code}`;
-      }
+      const error = data.error;
+      if ("message" in error) return `Error: ${error.message}`;
+      if ("code" in error) return `Error code: ${error.code}`;
     }
 
     // 對於其他類型的 data，嘗試格式化為可讀的字串

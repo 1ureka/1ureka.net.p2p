@@ -28,9 +28,9 @@ const createWebRTCSession = () => {
     const dataChannel = peerConnection.createDataChannel("data", { negotiated: true, id: 0 });
     dataChannel.onopen = () => resolve(dataChannel);
 
-    dataChannel.onerror = () => {
+    dataChannel.onerror = (error) => {
       close();
-      reject(new Error("DataChannel failed to open"));
+      reject(error);
     };
     dataChannel.onclose = () => {
       close();

@@ -47,7 +47,7 @@ const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
     sender.close();
   };
 
-  dataChannel.onerror = (error) => {
+  dataChannel.onerror = () => {
     window.electron.off("bridge.data.tcp", handleIPCMessage);
     sender.close();
   };
