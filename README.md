@@ -1,89 +1,91 @@
-# 1ureka P2P 橋接工具
-
-## 專案概述
+# 1ureka.net.p2p
 
 這是一個基於 Electron 的桌面應用程式，能將 **TCP socket 與 WebRTC DataChannel** 做橋接，讓 **任何基於 TCP 的服務** 都能進行真正的點對點通訊。
 
-本專案的願景是：**只要協定建立在 TCP 之上，就能透過本工具進行 P2P 傳輸。**
-無論是 **多 socket 協定、server-first / client-first 連線、HTTP/HTTPS、WebSocket (ws/wss)，甚至 各種遊戲或自訂協定**，理論上都能透明橋接，因為工具專注在 TCP 層，不干涉更上層的協定。
+> **只要協定建立在 TCP 之上，就能透過本工具進行 P2P 傳輸。**
 
-<!-- 之後轉為 public repo 時再取消註解 -->
-<!-- 這是一個正在實驗中的計畫，目前仍需要更多的協定測試與使用案例。
-如果你也曾被防火牆、中心化伺服器或收費方案限制過，或單純想探索 TCP 與 WebRTC 的可能性，**歡迎參與與貢獻！** -->
+因為工具專注在 TCP 層，不干涉更上層的協定，因此支援各種基於 TCP 的協定，無論是 **多 socket 協定、server-first / client-first 連線、HTTP/HTTPS、WebSocket (ws/wss)，甚至 各種遊戲或自訂協定**。
 
-### 核心功能
+---
 
-1. **Host 模式 (服務提供者)**：
-   - 將任意本地 TCP 服務（如遊戲伺服器、HTTP 伺服器等）透過 WebRTC 暴露給遠端客戶端
-   - 管理多個並發 TCP 連線
-   - 支援連線監控與狀態回報
+## 如何使用？
 
-2. **Client 模式 (服務使用者)**：
-   - 在本地建立假 TCP 伺服器，接受本地應用程式連線
-   - 假 TCP 伺服器將本地應用程式的 TCP 連線透過 WebRTC 轉發到遠端 Host
-   - 支援多個本地應用程式同時連線
+### 下載與啟動
 
-## 架構設計
+1. 前往 Releases 頁面下載最新的 **zip 壓縮檔**。
+2. 解壓縮後，資料夾內會包含 `1ureka.net.p2p.exe`。
+3. 直接雙擊 `1ureka.net.p2p.exe` 就能啟動應用程式。
+   - **所有應用資料（設定、快取、Session 資訊）**都會存在於解壓縮後的資料夾中，不會寫入系統。
+   - 想要**移除應用**，只需刪除整個資料夾即可，無需額外清理。
 
-```mermaid
-flowchart
-    subgraph Client["本地機器 (Client)"]
-        App["TCP Client (遊戲 / 瀏覽器等)"]
-        subgraph CBridge["Client Bridge (主進程)"]
-            CPool["socketId 分配 / Chunker / Reassembler"]
-        end
-        subgraph CWebRTC["WebRTC 模組 (渲染進程)"]
-            CRTC["DataChannel 傳輸"]
-        end
-    end
+### Session 概念
 
-    App <---> CBridge
-    CBridge <---> CWebRTC
-```
+在 1ureka.net.p2p 中，每一次 **Host ↔ Client 的一對一連線**都稱為一個 **Session**。
 
-```mermaid
-flowchart
-    subgraph Host["遠端機器 (Host)"]
-        Srv["TCP Server (遊戲伺服器 / HTTP 等)"]
-        subgraph HBridge["Host Bridge (主進程)"]
-            HPool["TCP 連線管理 / Chunker / Reassembler"]
-        end
-        subgraph HWebRTC["WebRTC 模組 (渲染進程)"]
-            HRTC["DataChannel 傳輸"]
-        end
-    end
+- 一個 Session 代表一條獨立的 **TCP ↔ WebRTC 隧道 ↔ TCP**。
+- Host 與 Client 在 Session 內建立對應關係：
+  - Host 提供某個本地 TCP 服務。
+  - Client 則在本地建立假 TCP 伺服器，將應用程式的連線轉送給 Host。
 
-    HWebRTC <---> HBridge
-    HBridge <---> Srv
-```
+- 一個 Session 僅支援 **一個 Host 與一個 Client**。
+  - 如果需要一對多，請建立多個應用實例（詳見下方「小技巧」）。
+
+### 選擇 Host 或 Client
+
+啟動應用後，首先需要選擇角色：
+
+- **Host 模式**
+  - 適用於你要「分享服務」的情境，例如：
+    - Minecraft Dedicated Server
+    - 本地大語言模型服務 (比如 [ollama](https://github.com/ollama/ollama))
+    - 本地協作工具服務 (比如 [Blender Mixer Addon](https://ubisoft-mixer.readthedocs.io/en/latest/index.html))
+
+  - 你需要填寫：
+    - **轉發端口**：本地 TCP 服務正在監聽的端口（例：`25565` for Minecraft）。
+    - **IP 類型**：通常選擇 `127.0.0.1` 或 `::1` 即可。
+
+  - 建立成功後，會生成一個唯一的 **Session ID**。
+    - 將此 ID 分享給遠端的 Client（僅限一位）。
+
+- **Client 模式**
+  - 適用於你要「使用遠端服務」的情境，例如：
+    - Minecraft Client
+    - 在命令行寄送請求到遠端的本地大語言模型服務
+    - 在協作工具中設置 localhost 連線
+
+  - 你需要填寫：
+    - **Session ID**：向 Host 索取並填入。
+    - **Port**：指定一個本地端口（例：`25565`），應用程式會連線到此端口，實際會透過 WebRTC 傳送到 Host。
+
+  - 送出 Join 請求後，若 Host 同意，Session 即建立完成。
+
+### 斷線與資源管理
+
+- 若想中斷連線，**只需關閉應用程式**。
+- 所有的 Session、TCP 連線與資源都會隨應用程式進程釋放，不會殘留任何背景程序或隱藏服務。
+
+### 小技巧：一對多
+
+1ureka.net.p2p 的 Session 本質是一對一設計，但若要達到 **一個 Host 同時服務多個 Client**，可以：
+
+1. 在 Host 端 **同時開啟多個應用實例**，每個實例綁定相同的 TCP 服務端口。
+2. 每個實例會生成不同的 Session ID，分別提供給不同的 Client。
+
+---
+
+## 應用架構
 
 本工具採用 **雙進程架構**，透過 Electron 的 IPC 機制實現 TCP 與 WebRTC 之間的數據橋接，各自負責不同的網路層級處理：
 
-### WebRTC 模組 (渲染進程)
+- **WebRTC 模組（渲染進程）**
+  專注於 P2P 連線的建立與維護，處理信令交換、ICE 候選收集，以及資料在 DataChannel 上的傳遞。
+  可以將它視為「通往遠端的網路管道」。
 
-負責 P2P 連線的建立與數據傳輸。特別利用 **Electron 的跨平台特性**，讓 WebRTC API 能在桌面環境下穩定運行，省去自行安裝 WebRTC 依賴的麻煩。主要功能包括：
+- **Bridge 模組（主進程）**
+  負責管理與轉送本地 TCP 連線的資料，並透過 IPC 與 WebRTC 模組協同工作。
+  可以將它視為「銜接本地應用程式與網路管道的橋樑」。
 
-- **信令交換**
-  透過中央信令伺服器 (1ureka.vercel.app) 交換 SDP offer/answer 和 ICE candidates
-- **IPC 橋接**
-  監聽來自主進程的 `bridge.data.tcp` 事件，並將接收到的 WebRTC 數據透過 `bridge.data.rtc` 事件轉發給主進程
-- **數據緩衝**
-  透過實作內部佇列和緩衝區監控，確保在 DataChannel 緩衝區滿時不會因為阻塞而導致速度變慢
-
-### Bridge 模組 (主進程)
-
-負責 TCP 與 WebRTC 之間的數據轉換與傳輸，負責：
-
-- **連線管理**
-  Client 接收到新的 TCP 連線請求時，會為其分配唯一的 `socketId` ，並傳送 `CONNECT` 封包通知 Host 建立對應的 socket 連線
-- **數據轉發**
-  將來自 WebRTC 的 `DATA` 封包解包後寫入對應的 TCP socket
-- **生命週期追蹤**
-  監聽 TCP socket 的 `error`、`data`、`close` 事件，傳送 `DATA` 或 `CLOSE` 封包給對端
-- **資源管理**
-  當 socket 自身發生 `error` 或 `close` 時，會自動釋放相關資源，對端則會因為收到 `CLOSE` 封包而釋放對應資源
-
-所有模組透過 **Electron IPC** 和 **自訂封包格式** 協同工作，實現完整的 TCP over WebRTC 隧道，讓兩端的傳統 TCP 應用程式能夠透過 P2P 網路進行通信。
+這兩個模組互相合作，使得本地 TCP 服務能透過 P2P 的方式被另一端直接存取。
 
 ### 流程圖
 
@@ -115,162 +117,91 @@ sequenceDiagram
     CB->>App: socket.write(data)
 ```
 
-## 封包設計
+---
 
-在 **TCP over WebRTC** 的橋接中，為了支援多 socket、多訊息，以及避免因訊息過大導致傳輸失敗，實作了一個 **自訂 Header + Chunker 機制**。
+## 核心模組：Bridge
 
-- **Header**：提供必要的中繼資訊（socket 分流、訊息標識、事件型別）。
-- **Chunker**：將一個完整訊息切成多個片段 (chunk)，每個片段攜帶 Header，確保在對端能正確重組。
+Bridge 是應用的 **核心轉換模組**，位於 **Bridge ↔ WebRTC ↔ Bridge** 的兩端：
 
-### 結構
+- **Host Bridge**
+  - 接收來自 WebRTC 的封包，對應到本地真實 TCP 服務。
+  - 負責維護多個 TCP 連線的狀態，並將伺服器回應透過 WebRTC 傳回給 Client。
+
+- **Client Bridge**
+  - 接收來自本地應用程式的 TCP 請求，將其封裝後透過 WebRTC 發送給 Host。
+  - 在本地維護多個「假 TCP socket」，確保應用程式以為自己在連線真實伺服器。
+
+### 為什麼需要 Bridge？
+
+要理解 Bridge 的存在，必須先理解 **TCP socket 的本質**：
+
+- **TCP 是雙向的資料流協定**。
+  - 每建立一次連線，就會創造一個獨立的 **socket 實體**，用來維護連線狀態（序號、緩衝、重傳、關閉等）。
+  - 一個應用程式可以同時開啟許多 TCP socket，例如：
+    - 瀏覽器同時載入多張圖片、JS、CSS。
+    - 資料庫連線池 (connection pool) 中的多條 TCP 連線，同樣指向同一個 DB 服務與 port。
+    - Vite Dev Server (一個前端常用的網站開發工具) 會同時出現短生命的靜態資源請求與長生命的 HMR 連線。
+
+- **WebRTC DataChannel 的限制**
+  - DataChannel 底層基於 **SCTP over DTLS over UDP**，本質上是「訊息導向（message-oriented）」的，而非 TCP 那樣的連續位元流。
+  - 每條 DataChannel 對應一個 SCTP stream，單個訊息大小有限制。
+  - 因此在 DataChannel 上要模擬 TCP，必須有額外層：
+    1. **多工 (Multiplexing)**：讓多個邏輯 TCP socket 共用同一條 DataChannel。
+    2. **流式重組 (Chunker/Reassembler)**：將 TCP 的資料流切片到合適的大小再拼回來。
+
+**Bridge 的角色**，就是建立這個「模擬層」，把 DataChannel 變成一個「可承載多個 TCP socket 的虛擬線路」。
+
+### 邏輯 Socket
+
+Bridge 透過自製協定中的 **socketId 與 event** 將單一 DataChannel 切分為多條邏輯 TCP 連線：
+
+- **一個 socketId = 一條 TCP 連線**
+  - Host 與 Client 會共享這個 socketId。
+  - 所有與此連線相關的 `CONNECT`、`DATA`、`CLOSE` 封包，都會使用相同的 socketId。
+
+- **生命週期**
+  - **建立 (CONNECT)**
+    - Client Bridge 接收到本地 TCP 請求 → 分配 socketId → 發送 CONNECT 封包給 Host。
+  - **傳輸 (DATA)**
+    - 雙方透過 Chunker / Reassembler 傳送與接收資料。
+  - **關閉 (CLOSE)**
+    - 任一端發生錯誤或主動關閉 → 發送 CLOSE 封包 → 對端釋放資源。
+
+> 邏輯 socket 在 Bridge 裡是一個「狀態機」，對應到真實 TCP socket 的生命周期。
+
+### 協定設計
+
+在 Bridge 的多工架構下，需要一個自訂協定，確保 **多連線、多訊息、多片段** 都能正確傳輸。
+
+#### 封包結構
 
 ```
 Offset   Size   Field          Type      說明
 ────────────────────────────────────────────────────────────
-[0]      1      event          Uint8     DATA, CONNECT, CLOSE 事件
-[1–2]    2      socket_id      Uint16    對應一條 TCP socket 連線
-                                         (真的有數萬條連線 DataChannel 也不可能負荷，因此範圍足夠)
-[3–4]    2      chunk_id       Uint16    一次完整訊息的唯一識別
-                                         (WebRTC ordered=true 不太可能同時多個 chunk 未組完，因此範圍足夠)
-[5–6]    2      chunk_index    Uint16    本片段序號
+[0]      1      event          Uint8     事件型別 (CONNECT, DATA, CLOSE)
+[1–2]    2      socket_id      Uint16    邏輯 TCP 連線 ID
+[3–4]    2      chunk_id       Uint16    一段 TCP 資料流的片段 ID
+[5–6]    2      chunk_index    Uint16    本片段在訊息中的序號
 [7–8]    2      total_chunks   Uint16    總片段數
-                                         (65535 片段 * 65525 bytes = ~4GB)
-[9–10]   2      payload_size   Uint16    本片段大小 (bytes) (0–65535 > payload 最大 65525)
-[11– ]   N      payload        Uint8[]   真正的資料內容
+[9–10]   2      payload_size   Uint16    本片段資料大小
+[11– ]   N      payload        Uint8[]   真正的 TCP 資料
 ```
 
-## 生命週期與資源管理
+#### 補充說明
 
-核心函數 `createHostBridge`, `createClientBridge`, `createWebRTC` 並未提供顯式的 `close()` 或 `clean()` API，原因是 **核心功能的生命週期與應用程式本身綁定**：
+- **payload_size 的設計**
+  - DataChannel 單次訊息的實務上限約 **65535 bytes**。
+  - 扣除協定 header 的 11 bytes，最大 payload 剛好是 **65525 bytes**。
+  - 這確保 `payload_size` 可以完全由 `Uint16` 表示，無需額外擴展。
 
-- 一旦進入 `connected` 狀態，該層就會持續存在，直到 Electron App 被關閉。
-- 使用者若要斷開連線，只需關閉整個應用程式，所有資源會隨進程自動釋放。
+- **循環使用**
+  - `socketId` 與 `chunkId` **MUST 實作循環使用**。
+  - 上限皆為 65535，當編號達到最大值後，必須回到 0 重新分配。
+  - 任何尚未釋放的 socketId 或未完成的 chunkId 不得被覆寫，實作方 SHOULD 確保安全回收。
+  - 因此該協定能支撐同時多達 65535 條邏輯連線與 65535 個未完成的訊息。
 
-然而，在 **進入 `connected` 之前** 的階段（`connecting` → `failed`），以及連線中的 sockets 管理，仍然會進行資源釋放，以避免資源洩漏或殘留。
+---
 
-### WebRTC, Bridge 生命週期
+## 核心模組：WebRTC
 
-```mermaid
-flowchart TD
-
-  A["idle"] --> B["connecting"]
-  B --> C["failed"]
-  C --> D["(retry)"]
-  D --> B
-
-  B --> E["connected"]
-  E --> F["App exit"]
-  F --> A
-```
-
-### Socket 生命週期
-
-```mermaid
-stateDiagram-v2
-  state Host {
-    [*] --> host_connect
-    host_connect : IPC/RTC 收到 CONNECT (來自 Client)
-    host_connect --> host_tcp
-    host_tcp : net.connect() 到真實 TCP 服務
-  }
-
-  state Client {
-    [*] --> client_connect
-    client_connect : TCP Server 收到 connection (來自外部應用)
-    client_connect --> client_assign
-    client_assign : 指派 socketId，並發送 CONNECT 封包給 Host
-  }
-
-  host_tcp --> createSocketLifecycle.bind(socket)
-  client_assign --> createSocketLifecycle.bind(socket)
-
-  state createSocketLifecycle.bind(socket) {
-    [*] --> data
-    data : socket.on('data')
-
-    data --> error
-    data --> peer_close
-
-    error : socket.on('error')
-    peer_close : IPC/RTC 收到對方 CLOSE
-
-    error --> destroy
-    peer_close --> destroy
-
-    destroy : socket.destroy()
-    destroy --> closed
-
-    closed : socket.on('close')
-    closed --> cleanup
-
-    cleanup : 釋放資源並發送 CLOSE 封包給對方
-  }
-```
-
-## WebRTC 架構
-
-在實作上，WebRTC 的連線過程分散於許多步驟：建立 `RTCPeerConnection`、建立唯一的 `RTCDataChannel`、收集與設置 ICE Candidate、設置遠端描述等等。
-為了讓生命週期清楚，專案封裝了一個 **唯一連線的 Session API**：
-
-```ts
-const { getDataChannel, getLocal, setRemote, close } = createWebRTCSession();
-```
-
-> 這層 Session 封裝會在一開始就初始化 **DataChannel** 與 **ICE Candidate 收集**，避免使用者忘記步驟。
-> 其責任是確保 **唯一的 WebRTC 連線生命週期**，上層只需要專注於角色（Host/Client）的流程。
-
-### 插件式綁定（bindXXX）規範
-
-在 WebRTC 模組中，常見的操作如 **DataChannel ↔ IPC 綁定**、**監控流量**、**記錄監控資訊**，都可以被抽象為「插件」。
-為了確保生命週期清晰，每個 `bindXXX` 函數必須遵循以下規範：
-
-- **自給自足**：
-  呼叫 `bindXXX(...)` 即表示完成了該插件的整個註冊過程。呼叫者無需額外呼叫 `unregister` 或 `close`。
-- **責任範圍**：
-  - `register` → 在 `onmessage`、`monkey patch send` 等事件中掛載需要的邏輯。
-  - `unregister` → 必須在 `onclose` / `onerror` 自動移除監聽器、釋放自己創建的資源。
-
-- **框架保證**：
-  核心 `createWebRTCSession` 已經保證整體連線的 **主生命週期**，插件只需管理「自己多出來的部分」。
-- **類似 Blender 插件機制**：
-  - Blender 規範每個插件必須有 `register/unregister`。
-  - 在這裡，`bindXXX` 就是自帶 register/unregister 的函式，應用本身不需要知道如何清理。
-
-### 範例：DataChannel 與 IPC 綁定
-
-```ts
-const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
-  const sender = createDataChannelSender(dataChannel);
-
-  // register
-  dataChannel.onmessage = (event) => /* ...轉發到 IPC... */;
-  const handleIPCMessage = (buffer: unknown) => /* ...轉發到 DataChannel... */;
-  window.electron.on("bridge.data.tcp", handleIPCMessage);
-
-  // unregister
-  dataChannel.onclose = () => {
-    window.electron.off("bridge.data.tcp", handleIPCMessage);
-    sender.close();
-  };
-  dataChannel.onerror = () => {
-    window.electron.off("bridge.data.tcp", handleIPCMessage);
-    sender.close();
-  };
-};
-```
-
-### 範例：DataChannel 流量監控
-
-```ts
-const bindDataChannelMonitor = (dataChannel, onUpdate) => {
-  // register
-  dataChannel.addEventListener("message", (e) =>  /* 計算輸入流量 */ );
-  const originalSend = dataChannel.send.bind(dataChannel);
-  dataChannel.send = (data) =>  /* 計算輸出流量 */, originalSend(data);
-
-  // unregister
-  const cleanup = () => { dataChannel.send = originalSend; /* 移除監聽 */ };
-  dataChannel.addEventListener("close", cleanup);
-  dataChannel.addEventListener("error", cleanup);
-};
-```
+<!-- TODO -->
