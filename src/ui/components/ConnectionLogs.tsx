@@ -4,7 +4,7 @@ import { LayoutBox } from "@/ui/components/Layout";
 import { ellipsisSx } from "@/ui/components/Property";
 
 import { useBridge } from "@/store/bridge";
-import { useWebRTC } from "@/store/webrtc";
+import { useTransport } from "@/transport/store";
 import type { ConnectionLogEntry } from "@/store/type";
 
 const formatData = (data: Record<string, unknown>) => {
@@ -70,7 +70,7 @@ const getRow = (params: ConnectionLogEntry & { current: boolean }) => {
 
 const ConnectionLogs = () => {
   const history1 = useBridge((state) => state.history);
-  const history2 = useWebRTC((state) => state.history);
+  const history2 = useTransport((state) => state.history);
   const history = [...history1, ...history2].sort((a, b) => a.timestamp - b.timestamp);
 
   return (

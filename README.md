@@ -233,7 +233,7 @@ Transport 模組是該專案的 **P2P 實現基礎**，以 WebRTC 為核心，�
 - 專案只需要 **一條穩定的資料通道** 來承載 TCP 封包。
 
 ```ts
-const { getDataChannel, getLocal, setRemote, close } = createWebRTCSession();
+const { getDataChannel, getLocal, setRemote, close } = createPeerConnection();
 ```
 
 > [!TIP]

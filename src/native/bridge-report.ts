@@ -1,6 +1,6 @@
 import type { BrowserWindow } from "electron";
 import { createStore } from "zustand/vanilla";
-import type { ConnectionStatus, ConnectionLogEntry } from "@/store/type";
+import type { ConnectionStatus, ConnectionLogEntry } from "@/utils";
 
 const store = createStore<{ status: ConnectionStatus; history: ConnectionLogEntry[] }>(() => ({
   status: "disconnected",

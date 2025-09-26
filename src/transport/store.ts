@@ -1,20 +1,19 @@
 import { create } from "zustand";
-import type { ConnectionStatus, ConnectionLogEntry } from "@/store/type";
+import type { ConnectionStatus, ConnectionLogEntry } from "@/utils";
 
-// ===============================================================
-// 以下是給 UI 使用的 hook， readonly
-// ===============================================================
-const store = create<{ status: ConnectionStatus; history: ConnectionLogEntry[] }>(() => ({
+// 給 UI 使用 (read only)
+
+const useTransport = create<{ status: ConnectionStatus; history: ConnectionLogEntry[] }>(() => ({
   status: "disconnected",
   history: [],
 }));
 
-const useWebRTC = store;
-export { useWebRTC };
+export { useTransport };
 
-// ===============================================================
-// 以下是給 native/webrtc.ts 使用的函式，更新狀態
-// ===============================================================
+// 給邏輯使用 (set only)
+
+const store = useTransport;
+
 type PrimitiveState = {
   status: ConnectionStatus;
   log: string;

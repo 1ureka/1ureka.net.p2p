@@ -1,4 +1,4 @@
-import { setState } from "@/store/webrtc";
+import { setState } from "@/transport/store";
 
 /**
  * 為 RTCDataChannel 創建一個發送器，確保在緩衝區滿時不會丟失資料。

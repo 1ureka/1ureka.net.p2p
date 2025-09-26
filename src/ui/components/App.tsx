@@ -3,7 +3,7 @@ import { Box, Typography } from "@mui/material";
 
 import { useFormStore } from "@/ui/form";
 import { useBridge } from "@/store/bridge";
-import { useWebRTC } from "@/store/webrtc";
+import { useTransport } from "@/transport/store";
 import type { Role } from "@/native/webrtc";
 
 import { LayoutBox, LayoutColumn, LayoutRow, LayoutText, LayoutTitle } from "@/ui/components/Layout";
@@ -30,7 +30,7 @@ const WebRTCPanel = () => {
   const setRole = useFormStore((state) => state.setRole);
   const code = useFormStore((state) => state.code);
   const setCode = useFormStore((state) => state.setCode);
-  const status = useWebRTC((state) => state.status);
+  const status = useTransport((state) => state.status);
 
   const items: Array<{ value: Role; label: string }> = [
     { value: "host", label: "Host" },

@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { useFormStore } from "@/ui/form";
-import { useWebRTC } from "@/store/webrtc";
 import { useBridge } from "@/store/bridge";
+import { useTransport } from "@/transport/store";
 import { createWebRTC } from "@/native/webrtc";
 import { LayoutButton } from "@/ui/components/Layout";
 
@@ -15,7 +15,7 @@ const ConnectionButton = () => {
     if (result) window.electron.send(`bridge.start.${role}`, port);
   }, [code, port, role]);
 
-  const status1 = useWebRTC((state) => state.status);
+  const status1 = useTransport((state) => state.status);
   const status2 = useBridge((state) => state.status);
 
   return (

@@ -1,5 +1,5 @@
-import { setState } from "@/store/webrtc";
-import { createDataChannelSender } from "@/native/webrtc-sender";
+import { setState } from "@/transport/store";
+import { createDataChannelSender } from "@/transport/transport-sender";
 
 /**
  * 綁定 DataChannel 與 IPC 的雙向資料橋接
