@@ -15,7 +15,7 @@
 1. 前往 Releases 頁面下載最新的 **zip 壓縮檔**。
 2. 解壓縮後，資料夾內會包含 `1ureka.net.p2p.exe`。
 3. 直接雙擊 `1ureka.net.p2p.exe` 就能啟動應用程式。
-   - **所有應用資料（設定、快取、Session 資訊）**都會存在於解壓縮後的資料夾中，不會寫入系統。
+   - **所有應用資料**都會存在於解壓縮後的資料夾中，不會寫入系統。
    - 想要**移除應用**，只需刪除整個資料夾即可，無需額外清理。
 
 ## 選擇 Host 或 Client
@@ -77,47 +77,54 @@
 
 ## 流程圖
 
-以下是單次 TCP 資料流從本地應用程式到本地服務器的數據流向範例：
+以下流程圖展示了 TCP 資料如何透過本系統進行傳輸：
 
 ```mermaid
 sequenceDiagram
-    participant App as TCP Client (本地應用)
+    participant AP as 本地應用
     participant CB as Client Bridge
-    participant DC as WebRTC DataChannel
+    participant DC as WebRTC
     participant HB as Host Bridge
-    participant Srv as TCP Server (本地服務)
+    participant SR as 本地服務
 
-    App->>CB: TCP connect()
-    CB->>CB: 分配 socketId (0..65535)
-    App->>CB: socket.write(data)
-    CB->>CB: Chunker 切片 (header + payload)
-    CB->>DC: 封裝後的 buffer
+    AP->>CB: 收到本地應用連線請求
+    CB->>CB: 分配識別碼
+    CB->>DC: CONNECT 封包
+    DC->>HB: CONNECT 封包
+    HB->>SR: 建立新的 TCP 連線至服務
 
-    DC->>HB: 收到 buffer
-    HB->>HB: Reassembler 重組
-    HB->>Srv: socket.write(data)
+    AP->>CB: 收到應用程式的資料
+    CB->>CB: 切片與封裝標頭
+    CB->>DC: DATA 封包
+    DC->>HB: DATA 封包
+    HB->>HB: 封包解析與重組
+    HB->>SR: 寫入資料到 TCP 服務
 
-    Srv->>HB: 回應資料
-    HB->>HB: Chunker 切片
-    HB->>DC: 封裝後的 buffer
-    DC->>CB: 收到 buffer
-    CB->>CB: Reassembler 重組
-    CB->>App: socket.write(data)
+    SR->>HB: 服務回應資料
+    HB->>HB: 切片與封裝標頭
+    HB->>DC: DATA 封包
+    DC->>CB: DATA 封包
+    CB->>CB: 封包解析與重組
+    CB->>AP: 寫入資料到 TCP 連線
+
+    AP->>CB: 關閉連線
+    CB->>CB: 釋放資源
+    CB->>DC: CLOSE 封包
+    DC->>HB: CLOSE 封包
+    HB->>SR: 關閉 TCP 連線
 ```
 
 ---
 
 # 核心模組：Bridge
 
-Bridge 是應用的 **核心轉換模組**，位於 **Bridge ↔ WebRTC ↔ Bridge** 的兩端：
+Bridge 是應用的 **核心轉換模組**，根據不同角色的需求，分為：
 
-- **Host Bridge**
-  - 接收來自 WebRTC 的封包，對應到本地真實 TCP 服務。
-  - 負責維護多個 TCP 連線的狀態，並將伺服器回應透過 WebRTC 傳回給 Client。
+- **Host**
+  將任意本地 TCP 服務（如遊戲伺服器、HTTP 伺服器等）透過 WebRTC 暴露給遠端客戶端。
 
-- **Client Bridge**
-  - 接收來自本地應用程式的 TCP 請求，將其封裝後透過 WebRTC 發送給 Host。
-  - 在本地維護多個「假 TCP socket」，確保應用程式以為自己在連線真實伺服器。
+- **Client**
+  將本地應用程式的 TCP 連線，透過建立假 TCP 伺服器，再經由 WebRTC 轉發到遠端 Host。
 
 ## 為什麼需要 Bridge？
 
@@ -141,7 +148,7 @@ Bridge 是應用的 **核心轉換模組**，位於 **Bridge ↔ WebRTC ↔ Brid
 
 ## 邏輯 Socket
 
-Bridge 透過自製協定中的 **socketId 與 event** 將單一 DataChannel 切分為多條邏輯 TCP 連線：
+Bridge 透過自訂協定中的 **socketId 與 event** 將單一 DataChannel 切分為多條邏輯 TCP 連線：
 
 - **一個 socketId = 一條 TCP 連線**
   - Host 與 Client 會共享這個 socketId。
@@ -149,7 +156,7 @@ Bridge 透過自製協定中的 **socketId 與 event** 將單一 DataChannel 切
 
 - **生命週期**
   - **建立 (CONNECT)**
-    - Client Bridge 接收到本地 TCP 請求 → 分配 socketId → 發送 CONNECT 封包給 Host。
+    - Client 接收到本地 TCP 請求 → 分配 socketId → 發送 CONNECT 封包 → Host 建立新的 TCP socket。
   - **傳輸 (DATA)**
     - 雙方透過 Chunker / Reassembler 傳送與接收資料。
   - **關閉 (CLOSE)**
@@ -192,7 +199,7 @@ Offset   Size   Field          Type      說明
 
 # 核心模組：WebRTC
 
-WebRTC 模組是 **1ureka.net.p2p 的 P2P 實現基礎**，主要負責：
+WebRTC 模組是該專案的 **P2P 實現基礎**，主要負責：
 
 1. 建立並維護 **Peer-to-Peer 連線**。
 2. 提供唯一的 **RTCDataChannel** 作為 TCP 隧道的承載管道。
@@ -212,14 +219,13 @@ WebRTC 模組是 **1ureka.net.p2p 的 P2P 實現基礎**，主要負責：
 - 建立連線需要 SDP offer/answer、ICE candidates 的交換。
 - 必須正確初始化 DataChannel，並監控其狀態。
 
-因此，專案內封裝了一層 **Session API**，確保初始化、生命週期管理的簡單性。
+因此，專案內封裝了一層 **WebRTC Session API**，確保初始化、生命週期管理的簡單性。
 
-## Session API
+## WebRTC Session API
 
-專案採用 **Vanilla ICE 流程**，並將 **RTCPeerConnection** 與 **RTCDataChannel** 綁定在同一個生命週期，抽象為 **「Session」**。
+專案採用 **Vanilla ICE 流程**，並將 **RTCPeerConnection** 與 **RTCDataChannel** 綁定在同一個生命週期。
 
 這樣做的原因是：
-
 - 專案並不是要實作完整的 RTC 應用（例如多媒體傳輸、多條 DataChannel）。
 - 專案只需要 **一條穩定的資料通道** 來承載 TCP 封包。
 
@@ -227,7 +233,7 @@ WebRTC 模組是 **1ureka.net.p2p 的 P2P 實現基礎**，主要負責：
 const { getDataChannel, getLocal, setRemote, close } = createWebRTCSession();
 ```
 
-> 這層 Session 封裝會在一開始就初始化 **DataChannel** 與 **ICE Candidate 收集**。
+> 這層封裝會在一開始就初始化 **RTCDataChannel** 與 **ICE Candidate 收集**。
 > 同時將 **RTCPeerConnection** 與 **RTCDataChannel** 綁定在一起，上層只需要專注於角色（Host/Client）的流程。
 
 ## 插件式綁定
