@@ -139,7 +139,7 @@ Adapter 是應用的 **核心轉換模組**，根據不同角色的需求，分�
     - Vite 開發伺服器 (一個前端常用的網站開發工具) 會同時出現短生命的靜態資源請求與長生命的 HMR 連線。
 
 - **WebRTC DataChannel 的限制**
-  - DataChannel 底層基於 **SCTP over DTLS over UDP**，本質上是「訊息導向（message-oriented）」的，而非 TCP 那樣的連續位元流。
+  - DataChannel 底層基於 **SCTP over DTLS over UDP**，本質上是 **訊息導向** 的，而非 TCP 那樣的連續位元流。
   - 每條 DataChannel 對應一個 SCTP stream，單個訊息大小有限制。
   - 因此在 DataChannel 上要模擬 TCP，必須有額外層：
     1. **多工 (Multiplexing)**：讓多個邏輯 TCP socket 共用同一條 DataChannel。
@@ -149,20 +149,21 @@ Adapter 是應用的 **核心轉換模組**，根據不同角色的需求，分�
 
 ## 邏輯 Socket
 
-Adapter 透過自訂協定中的 **socketId 與 event** 將單一 DataChannel 切分為多條邏輯 TCP 連線：
+Adapter 透過自訂協定中的 **識別碼與事件封包** 將單一 DataChannel 切分為多條邏輯 TCP 連線：
 
-- **一個 socketId = 一條 TCP 連線**
-  - Host 與 Client 會共享這個 socketId。
-  - 所有與此連線相關的 `CONNECT`、`DATA`、`CLOSE` 封包，都會使用相同的 socketId。
+- **一個 socket_id = 一條 TCP 連線**
+  - Host 與 Client 會共享這個 socket_id。
+  - 所有與此連線相關的 `CONNECT`、`DATA`、`CLOSE` 封包，都會使用相同的 socket_id。
 
 - **生命週期**
   - **建立 (CONNECT)**
-    - Client 接收到本地 TCP 請求 → 分配 socketId → 發送 CONNECT 封包 → Host 建立新的 TCP socket。
+    - Client 接收到本地 TCP 請求 → 分配 socket_id → 發送 `CONNECT` 封包 → Host 建立新的 TCP socket。
   - **傳輸 (DATA)**
     - 雙方透過 Chunker / Reassembler 傳送與接收資料。
   - **關閉 (CLOSE)**
-    - 任一端發生錯誤或主動關閉 → 發送 CLOSE 封包 → 對端釋放資源。
+    - 任一端發生錯誤或主動關閉 → 發送 `CLOSE` 封包 → 對端釋放資源。
 
+> [!TIP]
 > 邏輯 socket 在 Adapter 裡是一個「狀態機」，對應到真實 TCP socket 的生命周期。
 
 ## 協定設計
@@ -191,9 +192,9 @@ Offset   Size   Field          Type      說明
   - 這確保 `payload_size` 可以完全由 `Uint16` 表示，無需額外擴展。
 
 - **循環使用**
-  - `socketId` 與 `chunkId` **MUST 實作循環使用**。
+  - `socket_id` 與 `chunk_id` **MUST 實作循環使用**。
   - 上限皆為 65535，當編號達到最大值後，必須回到 0 重新分配。
-  - 任何尚未釋放的 socketId 或未完成的 chunkId 不得被覆寫，實作方 SHOULD 確保安全回收。
+  - 任何尚未釋放的 socket_id 或未完成的 chunk_id 不得被覆寫，實作方 SHOULD 確保安全回收。
   - 因此該協定能支撐同時多達 65535 條邏輯連線與 65535 個未完成的訊息。
 
 ---
@@ -220,13 +221,14 @@ Transport 模組是該專案的 **P2P 實現基礎**，以 WebRTC 為核心，�
 - 建立連線需要 SDP offer/answer、ICE candidates 的交換。
 - 必須正確初始化 DataChannel，並監控其狀態。
 
-因此，專案內封裝了一層 **WebRTC Session API**，確保初始化、生命週期管理的簡單性。
+因此，專案內封裝了一層 API，確保初始化、生命週期管理的簡單性。
 
-## 生命週期管理
+## API 設計
 
 專案採用 **Vanilla ICE 流程**，並將 **RTCPeerConnection** 與 **RTCDataChannel** 綁定在同一個生命週期。
 
 這樣做的原因是：
+
 - 專案並不是要實作完整的 RTC 應用（例如多媒體傳輸、多條 DataChannel）。
 - 專案只需要 **一條穩定的資料通道** 來承載 TCP 封包。
 
@@ -234,8 +236,9 @@ Transport 模組是該專案的 **P2P 實現基礎**，以 WebRTC 為核心，�
 const { getDataChannel, getLocal, setRemote, close } = createWebRTCSession();
 ```
 
+> [!TIP]
 > 這層封裝會在一開始就初始化 **RTCDataChannel** 與 **ICE Candidate 收集**。
-> 同時將 **RTCPeerConnection** 與 **RTCDataChannel** 綁定在一起，上層只需要專注於角色（Host/Client）的流程。
+> 上層只需要專注於角色（Host/Client）的流程。
 
 ## 插件式綁定
 
