@@ -55,7 +55,7 @@ const WebRTCPanel = () => {
   );
 };
 
-const BridgePanel = () => {
+const AdapterPanel = () => {
   const port = useFormStore((state) => state.port);
   const setPort = useFormStore((state) => state.setPort);
   const status = useAdapter((state) => state.status);
@@ -106,7 +106,7 @@ const App = () => (
     <LayoutColumn>
       <Title />
       <WebRTCPanel />
-      <BridgePanel />
+      <AdapterPanel />
     </LayoutColumn>
     <LayoutColumn sx={{ gridTemplateRows: "1fr", height: 1 }}>
       <LogPanel />

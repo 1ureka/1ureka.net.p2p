@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { IPCChannel } from "@/ipc";
 import { EventEmitter } from "events";
 import { vi, describe, it, expect } from "vitest";
 import net from "net";
@@ -22,13 +23,13 @@ const createMockElectronApp = () => {
   };
 
   const sendToPeer = (data: Buffer) => {
-    setTimeout(() => peerApp?.ipcMain.emit("bridge.data.rtc", null, data), 50);
+    setTimeout(() => peerApp?.ipcMain.emit(IPCChannel.FromRTC, null, data), 50);
   };
 
   const browserWindow = {
     webContents: {
-      send: (channel: string, data: Buffer) => {
-        if (channel === "bridge.data.tcp") {
+      send: (channel: IPCChannel, data: Buffer) => {
+        if (channel === IPCChannel.FromTCP) {
           sendToPeer(data);
         } else {
           // 應用中的其他 主進程與渲染進程 的通訊事件，與該 e2e 測試無關，故不處理

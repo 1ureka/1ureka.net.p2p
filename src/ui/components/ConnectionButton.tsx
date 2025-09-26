@@ -4,6 +4,7 @@ import { useAdapter } from "@/adapter/store";
 import { useTransport } from "@/transport/store";
 import { createTransport } from "@/transport/transport";
 import { LayoutButton } from "@/ui/components/Layout";
+import { IPCChannel } from "@/ipc";
 
 const ConnectionButton = () => {
   const port = useFormStore((state) => state.port);
@@ -12,7 +13,7 @@ const ConnectionButton = () => {
 
   const handleConnect = useCallback(async () => {
     const result = await createTransport({ role, code: String(code) });
-    if (result) window.electron.send(`bridge.start.${role}`, port);
+    if (result) window.electron.send(IPCChannel.AdapterStart, port, role);
   }, [code, port, role]);
 
   const status1 = useTransport((state) => state.status);

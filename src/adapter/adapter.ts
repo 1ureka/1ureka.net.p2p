@@ -3,6 +3,7 @@ import { ipcMain, type BrowserWindow } from "electron";
 import { createReporter } from "@/adapter/report";
 import { checkLock, tryConnect, tryListen } from "@/adapter/adapter-utils";
 import { createChunker, createReassembler, PacketEvent } from "@/adapter/packet";
+import { IPCChannel } from "@/ipc";
 
 /**
  * 為每個 TCP socket 建立生命週期管理 (可參考 README.md)
@@ -16,7 +17,7 @@ const createSocketLifecycle = (sockets: Map<number, net.Socket>, win: BrowserWin
 
     const { generateChunks } = createChunker(socketId);
     for (const packet of generateChunks(PacketEvent.CONNECT, Buffer.alloc(0))) {
-      win.webContents.send("bridge.data.tcp", packet);
+      win.webContents.send(IPCChannel.FromTCP, packet);
     }
 
     socket.on("error", (error) => {
@@ -30,7 +31,7 @@ const createSocketLifecycle = (sockets: Map<number, net.Socket>, win: BrowserWin
     socket.on("data", (chunk) => {
       try {
         for (const packet of generateChunks(PacketEvent.DATA, chunk)) {
-          win.webContents.send("bridge.data.tcp", packet);
+          win.webContents.send(IPCChannel.FromTCP, packet);
         }
       } catch (error) {
         reportError({ message: `Error processing data for socket ${socketId}`, data: { error } });
@@ -40,7 +41,7 @@ const createSocketLifecycle = (sockets: Map<number, net.Socket>, win: BrowserWin
     socket.on("close", () => {
       try {
         for (const packet of generateChunks(PacketEvent.CLOSE, Buffer.alloc(0))) {
-          win.webContents.send("bridge.data.tcp", packet);
+          win.webContents.send(IPCChannel.FromTCP, packet);
         }
       } catch (error) {
         reportError({ message: `Error processing close for socket ${socketId}`, data: { error } });
@@ -70,8 +71,8 @@ async function createHostAdapter(win: BrowserWindow, port: number) {
   const sockets: Map<number, net.Socket> = new Map();
   const socketLifecycle = createSocketLifecycle(sockets, win);
 
-  ipcMain.removeAllListeners("bridge.data.rtc");
-  ipcMain.on("bridge.data.rtc", (_, buffer: Buffer) => {
+  ipcMain.removeAllListeners(IPCChannel.FromRTC);
+  ipcMain.on(IPCChannel.FromRTC, (_, buffer: Buffer) => {
     let msg;
 
     try {
@@ -133,8 +134,8 @@ async function createClientAdapter(win: BrowserWindow, port: number) {
     socketLifecycle.bind(socket, ++socketCount % 65536);
   });
 
-  ipcMain.removeAllListeners("bridge.data.rtc");
-  ipcMain.on("bridge.data.rtc", (_e, buffer: Buffer) => {
+  ipcMain.removeAllListeners(IPCChannel.FromRTC);
+  ipcMain.on(IPCChannel.FromRTC, (_e, buffer: Buffer) => {
     let msg;
 
     try {

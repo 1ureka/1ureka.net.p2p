@@ -14,9 +14,7 @@ export async function tryCatch<T, E = Error>(promise: Promise<T>): Promise<Resul
 }
 
 export type ConnectionStatus = "connected" | "disconnected" | "connecting" | "failed";
-
 export type ConnectionLogLevel = "info" | "warn" | "error";
-
 export type ConnectionLogEntry = {
   level: ConnectionLogLevel;
   module: string;
