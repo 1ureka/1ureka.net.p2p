@@ -89,7 +89,7 @@ describe("Adapter System Tests", () => {
     tcpClient.destroy();
     echoServer.close();
 
-    // 用於看 socket close 的 log，確保橋接端有正確關閉
+    // 用於看 socket close 的 log，確保兩端 adapter 有正確關閉
     await new Promise((res) => setTimeout(res, 500));
   }, 5000);
 

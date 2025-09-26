@@ -55,7 +55,7 @@ const createSocketLifecycle = (sockets: Map<number, net.Socket>, win: BrowserWin
 };
 
 /**
- * 建立 Host 端的橋接 (連接到本地的 TCP 伺服器)
+ * 建立 Host 端的 Adapter (連接到本地的 TCP 伺服器)
  */
 async function createHostAdapter(win: BrowserWindow, port: number) {
   const { reportLog, reportWarn, reportError, reportStatus } = createReporter("Host", win);
@@ -112,7 +112,7 @@ async function createHostAdapter(win: BrowserWindow, port: number) {
 }
 
 /**
- * 建立 Client 端的橋接 (建立一個假 TCP 伺服器讓本地的 TCP 客戶端連接)
+ * 建立 Client 端的 Adapter (建立一個假 TCP 伺服器讓本地的 TCP 客戶端連接)
  */
 async function createClientAdapter(win: BrowserWindow, port: number) {
   const { reportLog, reportError, reportStatus } = createReporter("Client", win);
