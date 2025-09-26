@@ -2,9 +2,9 @@ import LanRoundedIcon from "@mui/icons-material/LanRounded";
 import { Box, Typography } from "@mui/material";
 
 import { useFormStore } from "@/ui/form";
-import { useBridge } from "@/store/bridge";
+import { useAdapter } from "@/adapter/store";
 import { useTransport } from "@/transport/store";
-import type { Role } from "@/native/webrtc";
+import type { Role } from "@/transport/transport";
 
 import { LayoutBox, LayoutColumn, LayoutRow, LayoutText, LayoutTitle } from "@/ui/components/Layout";
 import { EnumProperty, NumberProperty } from "@/ui/components/Property";
@@ -58,7 +58,7 @@ const WebRTCPanel = () => {
 const BridgePanel = () => {
   const port = useFormStore((state) => state.port);
   const setPort = useFormStore((state) => state.setPort);
-  const status = useBridge((state) => state.status);
+  const status = useAdapter((state) => state.status);
 
   return (
     <LayoutBox>

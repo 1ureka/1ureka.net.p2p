@@ -3,9 +3,9 @@ import { Box, Typography } from "@mui/material";
 import { LayoutBox } from "@/ui/components/Layout";
 import { ellipsisSx } from "@/ui/components/Property";
 
-import { useBridge } from "@/store/bridge";
+import { useAdapter } from "@/adapter/store";
 import { useTransport } from "@/transport/store";
-import type { ConnectionLogEntry } from "@/store/type";
+import type { ConnectionLogEntry } from "@/utils";
 
 const formatData = (data: Record<string, unknown>) => {
   try {
@@ -69,7 +69,7 @@ const getRow = (params: ConnectionLogEntry & { current: boolean }) => {
 };
 
 const ConnectionLogs = () => {
-  const history1 = useBridge((state) => state.history);
+  const history1 = useAdapter((state) => state.history);
   const history2 = useTransport((state) => state.history);
   const history = [...history1, ...history2].sort((a, b) => a.timestamp - b.timestamp);
 

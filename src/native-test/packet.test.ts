@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-explicit-any */
 
-import { createChunker, createReassembler, PacketEvent } from "../native/packet";
+import { createChunker, createReassembler, PacketEvent } from "../adapter/packet";
 import { describe, test, expect } from "vitest";
 
 describe("Packet System Tests", () => {

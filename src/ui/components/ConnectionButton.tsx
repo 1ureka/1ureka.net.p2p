@@ -1,8 +1,8 @@
 import { useCallback } from "react";
 import { useFormStore } from "@/ui/form";
-import { useBridge } from "@/store/bridge";
+import { useAdapter } from "@/adapter/store";
 import { useTransport } from "@/transport/store";
-import { createWebRTC } from "@/native/webrtc";
+import { createTransport } from "@/transport/transport";
 import { LayoutButton } from "@/ui/components/Layout";
 
 const ConnectionButton = () => {
@@ -11,12 +11,12 @@ const ConnectionButton = () => {
   const code = useFormStore((state) => state.code);
 
   const handleConnect = useCallback(async () => {
-    const result = await createWebRTC({ role, code: String(code) });
+    const result = await createTransport({ role, code: String(code) });
     if (result) window.electron.send(`bridge.start.${role}`, port);
   }, [code, port, role]);
 
   const status1 = useTransport((state) => state.status);
-  const status2 = useBridge((state) => state.status);
+  const status2 = useAdapter((state) => state.status);
 
   return (
     <LayoutButton

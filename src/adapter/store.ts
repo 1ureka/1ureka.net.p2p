@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { ConnectionStatus, ConnectionLogEntry } from "@/utils";
 
-const useBridge = create<{ status: ConnectionStatus; history: ConnectionLogEntry[] }>((set) => {
+const useAdapter = create<{ status: ConnectionStatus; history: ConnectionLogEntry[] }>((set) => {
   window.electron.on("bridge.status", (status: ConnectionStatus) => {
     set((prev) => ({ ...prev, status }));
   });
@@ -12,4 +12,4 @@ const useBridge = create<{ status: ConnectionStatus; history: ConnectionLogEntry
   return { status: "disconnected", history: [] };
 });
 
-export { useBridge };
+export { useAdapter };

@@ -1,8 +1,8 @@
 import net from "net";
 import { ipcMain, type BrowserWindow } from "electron";
-import { createReporter } from "./bridge-report";
-import { checkLock, tryConnect, tryListen } from "./bridge-utils";
-import { createChunker, createReassembler, PacketEvent } from "./packet";
+import { createReporter } from "@/adapter/report";
+import { checkLock, tryConnect, tryListen } from "@/adapter/adapter-utils";
+import { createChunker, createReassembler, PacketEvent } from "@/adapter/packet";
 
 /**
  * 為每個 TCP socket 建立生命週期管理 (可參考 README.md)
@@ -57,10 +57,10 @@ const createSocketLifecycle = (sockets: Map<number, net.Socket>, win: BrowserWin
 /**
  * 建立 Host 端的橋接 (連接到本地的 TCP 伺服器)
  */
-async function createHostBridge(win: BrowserWindow, port: number) {
+async function createHostAdapter(win: BrowserWindow, port: number) {
   const { reportLog, reportWarn, reportError, reportStatus } = createReporter("Host", win);
   reportStatus("connecting");
-  reportLog({ message: `Creating host bridge to TCP server at localhost:${port}` });
+  reportLog({ message: `Creating host adapter to TCP server at localhost:${port}` });
 
   if (!(await tryConnect(win, port))) return;
 
@@ -114,7 +114,7 @@ async function createHostBridge(win: BrowserWindow, port: number) {
 /**
  * 建立 Client 端的橋接 (建立一個假 TCP 伺服器讓本地的 TCP 客戶端連接)
  */
-async function createClientBridge(win: BrowserWindow, port: number) {
+async function createClientAdapter(win: BrowserWindow, port: number) {
   const { reportLog, reportError, reportStatus } = createReporter("Client", win);
   reportStatus("connecting");
   reportLog({ message: `Connecting to TCP Proxy server at localhost:${port}` });
@@ -169,19 +169,19 @@ async function createClientBridge(win: BrowserWindow, port: number) {
 /**
  * Host: 收到 CONNECT 後，建立一個 TCP 連線到本地的 TCP 伺服器
  * Client: 建立一個假 TCP 伺服器讓本地的 TCP 客戶端連接
- * (該函數是因為若不抽離 lock 檢查，會導致 createHostBridge 與 createClientBridge 無法被測試)
+ * (該函數是因為若不抽離 lock 檢查，會導致 createHostAdapter 與 createClientAdapter 無法被測試)
  */
 const createBridge = (win: BrowserWindow, port: number, role: "host" | "client") => {
   if (!checkLock(win)) return;
 
   if (role === "host") {
-    createHostBridge(win, port);
+    createHostAdapter(win, port);
   }
 
   if (role === "client") {
-    createClientBridge(win, port);
+    createClientAdapter(win, port);
   }
 };
 
-export { createHostBridge, createClientBridge }; // 用於測試，不包含 lock 檢查
+export { createHostAdapter, createClientAdapter }; // 用於測試，不包含 lock 檢查
 export { createBridge }; // 實際使用時要有 lock 檢查

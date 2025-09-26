@@ -1,5 +1,5 @@
-import type { BrowserWindow } from "electron";
 import { createStore } from "zustand/vanilla";
+import type { BrowserWindow } from "electron";
 import type { ConnectionStatus, ConnectionLogEntry } from "@/utils";
 
 const store = createStore<{ status: ConnectionStatus; history: ConnectionLogEntry[] }>(() => ({

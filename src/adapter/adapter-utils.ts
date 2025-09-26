@@ -1,14 +1,14 @@
 import net from "net";
-import { createReporter, getLock } from "./bridge-report";
+import { createReporter, getLock } from "@/adapter/report";
 import type { BrowserWindow } from "electron";
 
 function checkLock(win: BrowserWindow): boolean {
-  const { reportWarn, reportStatus, clearHistory } = createReporter("Bridge", win);
+  const { reportWarn, reportStatus, clearHistory } = createReporter("Adapter", win);
   clearHistory();
 
   if (getLock()) {
     reportStatus("failed");
-    reportWarn({ message: "Bridge is already established or connecting, ignoring duplicate attempt" });
+    reportWarn({ message: "Adapter is already established or connecting, ignoring duplicate attempt" });
     return false;
   }
 
@@ -16,7 +16,7 @@ function checkLock(win: BrowserWindow): boolean {
 }
 
 function tryConnect(win: BrowserWindow, port: number): Promise<boolean> {
-  const { reportLog, reportError, reportStatus } = createReporter("Bridge", win);
+  const { reportLog, reportError, reportStatus } = createReporter("Adapter", win);
 
   // 驗證 port 範圍
   if (port < 0 || port > 65535 || !Number.isInteger(port)) {
@@ -52,7 +52,7 @@ function tryConnect(win: BrowserWindow, port: number): Promise<boolean> {
 }
 
 function tryListen(win: BrowserWindow, port: number): Promise<net.Server | null> {
-  const { reportLog, reportError, reportStatus } = createReporter("Bridge", win);
+  const { reportLog, reportError, reportStatus } = createReporter("Adapter", win);
   const server = net.createServer();
 
   // 驗證 port 範圍

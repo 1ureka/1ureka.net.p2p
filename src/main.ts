@@ -1,7 +1,7 @@
 import { app, BrowserWindow, Menu, ipcMain } from "electron";
 import path from "node:path";
 import started from "electron-squirrel-startup";
-import { createBridge } from "./native/bridge";
+import { createBridge } from "@/adapter/adapter";
 
 Menu.setApplicationMenu(null);
 
