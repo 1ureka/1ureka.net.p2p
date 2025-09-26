@@ -1,6 +1,6 @@
 @font-face {
   font-family: "jf openhuninn";
-  src: url("../fonts/jf-openhuninn-2.1.ttf") format("truetype");
+  src: url("./fonts/jf-openhuninn-2.1.ttf") format("truetype");
   font-style: normal;
   font-display: swap;
 }
@@ -10,7 +10,7 @@
   font-style: normal;
   font-weight: 300 700;
   font-display: block;
-  src: url("../fonts/Comfortaa-VariableFont_wght.ttf") format("truetype");
+  src: url("./fonts/Comfortaa-VariableFont_wght.ttf") format("truetype");
 }
 
 @font-face {
@@ -18,7 +18,7 @@
   font-style: normal;
   font-weight: 300 700;
   font-display: block;
-  src: url("../fonts/UbuntuMono-Regular.ttf") format("truetype");
+  src: url("./fonts/UbuntuMono-Regular.ttf") format("truetype");
 }
 
 * {
