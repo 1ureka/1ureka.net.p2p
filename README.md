@@ -248,7 +248,7 @@ Transport 模組是該專案的 **P2P 實現基礎**，以 WebRTC 為核心，�
 
 雖然 Node.js/Electron 中也可以透過 TCP/UDP 直連，但在 **NAT/防火牆** 環境下往往不可行。WebRTC 的出現，正好解決了這個問題：
 
-- **NAT Traversal**：WebRTC 內建 ICE (STUN/TURN) 機制，能在不同網路環境下盡可能建立直連。
+- **NAT Traversal**：WebRTC 內建 ICE (STUN) 機制，能在不同網路環境下盡可能建立直連。
 - **可靠性**：DataChannel 基於 **SCTP over DTLS over UDP**，具備重傳、順序保證、分片處理等功能。
 - **安全性**：所有資料皆透過 DTLS 加密，避免中途攔截。
 
