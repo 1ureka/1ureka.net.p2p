@@ -1,4 +1,4 @@
-import { ellipsisSx } from "@/components-lib/Property";
+import { ellipsisSx } from "@/components/Property";
 import { type PaperProps, Paper } from "@mui/material";
 import { type BoxProps, Box } from "@mui/material";
 import { type ButtonProps, Button } from "@mui/material";

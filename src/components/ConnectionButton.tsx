@@ -3,7 +3,7 @@ import { useFormStore } from "@/store/form";
 import { useWebRTC } from "@/store/webrtc";
 import { useBridge } from "@/store/bridge";
 import { createWebRTC } from "@/native/webrtc";
-import { LayoutButton } from "@/components-lib/Layout";
+import { LayoutButton } from "@/components/Layout";
 
 const ConnectionButton = () => {
   const port = useFormStore((state) => state.port);

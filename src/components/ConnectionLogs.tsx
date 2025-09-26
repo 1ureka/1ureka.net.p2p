@@ -1,11 +1,11 @@
 import { AnimatePresence, motion } from "motion/react";
 import { Box, Typography } from "@mui/material";
-import { ellipsisSx } from "@/components-lib/Property";
+import { LayoutBox } from "@/components/Layout";
+import { ellipsisSx } from "@/components/Property";
 
 import { useBridge } from "@/store/bridge";
 import { useWebRTC } from "@/store/webrtc";
 import type { ConnectionLogEntry } from "@/store/type";
-import { LayoutBox } from "@/components-lib/Layout";
 
 const formatData = (data: Record<string, unknown>) => {
   try {

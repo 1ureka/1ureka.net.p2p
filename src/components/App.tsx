@@ -6,10 +6,8 @@ import { useBridge } from "@/store/bridge";
 import { useWebRTC } from "@/store/webrtc";
 import type { Role } from "@/native/webrtc";
 
-import { LayoutBox, LayoutColumn, LayoutRow } from "@/components-lib/Layout";
-import { LayoutText, LayoutTitle } from "@/components-lib/Layout";
-import { EnumProperty, NumberProperty } from "@/components-lib/Property";
-
+import { LayoutBox, LayoutColumn, LayoutRow, LayoutText, LayoutTitle } from "@/components/Layout";
+import { EnumProperty, NumberProperty } from "@/components/Property";
 import { Background } from "@/components/Background";
 import { ConnectionIndicator } from "@/components/ConnectionIndicator";
 import { ConnectionLogs } from "@/components/ConnectionLogs";
