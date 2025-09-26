@@ -171,7 +171,7 @@ async function createClientAdapter(win: BrowserWindow, port: number) {
  * Client: 建立一個假 TCP 伺服器讓本地的 TCP 客戶端連接
  * (該函數是因為若不抽離 lock 檢查，會導致 createHostAdapter 與 createClientAdapter 無法被測試)
  */
-const createBridge = (win: BrowserWindow, port: number, role: "host" | "client") => {
+const createAdapter = (win: BrowserWindow, port: number, role: "host" | "client") => {
   if (!checkLock(win)) return;
 
   if (role === "host") {
@@ -184,4 +184,4 @@ const createBridge = (win: BrowserWindow, port: number, role: "host" | "client")
 };
 
 export { createHostAdapter, createClientAdapter }; // 用於測試，不包含 lock 檢查
-export { createBridge }; // 實際使用時要有 lock 檢查
+export { createAdapter }; // 實際使用時要有 lock 檢查
