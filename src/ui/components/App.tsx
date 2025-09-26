@@ -6,12 +6,12 @@ import { useBridge } from "@/store/bridge";
 import { useWebRTC } from "@/store/webrtc";
 import type { Role } from "@/native/webrtc";
 
-import { LayoutBox, LayoutColumn, LayoutRow, LayoutText, LayoutTitle } from "@/components/Layout";
-import { EnumProperty, NumberProperty } from "@/components/Property";
-import { Background } from "@/components/Background";
-import { ConnectionIndicator } from "@/components/ConnectionIndicator";
-import { ConnectionLogs } from "@/components/ConnectionLogs";
-import { ConnectionButton } from "@/components/ConnectionButton";
+import { LayoutBox, LayoutColumn, LayoutRow, LayoutText, LayoutTitle } from "@/ui/components/Layout";
+import { EnumProperty, NumberProperty } from "@/ui/components/Property";
+import { Background } from "@/ui/components/Background";
+import { ConnectionIndicator } from "@/ui/components/ConnectionIndicator";
+import { ConnectionLogs } from "@/ui/components/ConnectionLogs";
+import { ConnectionButton } from "@/ui/components/ConnectionButton";
 
 const Title = () => (
   <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3, p: 1.5 }}>

@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { Box, Typography } from "@mui/material";
-import { LayoutBox } from "@/components/Layout";
-import { ellipsisSx } from "@/components/Property";
+import { LayoutBox } from "@/ui/components/Layout";
+import { ellipsisSx } from "@/ui/components/Property";
 
 import { useBridge } from "@/store/bridge";
 import { useWebRTC } from "@/store/webrtc";
