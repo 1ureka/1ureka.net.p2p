@@ -1,7 +1,7 @@
 import LanRoundedIcon from "@mui/icons-material/LanRounded";
 import { Box, Typography } from "@mui/material";
 
-import { useFormStore } from "@/store/form";
+import { useFormStore } from "@/ui/form";
 import { useBridge } from "@/store/bridge";
 import { useWebRTC } from "@/store/webrtc";
 import type { Role } from "@/native/webrtc";
