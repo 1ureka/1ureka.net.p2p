@@ -64,7 +64,7 @@ const createEnvironment = async () => {
   };
 };
 
-describe("Bridge 主模組", () => {
+describe("Adapter System Tests", () => {
   it("[e2e] [echo] [client→server] [client 先關閉]", async () => {
     const { createHostAdapter, createClientAdapter } = await createEnvironment();
 
