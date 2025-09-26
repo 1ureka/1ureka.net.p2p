@@ -31,7 +31,6 @@ function createDataChannelSender(dataChannel: RTCDataChannel, threshold = 64 * 1
       }
 
       if (dataChannel.bufferedAmount > threshold) {
-        setState({ log: "DataChannel buffer full, pausing send..." });
         return; // 等待 'bufferedamountlow' 事件
       }
     }
