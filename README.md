@@ -2,6 +2,7 @@
 
 這是一個基於 Electron 的桌面應用程式，能將 **TCP socket 與 WebRTC DataChannel** 做橋接，讓 **任何基於 TCP 的服務** 都能進行真正的點對點通訊。
 
+> [!IMPORTANT]
 > **只要協定建立在 TCP 之上，就能透過本工具進行 P2P 傳輸。**
 
 因為工具專注在 TCP 層，不干涉更上層的協定，因此支援各種基於 TCP 的協定，無論是 **多 socket 協定、server-first / client-first 連線、HTTP/HTTPS、WebSocket (ws/wss)，甚至 各種遊戲或自訂協定**。
@@ -13,8 +14,8 @@
 ## 下載與啟動
 
 1. 前往 Releases 頁面下載最新的 **zip 壓縮檔**。
-2. 解壓縮後，資料夾內會包含 `1ureka.net.p2p.exe`。
-3. 直接雙擊 `1ureka.net.p2p.exe` 就能啟動應用程式。
+2. 解壓縮後，資料夾內會包含一個 **可執行檔** (例如 Windows 是 `*.exe`)。
+3. 直接開啟該可執行檔就能啟動應用程式。
    - **所有應用資料**都會存在於解壓縮後的資料夾中，不會寫入系統。
    - 想要**移除應用**，只需刪除整個資料夾即可，無需額外清理。
 
@@ -54,7 +55,7 @@
 
 ## 一對多
 
-1ureka.net.p2p 的 Session 本質是一對一設計，但若要達到 **一個 Host 同時服務多個 Client**，可以：
+本工具的 Session 是一對一設計，但若要達到 **一個 Host 同時服務多個 Client**，可以：
 
 1. 在 Host 端 **同時開啟多個應用實例**，每個實例綁定相同的 TCP 服務端口。
 2. 每個實例會生成不同的 Session ID，分別提供給不同的 Client。
