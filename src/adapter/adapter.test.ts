@@ -52,32 +52,31 @@ const createEnvironment = async () => {
 
   vi.resetModules();
   vi.doMock("electron", () => ({ ipcMain: hostApp.ipcMain, BrowserWindow: vi.fn() }));
-  const { createHostBridge } = await import("../native/bridge");
+  const { createHostAdapter } = await import("./adapter");
 
   vi.resetModules();
   vi.doMock("electron", () => ({ ipcMain: clientApp.ipcMain, BrowserWindow: vi.fn() }));
-  const { createClientBridge } = await import("../native/bridge");
+  const { createClientAdapter } = await import("./adapter");
 
   return {
-    createHostBridge: (port: number) => createHostBridge(hostApp.browserWindow as any, port),
-    createClientBridge: (port: number) => createClientBridge(clientApp.browserWindow as any, port),
+    createHostAdapter: (port: number) => createHostAdapter(hostApp.browserWindow as any, port),
+    createClientAdapter: (port: number) => createClientAdapter(clientApp.browserWindow as any, port),
   };
 };
 
 describe("Bridge 主模組", () => {
   it("[e2e] [echo] [client→server] [client 先關閉]", async () => {
-    const { createHostBridge, createClientBridge } = await createEnvironment();
+    const { createHostAdapter, createClientAdapter } = await createEnvironment();
 
     // 真實 Echo Server
     const echoServer = net.createServer((socket) => socket.on("data", (d) => socket.write(d)));
     await new Promise<void>((res) => echoServer.listen(0, res));
     const echoPort = (echoServer.address() as any).port;
 
-    // 啟動 bridges
-    await createHostBridge(echoPort);
-    await createClientBridge(6000);
+    await createHostAdapter(echoPort);
+    await createClientAdapter(6000);
 
-    // 測試程式的 TCP client → 連到 clientBridge fake server
+    // 測試程式的 TCP client
     const tcpClient = net.connect(6000, "127.0.0.1");
     const result = await new Promise<string>((resolve, reject) => {
       tcpClient.on("error", reject);
