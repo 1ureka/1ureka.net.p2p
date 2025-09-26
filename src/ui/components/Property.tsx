@@ -4,8 +4,8 @@ import ArrowLeftRoundedIcon from "@mui/icons-material/ArrowLeftRounded";
 import ArrowRightRoundedIcon from "@mui/icons-material/ArrowRightRounded";
 import { motion } from "motion/react";
 
-import { theme } from "@/renderer";
-import { LayoutBox, LayoutRow } from "@/components-lib/Layout";
+import { theme } from "@/ui/renderer";
+import { LayoutBox, LayoutRow } from "@/ui/components/Layout";
 
 const transition = "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)";
 const ellipsisSx = {

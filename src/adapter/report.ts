@@ -1,6 +1,7 @@
-import type { BrowserWindow } from "electron";
+import { IPCChannel } from "@/ipc";
 import { createStore } from "zustand/vanilla";
-import type { ConnectionStatus, ConnectionLogEntry } from "@/store/type";
+import type { BrowserWindow } from "electron";
+import type { ConnectionStatus, ConnectionLogEntry } from "@/utils";
 
 const store = createStore<{ status: ConnectionStatus; history: ConnectionLogEntry[] }>(() => ({
   status: "disconnected",
@@ -32,7 +33,7 @@ const createReporter = (module: string, win: BrowserWindow) => {
 
     store.setState((prev) => {
       const history = [...prev.history, logEntry].slice(-100);
-      win.webContents.send("bridge.history", history);
+      win.webContents.send(IPCChannel.AdapterLogs, history);
       return { ...prev, history };
     });
   };
@@ -40,14 +41,14 @@ const createReporter = (module: string, win: BrowserWindow) => {
   const reportStatus = (status: ConnectionStatus) => {
     store.setState((prev) => {
       if (status === prev.status) return { ...prev };
-      win.webContents.send("bridge.status", status);
+      win.webContents.send(IPCChannel.AdapterStatus, status);
       return { ...prev, status };
     });
   };
 
   const clearHistory = () => {
     store.setState((prev) => ({ ...prev, history: [] }));
-    win.webContents.send("bridge.history", []);
+    win.webContents.send(IPCChannel.AdapterLogs, []);
   };
 
   return { reportLog, reportError, reportWarn, reportStatus, clearHistory };

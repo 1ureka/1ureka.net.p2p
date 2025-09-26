@@ -2,7 +2,7 @@
   "name": "1ureka.net.p2p",
   "productName": "1ureka.net.p2p",
   "version": "1.0.0",
-  "description": "An Electron desktop app that bridges TCP and WebRTC, making any TCP service instantly P2P-capable.",
+  "description": "A desktop tool that lets you share any TCP service with a remote peer over WebRTC P2P.",
   "main": ".vite/build/main.js",
   "scripts": {
     "start": "electron-forge start",

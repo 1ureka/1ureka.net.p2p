@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Role } from "@/native/webrtc";
+import type { Role } from "@/transport/transport";
 
 type FormState = {
   role: Role;

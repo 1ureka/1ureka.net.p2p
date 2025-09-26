@@ -1,19 +1,17 @@
 import LanRoundedIcon from "@mui/icons-material/LanRounded";
 import { Box, Typography } from "@mui/material";
 
-import { useFormStore } from "@/store/form";
-import { useBridge } from "@/store/bridge";
-import { useWebRTC } from "@/store/webrtc";
-import type { Role } from "@/native/webrtc";
+import { useFormStore } from "@/ui/form";
+import { useAdapter } from "@/adapter/store";
+import { useTransport } from "@/transport/store";
+import type { Role } from "@/transport/transport";
 
-import { LayoutBox, LayoutColumn, LayoutRow } from "@/components-lib/Layout";
-import { LayoutText, LayoutTitle } from "@/components-lib/Layout";
-import { EnumProperty, NumberProperty } from "@/components-lib/Property";
-
-import { Background } from "@/components/Background";
-import { ConnectionIndicator } from "@/components/ConnectionIndicator";
-import { ConnectionLogs } from "@/components/ConnectionLogs";
-import { ConnectionButton } from "@/components/ConnectionButton";
+import { LayoutBox, LayoutColumn, LayoutRow, LayoutText, LayoutTitle } from "@/ui/components/Layout";
+import { EnumProperty, NumberProperty } from "@/ui/components/Property";
+import { Background } from "@/ui/components/Background";
+import { ConnectionIndicator } from "@/ui/components/ConnectionIndicator";
+import { ConnectionLogs } from "@/ui/components/ConnectionLogs";
+import { ConnectionButton } from "@/ui/components/ConnectionButton";
 
 const Title = () => (
   <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3, p: 1.5 }}>
@@ -32,7 +30,7 @@ const WebRTCPanel = () => {
   const setRole = useFormStore((state) => state.setRole);
   const code = useFormStore((state) => state.code);
   const setCode = useFormStore((state) => state.setCode);
-  const status = useWebRTC((state) => state.status);
+  const status = useTransport((state) => state.status);
 
   const items: Array<{ value: Role; label: string }> = [
     { value: "host", label: "Host" },
@@ -57,10 +55,10 @@ const WebRTCPanel = () => {
   );
 };
 
-const BridgePanel = () => {
+const AdapterPanel = () => {
   const port = useFormStore((state) => state.port);
   const setPort = useFormStore((state) => state.setPort);
-  const status = useBridge((state) => state.status);
+  const status = useAdapter((state) => state.status);
 
   return (
     <LayoutBox>
@@ -108,7 +106,7 @@ const App = () => (
     <LayoutColumn>
       <Title />
       <WebRTCPanel />
-      <BridgePanel />
+      <AdapterPanel />
     </LayoutColumn>
     <LayoutColumn sx={{ gridTemplateRows: "1fr", height: 1 }}>
       <LogPanel />

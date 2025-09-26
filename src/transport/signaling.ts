@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { setState } from "@/store/webrtc";
+import { setState } from "@/transport/store";
 
 /**
  * 信令伺服器相關的 url, schema 與型別

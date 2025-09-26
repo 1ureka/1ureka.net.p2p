@@ -1,5 +1,6 @@
-import { setState } from "@/store/webrtc";
-import { createDataChannelSender } from "@/native/webrtc-sender";
+import { IPCChannel } from "@/ipc";
+import { setState } from "@/transport/store";
+import { createDataChannelSender } from "@/transport/transport-sender";
 
 /**
  * 綁定 DataChannel 與 IPC 的雙向資料橋接
@@ -12,9 +13,9 @@ const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
     try {
       const buffer = event.data;
       if (buffer instanceof ArrayBuffer) {
-        window.electron.send("bridge.data.rtc", new Uint8Array(buffer));
+        window.electron.send(IPCChannel.FromRTC, new Uint8Array(buffer));
       } else if (ArrayBuffer.isView(buffer)) {
-        window.electron.send("bridge.data.rtc", buffer);
+        window.electron.send(IPCChannel.FromRTC, buffer);
       } else {
         setState({ error: "Received invalid data type from DataChannel" });
       }
@@ -39,18 +40,15 @@ const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
   };
 
   // 註冊 IPC 監聽器
-  window.electron.on("bridge.data.tcp", handleIPCMessage);
+  window.electron.on(IPCChannel.FromTCP, handleIPCMessage);
 
-  // 設置清理函數，當 DataChannel 關閉時移除監聽器與關閉 sender
-  dataChannel.onclose = () => {
-    window.electron.off("bridge.data.tcp", handleIPCMessage);
+  const cleanup = () => {
+    window.electron.off(IPCChannel.FromTCP, handleIPCMessage);
     sender.close();
   };
 
-  dataChannel.onerror = () => {
-    window.electron.off("bridge.data.tcp", handleIPCMessage);
-    sender.close();
-  };
+  dataChannel.onclose = () => cleanup();
+  dataChannel.onerror = () => cleanup();
 };
 
 export { bindDataChannelIPC };

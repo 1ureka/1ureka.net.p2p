@@ -1,4 +1,4 @@
-import { setState } from "@/store/webrtc";
+import { setState } from "@/transport/store";
 
 /**
  * 為 RTCDataChannel 創建一個發送器，確保在緩衝區滿時不會丟失資料。
@@ -31,7 +31,6 @@ function createDataChannelSender(dataChannel: RTCDataChannel, threshold = 64 * 1
       }
 
       if (dataChannel.bufferedAmount > threshold) {
-        setState({ log: "DataChannel buffer full, pausing send..." });
         return; // 等待 'bufferedamountlow' 事件
       }
     }

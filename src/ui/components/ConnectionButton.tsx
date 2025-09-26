@@ -1,9 +1,10 @@
 import { useCallback } from "react";
-import { useFormStore } from "@/store/form";
-import { useWebRTC } from "@/store/webrtc";
-import { useBridge } from "@/store/bridge";
-import { createWebRTC } from "@/native/webrtc";
-import { LayoutButton } from "@/components-lib/Layout";
+import { useFormStore } from "@/ui/form";
+import { useAdapter } from "@/adapter/store";
+import { useTransport } from "@/transport/store";
+import { createTransport } from "@/transport/transport";
+import { LayoutButton } from "@/ui/components/Layout";
+import { IPCChannel } from "@/ipc";
 
 const ConnectionButton = () => {
   const port = useFormStore((state) => state.port);
@@ -11,12 +12,12 @@ const ConnectionButton = () => {
   const code = useFormStore((state) => state.code);
 
   const handleConnect = useCallback(async () => {
-    const result = await createWebRTC({ role, code: String(code) });
-    if (result) window.electron.send(`bridge.start.${role}`, port);
+    const result = await createTransport({ role, code: String(code) });
+    if (result) window.electron.send(IPCChannel.AdapterStart, port, role);
   }, [code, port, role]);
 
-  const status1 = useWebRTC((state) => state.status);
-  const status2 = useBridge((state) => state.status);
+  const status1 = useTransport((state) => state.status);
+  const status2 = useAdapter((state) => state.status);
 
   return (
     <LayoutButton

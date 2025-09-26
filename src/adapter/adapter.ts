@@ -1,8 +1,9 @@
 import net from "net";
 import { ipcMain, type BrowserWindow } from "electron";
-import { createReporter } from "./bridge-report";
-import { checkLock, tryConnect, tryListen } from "./bridge-utils";
-import { createChunker, createReassembler, PacketEvent } from "./packet";
+import { createReporter } from "@/adapter/report";
+import { checkLock, tryConnect, tryListen } from "@/adapter/adapter-utils";
+import { createChunker, createReassembler, PacketEvent } from "@/adapter/packet";
+import { IPCChannel } from "@/ipc";
 
 /**
  * 為每個 TCP socket 建立生命週期管理 (可參考 README.md)
@@ -16,7 +17,7 @@ const createSocketLifecycle = (sockets: Map<number, net.Socket>, win: BrowserWin
 
     const { generateChunks } = createChunker(socketId);
     for (const packet of generateChunks(PacketEvent.CONNECT, Buffer.alloc(0))) {
-      win.webContents.send("bridge.data.tcp", packet);
+      win.webContents.send(IPCChannel.FromTCP, packet);
     }
 
     socket.on("error", (error) => {
@@ -30,7 +31,7 @@ const createSocketLifecycle = (sockets: Map<number, net.Socket>, win: BrowserWin
     socket.on("data", (chunk) => {
       try {
         for (const packet of generateChunks(PacketEvent.DATA, chunk)) {
-          win.webContents.send("bridge.data.tcp", packet);
+          win.webContents.send(IPCChannel.FromTCP, packet);
         }
       } catch (error) {
         reportError({ message: `Error processing data for socket ${socketId}`, data: { error } });
@@ -40,7 +41,7 @@ const createSocketLifecycle = (sockets: Map<number, net.Socket>, win: BrowserWin
     socket.on("close", () => {
       try {
         for (const packet of generateChunks(PacketEvent.CLOSE, Buffer.alloc(0))) {
-          win.webContents.send("bridge.data.tcp", packet);
+          win.webContents.send(IPCChannel.FromTCP, packet);
         }
       } catch (error) {
         reportError({ message: `Error processing close for socket ${socketId}`, data: { error } });
@@ -55,12 +56,12 @@ const createSocketLifecycle = (sockets: Map<number, net.Socket>, win: BrowserWin
 };
 
 /**
- * 建立 Host 端的橋接 (連接到本地的 TCP 伺服器)
+ * 建立 Host 端的 Adapter (連接到本地的 TCP 伺服器)
  */
-async function createHostBridge(win: BrowserWindow, port: number) {
+async function createHostAdapter(win: BrowserWindow, port: number) {
   const { reportLog, reportWarn, reportError, reportStatus } = createReporter("Host", win);
   reportStatus("connecting");
-  reportLog({ message: `Creating host bridge to TCP server at localhost:${port}` });
+  reportLog({ message: `Creating host adapter to TCP server at localhost:${port}` });
 
   if (!(await tryConnect(win, port))) return;
 
@@ -70,8 +71,8 @@ async function createHostBridge(win: BrowserWindow, port: number) {
   const sockets: Map<number, net.Socket> = new Map();
   const socketLifecycle = createSocketLifecycle(sockets, win);
 
-  ipcMain.removeAllListeners("bridge.data.rtc");
-  ipcMain.on("bridge.data.rtc", (_, buffer: Buffer) => {
+  ipcMain.removeAllListeners(IPCChannel.FromRTC);
+  ipcMain.on(IPCChannel.FromRTC, (_, buffer: Buffer) => {
     let msg;
 
     try {
@@ -112,9 +113,9 @@ async function createHostBridge(win: BrowserWindow, port: number) {
 }
 
 /**
- * 建立 Client 端的橋接 (建立一個假 TCP 伺服器讓本地的 TCP 客戶端連接)
+ * 建立 Client 端的 Adapter (建立一個假 TCP 伺服器讓本地的 TCP 客戶端連接)
  */
-async function createClientBridge(win: BrowserWindow, port: number) {
+async function createClientAdapter(win: BrowserWindow, port: number) {
   const { reportLog, reportError, reportStatus } = createReporter("Client", win);
   reportStatus("connecting");
   reportLog({ message: `Connecting to TCP Proxy server at localhost:${port}` });
@@ -133,8 +134,8 @@ async function createClientBridge(win: BrowserWindow, port: number) {
     socketLifecycle.bind(socket, ++socketCount % 65536);
   });
 
-  ipcMain.removeAllListeners("bridge.data.rtc");
-  ipcMain.on("bridge.data.rtc", (_e, buffer: Buffer) => {
+  ipcMain.removeAllListeners(IPCChannel.FromRTC);
+  ipcMain.on(IPCChannel.FromRTC, (_e, buffer: Buffer) => {
     let msg;
 
     try {
@@ -169,19 +170,19 @@ async function createClientBridge(win: BrowserWindow, port: number) {
 /**
  * Host: 收到 CONNECT 後，建立一個 TCP 連線到本地的 TCP 伺服器
  * Client: 建立一個假 TCP 伺服器讓本地的 TCP 客戶端連接
- * (該函數是因為若不抽離 lock 檢查，會導致 createHostBridge 與 createClientBridge 無法被測試)
+ * (該函數是因為若不抽離 lock 檢查，會導致 createHostAdapter 與 createClientAdapter 無法被測試)
  */
-const createBridge = (win: BrowserWindow, port: number, role: "host" | "client") => {
+const createAdapter = (win: BrowserWindow, port: number, role: "host" | "client") => {
   if (!checkLock(win)) return;
 
   if (role === "host") {
-    createHostBridge(win, port);
+    createHostAdapter(win, port);
   }
 
   if (role === "client") {
-    createClientBridge(win, port);
+    createClientAdapter(win, port);
   }
 };
 
-export { createHostBridge, createClientBridge }; // 用於測試，不包含 lock 檢查
-export { createBridge }; // 實際使用時要有 lock 檢查
+export { createHostAdapter, createClientAdapter }; // 用於測試，不包含 lock 檢查
+export { createAdapter }; // 實際使用時要有 lock 檢查

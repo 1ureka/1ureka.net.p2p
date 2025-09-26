@@ -1,4 +1,4 @@
-import type { ConnectionStatus } from "@/store/type";
+import type { ConnectionStatus } from "@/utils";
 import { Box } from "@mui/material";
 
 const colorMap: Record<ConnectionStatus, string> = {

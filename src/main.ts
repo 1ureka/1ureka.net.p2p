@@ -1,7 +1,8 @@
 import { app, BrowserWindow, Menu, ipcMain } from "electron";
 import path from "node:path";
 import started from "electron-squirrel-startup";
-import { createBridge } from "./native/bridge";
+import { createAdapter } from "@/adapter/adapter";
+import { IPCChannel } from "./ipc";
 
 Menu.setApplicationMenu(null);
 
@@ -26,12 +27,8 @@ const createWindow = () => {
 
   //   mainWindow.webContents.openDevTools();
 
-  ipcMain.on("bridge.start.host", (event, port) => {
-    createBridge(mainWindow, port, "host");
-  });
-
-  ipcMain.on("bridge.start.client", (event, port) => {
-    createBridge(mainWindow, port, "client");
+  ipcMain.on(IPCChannel.AdapterStart, (event, port, role) => {
+    createAdapter(mainWindow, port, role);
   });
 };
 

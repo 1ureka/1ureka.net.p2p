@@ -1,10 +1,10 @@
-import { setState } from "@/store/webrtc";
+import { setState } from "@/transport/store";
 
 /**
  * 創建一個只會有一個 RTCDataChannel，且生命週期與 RTCPeerConnection 綁定的 WebRTC 連線
  * 提供適合 Vanilla ICE 的 API
  */
-const createWebRTCSession = () => {
+const createPeerConnection = () => {
   setState({ log: "Creating RTCPeerConnection with Google STUN servers configuration" });
   const localCandidates: string[] = [];
   const peerConnection = new RTCPeerConnection({
@@ -122,4 +122,4 @@ const createWebRTCSession = () => {
   return { getDataChannel, getLocal, setRemote, close };
 };
 
-export { createWebRTCSession };
+export { createPeerConnection };

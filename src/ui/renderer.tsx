@@ -3,8 +3,8 @@ import ReactDOM from "react-dom/client";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 
-import "@/renderer.css";
-import { App } from "@/components/App";
+import "@/ui/renderer.css";
+import { App } from "@/ui/components/App";
 
 export const theme = createTheme({
   palette: {

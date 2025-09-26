@@ -1,7 +1,7 @@
-import { getLock, setState } from "@/store/webrtc";
-import { getSession, sendSession } from "@/native/signaling";
-import { createWebRTCSession } from "@/native/webrtc-utils";
-import { bindDataChannelIPC } from "@/native/webrtc-ipc";
+import { getLock, setState } from "@/transport/store";
+import { getSession, sendSession } from "@/transport/signaling";
+import { createPeerConnection } from "@/transport/transport-pc";
+import { bindDataChannelIPC } from "@/transport/transport-ipc";
 
 /**
  * WebRTC 參數類型
@@ -18,7 +18,7 @@ type WebRTCParams = {
 /**
  * 創建一個 唯一 的 WebRTC 連線，且 DataChannel 的生命週期會被 PeerConnection 綁定
  */
-const createWebRTC = async (params: WebRTCParams) => {
+const createTransport = async (params: WebRTCParams) => {
   const { role, code } = params;
   const { timeoutLocalCandidate = 2000, timeoutDataChannel = 5000, signalingMaxAttempts = 20 } = params;
 
@@ -34,7 +34,7 @@ const createWebRTC = async (params: WebRTCParams) => {
   }
 
   setState({ status: "connecting", history: [] });
-  const { getDataChannel, getLocal, setRemote, close } = createWebRTCSession();
+  const { getDataChannel, getLocal, setRemote, close } = createPeerConnection();
 
   // setup WebRTC connection
 
@@ -83,4 +83,4 @@ const createWebRTC = async (params: WebRTCParams) => {
   }
 };
 
-export { createWebRTC, type Role };
+export { createTransport, type Role };
