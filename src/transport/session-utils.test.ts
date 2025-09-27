@@ -1,15 +1,29 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
-import { createSession, joinSession, pollingSession, sendSignal, pollingSignal } from "./session-utils";
+import { createSession, joinSession, pollingSession, sendSignal } from "./session-utils";
 
 // Mock fetch globally
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
+// Mock window.electron
+const mockElectron = {
+  request: vi.fn(),
+};
+
+// Mock window object for Node.js test environment
+Object.defineProperty(globalThis, "window", {
+  value: {
+    electron: mockElectron,
+  },
+  writable: true,
+});
+
 describe("Session Utils 工具測試", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockElectron.request.mockResolvedValue("test-hostname");
   });
 
   afterEach(() => {
@@ -20,7 +34,7 @@ describe("Session Utils 工具測試", () => {
     it("成功建立會話", async () => {
       const mockSession = {
         id: "test-session-id",
-        host: "test-host",
+        host: "test-hostname",
         client: "",
         status: "waiting",
         createdAt: "2023-01-01T00:00:00.000Z",
@@ -32,14 +46,27 @@ describe("Session Utils 工具測試", () => {
         json: () => Promise.resolve(mockSession),
       });
 
-      const result = await createSession("test-host");
+      const result = await createSession();
 
+      expect(mockElectron.request).toHaveBeenCalledWith("os.info");
       expect(mockFetch).toHaveBeenCalledWith("https://1ureka.vercel.app/api/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ host: "test-host" }),
+        body: JSON.stringify({ host: "test-hostname" }),
       });
       expect(result).toEqual(mockSession);
+    });
+
+    it("IPC 回傳無效主機名時拋出錯誤", async () => {
+      mockElectron.request.mockResolvedValueOnce("");
+
+      await expect(createSession()).rejects.toThrow("Invalid hostname from IPC");
+    });
+
+    it("IPC 回傳非字串時拋出錯誤", async () => {
+      mockElectron.request.mockResolvedValueOnce(null);
+
+      await expect(createSession()).rejects.toThrow("Invalid hostname from IPC");
     });
 
     it("回應不正常時拋出錯誤", async () => {
@@ -48,7 +75,7 @@ describe("Session Utils 工具測試", () => {
         status: 400,
       });
 
-      await expect(createSession("test-host")).rejects.toThrow("Failed to create session, status code: 400");
+      await expect(createSession()).rejects.toThrow("Failed to create session, status code: 400");
     });
 
     it("回應資料無效時拋出錯誤", async () => {
@@ -57,7 +84,7 @@ describe("Session Utils 工具測試", () => {
         json: () => Promise.resolve({ invalid: "data" }),
       });
 
-      await expect(createSession("test-host")).rejects.toThrow();
+      await expect(createSession()).rejects.toThrow();
     });
   });
 
@@ -66,7 +93,7 @@ describe("Session Utils 工具測試", () => {
       const mockSession = {
         id: "test-session-id",
         host: "test-host",
-        client: "test-client",
+        client: "test-hostname",
         status: "joined",
         createdAt: "2023-01-01T00:00:00.000Z",
         signal: {},
@@ -77,14 +104,21 @@ describe("Session Utils 工具測試", () => {
         json: () => Promise.resolve(mockSession),
       });
 
-      const result = await joinSession("test-session-id", "test-client");
+      const result = await joinSession("test-session-id");
 
+      expect(mockElectron.request).toHaveBeenCalledWith("os.info");
       expect(mockFetch).toHaveBeenCalledWith("https://1ureka.vercel.app/api/session/test-session-id", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ client: "test-client" }),
+        body: JSON.stringify({ client: "test-hostname" }),
       });
       expect(result).toEqual(mockSession);
+    });
+
+    it("IPC 回傳無效主機名時拋出錯誤", async () => {
+      mockElectron.request.mockResolvedValueOnce("   ");
+
+      await expect(joinSession("test-session-id")).rejects.toThrow("Invalid hostname from IPC");
     });
 
     it("回應不正常時拋出錯誤", async () => {
@@ -93,14 +127,46 @@ describe("Session Utils 工具測試", () => {
         status: 404,
       });
 
-      await expect(joinSession("test-session-id", "test-client")).rejects.toThrow(
-        "Failed to join session, status code: 404"
-      );
+      await expect(joinSession("test-session-id")).rejects.toThrow("Failed to join session, status code: 404");
     });
   });
 
   describe("輪詢會話", () => {
-    it("成功輪詢會話資料", async () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("成功輪詢會話資料等待加入", async () => {
+      const mockSession = {
+        id: "test-session-id",
+        host: "test-host",
+        client: "test-client",
+        status: "joined",
+        createdAt: "2023-01-01T00:00:00.000Z",
+        signal: {},
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        status: 200,
+        json: () => Promise.resolve(mockSession),
+      });
+
+      const generator = pollingSession("test-session-id", "join");
+
+      // 模擬 100ms 延遲
+      const resultPromise = generator.next();
+      vi.advanceTimersByTime(100);
+      const result = await resultPromise;
+
+      expect(mockFetch).toHaveBeenCalledWith("https://1ureka.vercel.app/api/session/test-session-id?for=join");
+      expect(result.value).toEqual(mockSession);
+    });
+
+    it("成功輪詢會話資料等待 offer", async () => {
       const mockSession = {
         id: "test-session-id",
         host: "test-host",
@@ -109,100 +175,52 @@ describe("Session Utils 工具測試", () => {
         createdAt: "2023-01-01T00:00:00.000Z",
         signal: {
           offer: {
-            sdp: "test-sdp",
+            sdp: "test-offer-sdp",
             candidate: ["candidate1", "candidate2"],
           },
         },
       };
 
       mockFetch.mockResolvedValueOnce({
-        ok: true,
         status: 200,
         json: () => Promise.resolve(mockSession),
       });
 
-      const generator = pollingSession("test-session-id");
-      const result = await generator.next();
+      const generator = pollingSession("test-session-id", "offer");
 
-      expect(mockFetch).toHaveBeenCalledWith("https://1ureka.vercel.app/api/session/test-session-id");
-      expect(result.value).toEqual({ data: mockSession, error: null });
+      const resultPromise = generator.next();
+      vi.advanceTimersByTime(100);
+      const result = await resultPromise;
+
+      expect(mockFetch).toHaveBeenCalledWith("https://1ureka.vercel.app/api/session/test-session-id?for=offer");
+      expect(result.value).toEqual(mockSession);
     });
 
-    it("處理 404 狀態並結束輪詢", async () => {
+    it("處理 404 狀態並拋出 TTL 錯誤", async () => {
       mockFetch.mockResolvedValueOnce({
-        ok: false,
         status: 404,
       });
 
-      const generator = pollingSession("test-session-id");
-      const result = await generator.next();
+      const generator = pollingSession("test-session-id", "join");
 
-      expect(result.value).toEqual({
-        data: null,
-        error: "Session has been deleted due to TTL",
-      });
-      expect(result.done).toBe(false);
+      const resultPromise = generator.next();
+      vi.advanceTimersByTime(100);
 
-      // Generator should be done on next call
-      const nextResult = await generator.next();
-      expect(nextResult.done).toBe(true);
-    });
-
-    it("處理 fetch 錯誤", async () => {
-      mockFetch.mockRejectedValueOnce(new Error("Network error"));
-
-      const generator = pollingSession("test-session-id");
-      const result = await generator.next();
-
-      expect(result.value).toEqual({
-        data: null,
-        error: "Fetch error: Network error",
-      });
-    });
-
-    it("處理非正常狀態碼", async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-      });
-
-      const generator = pollingSession("test-session-id");
-      const result = await generator.next();
-
-      expect(result.value).toEqual({
-        data: null,
-        error: "Status code: 500",
-      });
-    });
-
-    it("處理無效 JSON 回應", async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.reject(new Error("Invalid JSON")),
-      });
-
-      const generator = pollingSession("test-session-id");
-      const result = await generator.next();
-
-      expect(result.value).toEqual({
-        data: null,
-        error: "JSON error: Invalid JSON",
-      });
+      await expect(resultPromise).rejects.toThrow("Session has been deleted due to TTL");
     });
 
     it("處理無效資料格式", async () => {
       mockFetch.mockResolvedValueOnce({
-        ok: true,
         status: 200,
         json: () => Promise.resolve({ invalid: "data" }),
       });
 
-      const generator = pollingSession("test-session-id");
-      const result = await generator.next();
+      const generator = pollingSession("test-session-id", "join");
 
-      expect(result.value?.error).toContain("Invalid data:");
-      expect(result.value?.data).toBe(null);
+      const resultPromise = generator.next();
+      vi.advanceTimersByTime(100);
+
+      await expect(resultPromise).rejects.toThrow();
     });
   });
 
@@ -266,87 +284,12 @@ describe("Session Utils 工具測試", () => {
 
     it("無效信號資料時拋出錯誤", async () => {
       const invalidData = {
-        type: "invalid",
+        type: "invalid" as any,
         sdp: "test-sdp",
-      };
-
-      await expect(sendSignal("test-session-id", invalidData)).rejects.toThrow();
-    });
-  });
-
-  describe("輪詢信號", () => {
-    it("成功輪詢 offer 信號", async () => {
-      const mockSignalResponse = {
-        sdp: "test-offer-sdp",
-        candidate: ["candidate1", "candidate2"],
-      };
-
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve(mockSignalResponse),
-      });
-
-      const generator = pollingSignal("test-session-id", "offer");
-      const result = await generator.next();
-
-      expect(mockFetch).toHaveBeenCalledWith("https://1ureka.vercel.app/api/session/test-session-id/signal?type=offer");
-      expect(result.value).toEqual({ data: mockSignalResponse, error: null });
-    });
-
-    it("成功輪詢 answer 信號", async () => {
-      const mockSignalResponse = {
-        sdp: "test-answer-sdp",
         candidate: ["candidate1"],
       };
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve(mockSignalResponse),
-      });
-
-      const generator = pollingSignal("test-session-id", "answer");
-      const result = await generator.next();
-
-      expect(mockFetch).toHaveBeenCalledWith(
-        "https://1ureka.vercel.app/api/session/test-session-id/signal?type=answer"
-      );
-      expect(result.value).toEqual({ data: mockSignalResponse, error: null });
-    });
-
-    it("處理 404 狀態並結束輪詢", async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 404,
-      });
-
-      const generator = pollingSignal("test-session-id", "offer");
-      const result = await generator.next();
-
-      expect(result.value).toEqual({
-        data: null,
-        error: "Session has been deleted due to TTL",
-      });
-      expect(result.done).toBe(false);
-
-      // Generator should be done on next call
-      const nextResult = await generator.next();
-      expect(nextResult.done).toBe(true);
-    });
-
-    it("處理無效信號回應格式", async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: () => Promise.resolve({ invalid: "signal" }),
-      });
-
-      const generator = pollingSignal("test-session-id", "offer");
-      const result = await generator.next();
-
-      expect(result.value?.error).toContain("Invalid data:");
-      expect(result.value?.data).toBe(null);
+      await expect(sendSignal("test-session-id", invalidData)).rejects.toThrow();
     });
   });
 });
