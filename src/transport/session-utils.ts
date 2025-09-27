@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { tryCatch } from "@/utils";
 import { IPCChannel } from "@/ipc";
 
 /**
@@ -27,52 +26,7 @@ const SignalRequestSchema = z.object({
   candidate: z.array(z.string()),
 });
 
-const SignalResponseSchema = z.object({
-  sdp: z.string(),
-  candidate: z.array(z.string()),
-});
-
 type Session = z.infer<typeof SessionSchema>;
-type PollingState<T> = { data: T; error: null } | { data: null; error: string };
-
-/**
- * 通用輪詢函數，當 404 時結束
- */
-async function* polling<T>(url: string, schema: z.ZodType<T>): AsyncGenerator<PollingState<T>> {
-  while (true) {
-    await new Promise((r) => setTimeout(r, 100));
-
-    const { data: response, error: fetchError } = await tryCatch(fetch(url));
-    if (fetchError) {
-      yield { data: null, error: `Fetch error: ${fetchError.message}` };
-      continue;
-    }
-
-    if (response.status === 404) {
-      yield { data: null, error: "Session has been deleted due to TTL" };
-      return;
-    }
-
-    if (!response.ok) {
-      yield { data: null, error: `Status code: ${response.status}` };
-      continue;
-    }
-
-    const { data: json, error: jsonError } = await tryCatch(response.json());
-    if (jsonError) {
-      yield { data: null, error: `JSON error: ${jsonError.message}` };
-      continue;
-    }
-
-    const { data, error: parseError } = schema.safeParse(json);
-    if (parseError) {
-      yield { data: null, error: `Invalid data: ${parseError.issues.join(", ")}` };
-      continue;
-    }
-
-    yield { data, error: null };
-  }
-}
 
 /**
  * 創建新會話
@@ -123,8 +77,17 @@ const joinSession = async (id: string): Promise<Session> => {
 /**
  * 輪詢會話狀態 (伺服器長輪詢 5 秒 + fetch端無限重試直到該 session 已被 TTL 刪除，間隔 100ms)
  */
-function pollingSession(id: string) {
-  return polling(`${API_BASE}/session/${id}`, SessionSchema);
+async function* pollingSession(id: string, event: "join" | "offer" | "answer") {
+  while (true) {
+    await new Promise((r) => setTimeout(r, 100));
+
+    const response = await fetch(`${API_BASE}/session/${id}?for=${event}`);
+    if (response.status === 404) {
+      throw new Error("Session has been deleted due to TTL");
+    }
+
+    yield SessionSchema.parse(await response.json());
+  }
 }
 
 /**
@@ -144,11 +107,4 @@ const sendSignal = async (id: string, data: z.infer<typeof SignalRequestSchema>)
   }
 };
 
-/**
- * 輪詢信令 (伺服器長輪詢 5 秒 + fetch端無限重試直到直到該 session 已被 TTL 刪除，間隔 100ms)
- */
-function pollingSignal(id: string, type: "offer" | "answer") {
-  return polling(`${API_BASE}/session/${id}/signal?type=${type}`, SignalResponseSchema);
-}
-
-export { createSession, joinSession, pollingSession, sendSignal, pollingSignal };
+export { createSession, joinSession, pollingSession, sendSignal };
