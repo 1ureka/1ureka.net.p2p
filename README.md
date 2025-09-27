@@ -332,14 +332,14 @@ const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
 ```ts
 const bindDataChannelMonitor = (dataChannel, onUpdate) => {
   // register
-  dataChannel.addEventListener("message", (e) =>  /* 計算輸入流量 */ );
+  dataChannel.onmessage = (e) =>  /* 計算輸入流量 */, onUpdate(...);
   const originalSend = dataChannel.send.bind(dataChannel);
   dataChannel.send = (data) =>  /* 計算輸出流量 */, originalSend(data);
 
   // unregister
   const cleanup = () => { dataChannel.send = originalSend; /* 移除監聽 */ };
-  dataChannel.addEventListener("close", cleanup);
-  dataChannel.addEventListener("error", cleanup);
+  dataChannel.onclose = cleanup;
+  dataChannel.onerror = cleanup;
 };
 ```
 
