@@ -193,8 +193,8 @@ Adapter 是應用的 **核心轉換模組**，根據不同角色的需求，分�
   - DataChannel 底層基於 **SCTP over DTLS over UDP**，本質上是 **訊息導向** 的，而非 TCP 那樣的連續位元流。
   - 每條 DataChannel 對應一個 SCTP stream，單個訊息大小有限制。
   - 因此在 DataChannel 上要模擬 TCP，必須有額外層：
-    1. **多工 (Multiplexing)**：讓多個邏輯 TCP socket 共用同一條 DataChannel。
-    2. **流式重組 (Chunker/Reassembler)**：將 TCP 的資料流切片到合適的大小再拼回來。
+    - **多工 (Multiplexing)**：讓多個邏輯 TCP socket 共用同一條 DataChannel。
+    - **流式重組 (Chunker/Reassembler)**：將 TCP 的資料流切片到合適的大小再拼回來。
 
 **Adapter 的角色**，就是為了將 DataChannel 變成一個「可承載多個 TCP socket 的虛擬線路」。
 
