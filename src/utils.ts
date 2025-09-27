@@ -1,15 +1,15 @@
 // code review 時，要確保這裡的代碼都是 nodeJS, browser 都能用的
 
 type Success<T> = { data: T; error: null };
-type Failure<E> = { data: null; error: E };
-type Result<T, E = Error> = Success<T> | Failure<E>;
+type Failure = { data: null; error: Error };
+type Result<T> = Success<T> | Failure;
 
-export async function tryCatch<T, E = Error>(promise: Promise<T>): Promise<Result<T, E>> {
+export async function tryCatch<T>(promise: Promise<T>): Promise<Result<T>> {
   try {
     const data = await promise;
     return { data, error: null };
-  } catch (error) {
-    return { data: null, error: error as E };
+  } catch (err: unknown) {
+    return { data: null, error: err instanceof Error ? err : new Error(String(err)) };
   }
 }
 
