@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { useFormStore } from "@/ui/form";
 import { useAdapter } from "@/adapter/store";
 import { useTransport } from "@/transport/store";
-import { createTransport } from "@/transport/transport";
+import { startSession } from "@/transport/session";
 import { LayoutButton } from "@/ui/components/Layout";
 import { IPCChannel } from "@/ipc";
 
@@ -12,8 +12,13 @@ const ConnectionButton = () => {
   const code = useFormStore((state) => state.code);
 
   const handleConnect = useCallback(async () => {
-    const result = await createTransport({ role, code: String(code) });
-    if (result) window.electron.send(IPCChannel.AdapterStart, port, role);
+    if (role === "host") {
+      const result = await startSession();
+      if (result) window.electron.send(IPCChannel.AdapterStart, port, role);
+    } else {
+      const result = await startSession(code);
+      if (result) window.electron.send(IPCChannel.AdapterStart, port, role);
+    }
   }, [code, port, role]);
 
   const status1 = useTransport((state) => state.status);
