@@ -72,7 +72,7 @@ const createTransport = async (params: WebRTCParams) => {
     const dataChannel = await getDataChannel(timeoutDataChannel);
     bindDataChannelIPC(dataChannel);
 
-    setState({ status: "connected", log: "連線建立完成" });
+    setState({ status: "connected", log: "Connection established successfully" });
     return close;
   } catch (error) {
     if (error instanceof Error) {
@@ -80,6 +80,8 @@ const createTransport = async (params: WebRTCParams) => {
     } else {
       setState({ status: "failed", error: "An unknown error occurred during WebRTC connection establishment" });
     }
+    close();
+    return;
   }
 };
 
