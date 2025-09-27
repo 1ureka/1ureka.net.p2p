@@ -138,9 +138,10 @@ sequenceDiagram
     participant SR as 本地服務
 
     AP->>CB: 收到本地應用連線請求
-    CB->>CB: 分配識別碼
+    CB->>CB: 產生必要資訊
     CB->>DC: CONNECT 封包
     DC->>HB: CONNECT 封包
+    HB->>HB: 若符合規則
     HB->>SR: 建立新的 TCP 連線至服務
 
     AP->>CB: 收到應用程式的資料
@@ -161,6 +162,7 @@ sequenceDiagram
     CB->>CB: 釋放資源
     CB->>DC: CLOSE 封包
     DC->>HB: CLOSE 封包
+    HB->>HB: 釋放資源
     HB->>SR: 關閉 TCP 連線
 ```
 
@@ -200,13 +202,13 @@ Adapter 是應用的 **核心轉換模組**，根據不同角色的需求，分�
 
 Adapter 透過自訂協定中的 **識別碼與事件封包** 將單一 DataChannel 切分為多條邏輯 TCP 連線：
 
-- **一個 socket_id = 一條 TCP 連線**
-  - Host 與 Client 會共享這個 socket_id。
-  - 所有與此連線相關的 `CONNECT`、`DATA`、`CLOSE` 封包，都會使用相同的 socket_id。
+- **一個識別碼 = 一條 TCP 連線**
+  - 識別碼實際上就是 TCP Socket Pair
+  - 所有與此連線相關的 `CONNECT`、`DATA`、`CLOSE` 封包，都會使用相同的識別碼。
 
 - **生命週期**
   - **建立 (CONNECT)**
-    - Client 接收到本地 TCP 請求 → 分配 socket_id → 發送 `CONNECT` 封包 → Host 建立新的 TCP socket。
+    - Client 接收到本地 TCP 請求 → 產生識別碼 → 發送 `CONNECT` 封包 → Host 建立新的 TCP socket。
   - **傳輸 (DATA)**
     - 雙方透過 Chunker / Reassembler 傳送與接收資料。
   - **關閉 (CLOSE)**
@@ -221,17 +223,18 @@ Adapter 透過自訂協定中的 **識別碼與事件封包** 將單一 DataChan
 
 ### 封包結構
 
-```
-Offset   Size   Field          Type      說明
-────────────────────────────────────────────────────────────
-[0]      1      event          Uint8     事件型別 (CONNECT, DATA, CLOSE)
-[1–2]    2      socket_id      Uint16    邏輯 TCP 連線 ID
-[3–4]    2      chunk_id       Uint16    一段 TCP 資料流的片段 ID
-[5–6]    2      chunk_index    Uint16    本片段在訊息中的序號
-[7–8]    2      total_chunks   Uint16    總片段數
-[9–10]   2      payload_size   Uint16    本片段資料大小
-[11– ]   N      payload        Uint8[]   真正的 TCP 資料
-```
+| Offset  | Size | Field        | Type      | 說明                                  |
+| ------- | ---- | ------------ | --------- | ------------------------------------- |
+| [0]     | 1    | event        | Uint8     | 事件型別 (`CONNECT`, `DATA`, `CLOSE`) |
+| [1–16]  | 16   | src_addr     | Uint8[16] | 來源 IP 位址 (IPv4 映射成 IPv6 格式)  |
+| [17–18] | 2    | src_port     | Uint16    | 來源 Port                             |
+| [19–34] | 16   | dst_addr     | Uint8[16] | 目標 IP 位址 (IPv4 映射成 IPv6 格式)  |
+| [35–36] | 2    | dst_port     | Uint16    | 目標 Port                             |
+| [37–38] | 2    | chunk_id     | Uint16    | 資料流片段 ID                         |
+| [39–40] | 2    | chunk_index  | Uint16    | 本片段在訊息中的序號                  |
+| [41–42] | 2    | total_chunks | Uint16    | 總片段數                              |
+| [43–44] | 2    | payload_size | Uint16    | 本片段資料大小                        |
+| [45– ]  | N    | payload      | Uint8[]   | 真正的 TCP 資料                       |
 
 ### 補充說明
 
@@ -241,10 +244,10 @@ Offset   Size   Field          Type      說明
   - 這確保 `payload_size` 可以完全由 `Uint16` 表示，無需額外擴展。
 
 - **循環使用**
-  - `socket_id` 與 `chunk_id` **MUST 實作循環使用**。
+  - `chunk_id` **MUST 實作循環使用**。
   - 上限皆為 65535，當編號達到最大值後，必須回到 0 重新分配。
-  - 任何尚未釋放的 socket_id 或未完成的 chunk_id 不得被覆寫，實作方 SHOULD 確保安全回收。
-  - 因此該協定能支撐同時多達 65535 條邏輯連線與 65535 個未完成的訊息。
+  - 任何尚未完成的 chunk_id 不得被覆寫，實作方 SHOULD 確保安全回收。
+  - 因此該協定能支撐同時多達 65535 個未完成的訊息。
 
 ---
 
