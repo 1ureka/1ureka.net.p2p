@@ -7,7 +7,7 @@ import { createSession, joinSession, pollingSession, sendSignal, pollingSignal }
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
-describe("Session Utils", () => {
+describe("Session Utils 工具測試", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -16,8 +16,8 @@ describe("Session Utils", () => {
     vi.restoreAllMocks();
   });
 
-  describe("createSession", () => {
-    it("should create a session successfully", async () => {
+  describe("建立會話", () => {
+    it("成功建立會話", async () => {
       const mockSession = {
         id: "test-session-id",
         host: "test-host",
@@ -42,7 +42,7 @@ describe("Session Utils", () => {
       expect(result).toEqual(mockSession);
     });
 
-    it("should throw error when response is not ok", async () => {
+    it("回應不正常時拋出錯誤", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 400,
@@ -51,7 +51,7 @@ describe("Session Utils", () => {
       await expect(createSession("test-host")).rejects.toThrow("Failed to create session, status code: 400");
     });
 
-    it("should throw error when response data is invalid", async () => {
+    it("回應資料無效時拋出錯誤", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ invalid: "data" }),
@@ -61,8 +61,8 @@ describe("Session Utils", () => {
     });
   });
 
-  describe("joinSession", () => {
-    it("should join a session successfully", async () => {
+  describe("加入會話", () => {
+    it("成功加入會話", async () => {
       const mockSession = {
         id: "test-session-id",
         host: "test-host",
@@ -87,7 +87,7 @@ describe("Session Utils", () => {
       expect(result).toEqual(mockSession);
     });
 
-    it("should throw error when response is not ok", async () => {
+    it("回應不正常時拋出錯誤", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 404,
@@ -99,8 +99,8 @@ describe("Session Utils", () => {
     });
   });
 
-  describe("pollingSession", () => {
-    it("should poll session data successfully", async () => {
+  describe("輪詢會話", () => {
+    it("成功輪詢會話資料", async () => {
       const mockSession = {
         id: "test-session-id",
         host: "test-host",
@@ -128,7 +128,7 @@ describe("Session Utils", () => {
       expect(result.value).toEqual({ data: mockSession, error: null });
     });
 
-    it("should handle 404 status and end polling", async () => {
+    it("處理 404 狀態並結束輪詢", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 404,
@@ -148,7 +148,7 @@ describe("Session Utils", () => {
       expect(nextResult.done).toBe(true);
     });
 
-    it("should handle fetch errors", async () => {
+    it("處理 fetch 錯誤", async () => {
       mockFetch.mockRejectedValueOnce(new Error("Network error"));
 
       const generator = pollingSession("test-session-id");
@@ -160,7 +160,7 @@ describe("Session Utils", () => {
       });
     });
 
-    it("should handle non-ok status codes", async () => {
+    it("處理非正常狀態碼", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
@@ -175,7 +175,7 @@ describe("Session Utils", () => {
       });
     });
 
-    it("should handle invalid JSON response", async () => {
+    it("處理無效 JSON 回應", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -191,7 +191,7 @@ describe("Session Utils", () => {
       });
     });
 
-    it("should handle invalid data format", async () => {
+    it("處理無效資料格式", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -206,8 +206,8 @@ describe("Session Utils", () => {
     });
   });
 
-  describe("sendSignal", () => {
-    it("should send offer signal successfully", async () => {
+  describe("發送信號", () => {
+    it("成功發送 offer 信號", async () => {
       const signalData = {
         type: "offer" as const,
         sdp: "test-offer-sdp",
@@ -228,7 +228,7 @@ describe("Session Utils", () => {
       });
     });
 
-    it("should send answer signal successfully", async () => {
+    it("成功發送 answer 信號", async () => {
       const signalData = {
         type: "answer" as const,
         sdp: "test-answer-sdp",
@@ -249,7 +249,7 @@ describe("Session Utils", () => {
       });
     });
 
-    it("should throw error when response is not ok", async () => {
+    it("回應不正常時拋出錯誤", async () => {
       const signalData = {
         type: "offer" as const,
         sdp: "test-sdp",
@@ -264,7 +264,7 @@ describe("Session Utils", () => {
       await expect(sendSignal("test-session-id", signalData)).rejects.toThrow("Failed to send offer, status code: 400");
     });
 
-    it("should throw error for invalid signal data", async () => {
+    it("無效信號資料時拋出錯誤", async () => {
       const invalidData = {
         type: "invalid",
         sdp: "test-sdp",
@@ -274,8 +274,8 @@ describe("Session Utils", () => {
     });
   });
 
-  describe("pollingSignal", () => {
-    it("should poll offer signal successfully", async () => {
+  describe("輪詢信號", () => {
+    it("成功輪詢 offer 信號", async () => {
       const mockSignalResponse = {
         sdp: "test-offer-sdp",
         candidate: ["candidate1", "candidate2"],
@@ -294,7 +294,7 @@ describe("Session Utils", () => {
       expect(result.value).toEqual({ data: mockSignalResponse, error: null });
     });
 
-    it("should poll answer signal successfully", async () => {
+    it("成功輪詢 answer 信號", async () => {
       const mockSignalResponse = {
         sdp: "test-answer-sdp",
         candidate: ["candidate1"],
@@ -315,7 +315,7 @@ describe("Session Utils", () => {
       expect(result.value).toEqual({ data: mockSignalResponse, error: null });
     });
 
-    it("should handle 404 status and end polling", async () => {
+    it("處理 404 狀態並結束輪詢", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 404,
@@ -335,7 +335,7 @@ describe("Session Utils", () => {
       expect(nextResult.done).toBe(true);
     });
 
-    it("should handle invalid signal response format", async () => {
+    it("處理無效信號回應格式", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
