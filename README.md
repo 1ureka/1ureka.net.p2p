@@ -240,7 +240,7 @@ Adapter 透過自訂協定中的 **識別碼與事件封包** 將單一 DataChan
 
 - **payload_size 的設計**
   - DataChannel 單次訊息的實務上限約 **65535 bytes**。
-  - 扣除協定 header 的 11 bytes，最大 payload 剛好是 **65525 bytes**。
+  - 扣除協定 header 的 **45 bytes**，最大 payload 剛好是 **65490 bytes**。
   - 這確保 `payload_size` 可以完全由 `Uint16` 表示，無需額外擴展。
 
 - **循環使用**
