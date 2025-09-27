@@ -7,6 +7,7 @@ enum IPCChannel {
   AdapterLogs = "adapter.logs",
   FromTCP = "data.from.tcp",
   FromRTC = "data.from.rtc",
+  OSInfo = "os.info",
 }
 
 export { IPCChannel };

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { tryCatch } from "@/utils";
+import { IPCChannel } from "@/ipc";
 
 /**
  * Session-based WebRTC API 相關的 schema 與型別
@@ -32,7 +33,7 @@ const SignalResponseSchema = z.object({
 });
 
 type Session = z.infer<typeof SessionSchema>;
-type PollingState<T> = { data: T | null; error: string | null };
+type PollingState<T> = { data: T; error: null } | { data: null; error: string };
 
 /**
  * 通用輪詢函數，當 404 時結束
@@ -76,13 +77,16 @@ async function* polling<T>(url: string, schema: z.ZodType<T>): AsyncGenerator<Po
 /**
  * 創建新會話
  */
-const createSession = async (host: string): Promise<Session> => {
-  // TODO: host 先由 ipc 傳入(async/await)
+const createSession = async (): Promise<Session> => {
+  const hostname = await window.electron.request(IPCChannel.OSInfo);
+  if (typeof hostname !== "string" || hostname.trim().length === 0) {
+    throw new Error("Invalid hostname from IPC");
+  }
 
   const response = await fetch(`${API_BASE}/session`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ host }),
+    body: JSON.stringify({ host: hostname }),
   });
 
   if (!response.ok) {
@@ -96,13 +100,16 @@ const createSession = async (host: string): Promise<Session> => {
 /**
  * 加入會話
  */
-const joinSession = async (id: string, client: string): Promise<Session> => {
-  // TODO: client 先由 ipc 傳入(async/await)
+const joinSession = async (id: string): Promise<Session> => {
+  const hostname = await window.electron.request(IPCChannel.OSInfo);
+  if (typeof hostname !== "string" || hostname.trim().length === 0) {
+    throw new Error("Invalid hostname from IPC");
+  }
 
   const response = await fetch(`${API_BASE}/session/${id}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ client }),
+    body: JSON.stringify({ client: hostname }),
   });
 
   if (!response.ok) {
@@ -123,7 +130,7 @@ function pollingSession(id: string) {
 /**
  * 發送信令
  */
-const sendSignal = async (id: string, data: unknown): Promise<void> => {
+const sendSignal = async (id: string, data: z.infer<typeof SignalRequestSchema>): Promise<void> => {
   const parsedData = SignalRequestSchema.parse(data);
 
   const response = await fetch(`${API_BASE}/session/${id}/signal`, {
