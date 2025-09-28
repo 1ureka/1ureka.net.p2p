@@ -14,21 +14,27 @@ interface ReassemblerEntry {
 }
 
 /**
+ * 同時用於 chunker 與 ressembler 的序號管理器，類似 RFC 1982 的序號比較實作
+ */
+function createSeqManager() {
+  let seq = 0; // 同時代表 下一個要使用的序號(chunker) 或是 目前的最早序號(ressembler)
+
+  // 取得並遞增序號，循環使用 0 ~ MAX_CHUNK_ID
+  const getSeq = () => {
+    const current = seq;
+    seq = (seq + 1) % (MAX_CHUNK_ID + 1);
+    return current;
+  };
+
+  return { getSeq };
+}
+
+/**
  * 建立 Chunker，用於將訊息切割成多個 chunk
  */
 function createChunker(socketId: number) {
   type GeneratorReturnType = Generator<Buffer, void, unknown>;
-  type Counter = number;
-  let currentCount: Counter = 0;
-
-  /**
-   * 使用並遞增指定 socket 的 currentCount，循環使用 0~65535 (原因請參考 README.md，不需 review)
-   */
-  const getCurrentCount = (): number => {
-    const count = currentCount;
-    currentCount = (currentCount + 1) % (MAX_CHUNK_ID + 1);
-    return count;
-  };
+  const { getSeq } = createSeqManager();
 
   /**
    * 將單個大訊息切割成多個 chunk ，每次使用時會消耗一次內部的 chunk_id (Generator 函數)
@@ -38,7 +44,7 @@ function createChunker(socketId: number) {
       throw new Error(`Socket ID ${socketId} exceeds maximum ${MAX_SOCKET_ID}`);
     }
 
-    const chunkId = getCurrentCount();
+    const chunkId = getSeq();
 
     // 計算需要多少個 chunk
     const totalChunks = Math.max(1, Math.ceil(data.length / MAX_PAYLOAD_SIZE));

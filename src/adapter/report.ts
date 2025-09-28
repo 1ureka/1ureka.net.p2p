@@ -54,4 +54,6 @@ const createReporter = (module: string, win: BrowserWindow) => {
   return { reportLog, reportError, reportWarn, reportStatus, clearHistory };
 };
 
-export { createReporter, getLock };
+type Reporter = ReturnType<typeof createReporter>;
+
+export { createReporter, getLock, type Reporter };
