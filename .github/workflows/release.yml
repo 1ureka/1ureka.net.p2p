@@ -1,0 +1,85 @@
+name: Release (Windows)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (e.g. v1.0.0)"
+        required: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Package app
+        run: npm run package
+
+      - name: Find packaged folder
+        id: find_folder
+        shell: pwsh
+        run: |
+          # 找到打包後的資料夾（Electron Forge 會在 out 目錄下創建）
+          $packagedFolder = Get-ChildItem -Path "out" -Directory | Select-Object -First 1
+          if ($packagedFolder) {
+            Write-Host "Found packaged folder: $($packagedFolder.FullName)"
+            echo "folder_path=$($packagedFolder.FullName)" >> $env:GITHUB_OUTPUT
+            echo "folder_name=$($packagedFolder.Name)" >> $env:GITHUB_OUTPUT
+          } else {
+            Write-Error "No packaged folder found in out directory"
+            exit 1
+          }
+
+      - name: Zip packaged folder
+        shell: pwsh
+        run: |
+          # 在 Windows 壓縮成 zip
+          $folderPath = "${{ steps.find_folder.outputs.folder_path }}"
+          $folderName = "${{ steps.find_folder.outputs.folder_name }}"
+          $zipName = "$folderName-win32-x64.zip"
+
+          # 確保 out 目錄存在
+          if (!(Test-Path "out")) {
+            New-Item -ItemType Directory -Path "out" -Force
+          }
+
+          # 壓縮資料夾
+          Compress-Archive -Path $folderPath -DestinationPath "out\$zipName" -Force
+          Write-Host "Created zip file: out\$zipName"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-zip
+          path: out/*.zip
+
+  release:
+    runs-on: windows-latest
+    needs: build
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-zip
+          path: ./release_zips
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.version }}
+          name: "Release ${{ github.event.inputs.version }}"
+          files: release_zips/**/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
