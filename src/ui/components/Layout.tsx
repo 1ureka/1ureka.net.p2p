@@ -1,3 +1,5 @@
+/* eslint-disable import/no-duplicates */
+
 import { ellipsisSx } from "@/ui/components/Property";
 import { type PaperProps, Paper } from "@mui/material";
 import { type BoxProps, Box } from "@mui/material";

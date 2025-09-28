@@ -1,13 +1,12 @@
 import LanRoundedIcon from "@mui/icons-material/LanRounded";
 import { Box, Typography } from "@mui/material";
 
-import { useFormStore } from "@/ui/form";
+import { type Role, useFormStore } from "@/ui/form";
 import { useAdapter } from "@/adapter/store";
 import { useTransport } from "@/transport/store";
-import type { Role } from "@/transport/transport";
 
 import { LayoutBox, LayoutColumn, LayoutRow, LayoutText, LayoutTitle } from "@/ui/components/Layout";
-import { EnumProperty, NumberProperty } from "@/ui/components/Property";
+import { EnumProperty, NumberProperty, TextProperty } from "@/ui/components/Property";
 import { Background } from "@/ui/components/Background";
 import { ConnectionIndicator } from "@/ui/components/ConnectionIndicator";
 import { ConnectionLogs } from "@/ui/components/ConnectionLogs";
@@ -50,7 +49,7 @@ const WebRTCPanel = () => {
       </LayoutText>
 
       <EnumProperty id="role" value={role} onChange={(role) => setRole(role)} items={items} />
-      <NumberProperty value={code} onChange={(value) => setCode(value)} step={1} min={0} max={Infinity} />
+      <TextProperty value={code} onChange={(e) => setCode(e.target.value)} placeholder="code" />
     </LayoutBox>
   );
 };

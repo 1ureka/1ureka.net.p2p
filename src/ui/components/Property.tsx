@@ -1,5 +1,5 @@
 import { useRef, useCallback, useEffect } from "react";
-import { Box, ButtonBase, Input, Typography } from "@mui/material";
+import { Box, ButtonBase, Input, type InputProps, Typography } from "@mui/material";
 import ArrowLeftRoundedIcon from "@mui/icons-material/ArrowLeftRounded";
 import ArrowRightRoundedIcon from "@mui/icons-material/ArrowRightRounded";
 import { motion } from "motion/react";
@@ -217,5 +217,27 @@ const NumberProperty = ({ value, onChange, ...props }: NumberProps) => {
   );
 };
 
+const TextProperty = ({ sx, ...props }: InputProps) => {
+  return (
+    <Input
+      size="small"
+      fullWidth
+      sx={{
+        "& .MuiInputBase-input": {
+          textAlign: "center",
+          p: 0.75,
+          bgcolor: "background.paper",
+          borderTopLeftRadius: theme.shape.borderRadius,
+          borderTopRightRadius: theme.shape.borderRadius,
+          border: "2px solid",
+          borderColor: "divider",
+        },
+        ...sx,
+      }}
+      {...props}
+    />
+  );
+};
+
 export { transition, ellipsisSx };
-export { EnumProperty, NumberProperty };
+export { EnumProperty, NumberProperty, TextProperty };
