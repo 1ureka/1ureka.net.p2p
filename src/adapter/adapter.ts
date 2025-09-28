@@ -48,6 +48,7 @@ const createSocketLifecycle = (sockets: Map<number, net.Socket>, win: BrowserWin
         reportError({ message: `Error processing close for socket ${socketId}`, data: { error } });
       }
 
+      socket.removeAllListeners();
       sockets.delete(socketId);
       reportLog({ message: `TCP socket closed for socket ${socketId}` });
     });
