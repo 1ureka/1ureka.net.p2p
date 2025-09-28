@@ -2,7 +2,8 @@ import net from "net";
 import { ipcMain, type BrowserWindow } from "electron";
 import { createReporter } from "@/adapter/report";
 import { checkLock, tryConnect, tryListen } from "@/adapter/adapter-utils";
-import { createChunker, createReassembler, PacketEvent } from "@/adapter/packet";
+import { PacketEvent } from "@/adapter/packet";
+import { createChunker, createReassembler } from "@/adapter/framing";
 import { IPCChannel } from "@/ipc";
 
 /**

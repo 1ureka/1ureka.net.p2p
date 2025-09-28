@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-explicit-any */
 
-import { createChunker, createReassembler, PacketEvent } from "./packet";
+import { PacketEvent } from "./packet";
+import { createChunker, createReassembler } from "./framing";
 import { describe, test, expect } from "vitest";
 
 describe("Packet System Tests", () => {
   describe("Chunker Tests", () => {
-    test("小數據 - 小於 MAX_PAYLOAD_SIZE (65525 bytes)", () => {
+    test("小數據 - 小於 MAX_PAYLOAD_SIZE (16384 bytes)", () => {
       const chunker = createChunker(1234);
       const testData = Buffer.from("Hello, World!");
 
@@ -27,9 +28,9 @@ describe("Packet System Tests", () => {
       expect(chunk.readUInt16BE(9)).toBe(testData.length); // payload_size
     });
 
-    test("中等數據 - 等於 MAX_PAYLOAD_SIZE (65525 bytes)", () => {
+    test("中等數據 - 等於 MAX_PAYLOAD_SIZE (16384 bytes)", () => {
       const chunker = createChunker(5678);
-      const testData = Buffer.alloc(65525, "A"); // 剛好 MAX_PAYLOAD_SIZE
+      const testData = Buffer.alloc(16384, "A"); // 剛好 MAX_PAYLOAD_SIZE
 
       const chunks = Array.from(chunker.generateChunks(PacketEvent.DATA, testData));
 
@@ -38,29 +39,35 @@ describe("Packet System Tests", () => {
 
       const chunk = chunks[0];
       expect(chunk.readUInt16BE(7)).toBe(1); // total_chunks
-      expect(chunk.readUInt16BE(9)).toBe(65525); // payload_size
+      expect(chunk.readUInt16BE(9)).toBe(16384); // payload_size
     });
 
     test("大數據 - 大於 MAX_PAYLOAD_SIZE，需要切片", () => {
       const chunker = createChunker(9999);
-      const testData = Buffer.alloc(100000, "B"); // 100KB 數據
+      const testData = Buffer.alloc(40000, "B"); // 40KB 數據
 
       const chunks = Array.from(chunker.generateChunks(PacketEvent.DATA, testData));
 
-      // 應該產生 2 個 chunks (100000 / 65525 = 1.52...)
-      expect(chunks).toHaveLength(2);
+      // 應該產生 3 個 chunks (40000 / 16384 = 2.44...)
+      expect(chunks).toHaveLength(3);
 
       // 驗證第一個 chunk
       const firstChunk = chunks[0];
       expect(firstChunk.readUInt16BE(5)).toBe(0); // chunk_index = 0
-      expect(firstChunk.readUInt16BE(7)).toBe(2); // total_chunks = 2
-      expect(firstChunk.readUInt16BE(9)).toBe(65525); // payload_size = MAX_PAYLOAD_SIZE
+      expect(firstChunk.readUInt16BE(7)).toBe(3); // total_chunks = 3
+      expect(firstChunk.readUInt16BE(9)).toBe(16384); // payload_size = MAX_PAYLOAD_SIZE
 
       // 驗證第二個 chunk
       const secondChunk = chunks[1];
       expect(secondChunk.readUInt16BE(5)).toBe(1); // chunk_index = 1
-      expect(secondChunk.readUInt16BE(7)).toBe(2); // total_chunks = 2
-      expect(secondChunk.readUInt16BE(9)).toBe(100000 - 65525); // 剩餘數據大小
+      expect(secondChunk.readUInt16BE(7)).toBe(3); // total_chunks = 3
+      expect(secondChunk.readUInt16BE(9)).toBe(16384); // payload_size = MAX_PAYLOAD_SIZE
+
+      // 驗證第三個 chunk
+      const thirdChunk = chunks[2];
+      expect(thirdChunk.readUInt16BE(5)).toBe(2); // chunk_index = 2
+      expect(thirdChunk.readUInt16BE(7)).toBe(3); // total_chunks = 3
+      expect(thirdChunk.readUInt16BE(9)).toBe(40000 - 16384 * 2); // 剩餘數據大小 = 7232
     });
 
     test("chunk_id 循環使用機制 (0-65535)", () => {
@@ -102,8 +109,8 @@ describe("Packet System Tests", () => {
       const chunker = createChunker(2222);
 
       // 測試需要超過 65535 chunks 的數據應該拋出錯誤
-      // 65536 * 65525 = 4,294,836,600 bytes (約 4.3GB)
-      const maxValidSize = 65535 * 65525; // 最大有效大小
+      // 65536 * 16384 = 1,073,741,824 bytes (1GB)
+      const maxValidSize = 65535 * 16384; // 最大有效大小
 
       expect(() => {
         const oversizedData = Buffer.alloc(maxValidSize + 1);
@@ -149,7 +156,7 @@ describe("Packet System Tests", () => {
     test("多 chunk 順序重組", () => {
       const chunker = createChunker(5555);
       const reassembler = createReassembler();
-      const originalData = Buffer.alloc(100000, "C"); // 需要多個 chunks
+      const originalData = Buffer.alloc(50000, "C"); // 需要多個 chunks (約 4 個 chunks)
 
       const chunks = Array.from(chunker.generateChunks(PacketEvent.DATA, originalData));
       expect(chunks.length).toBeGreaterThan(1);
@@ -175,7 +182,7 @@ describe("Packet System Tests", () => {
     test("多 chunk 亂序重組", () => {
       const chunker = createChunker(6666);
       const reassembler = createReassembler();
-      const originalData = Buffer.alloc(150000, "D"); // 需要多個 chunks
+      const originalData = Buffer.alloc(60000, "D"); // 需要多個 chunks (約 4 個 chunks)
 
       const chunks = Array.from(chunker.generateChunks(PacketEvent.DATA, originalData));
       expect(chunks.length).toBeGreaterThan(2);
@@ -201,8 +208,8 @@ describe("Packet System Tests", () => {
       const chunker2 = createChunker(1002);
       const reassembler = createReassembler();
 
-      const data1 = Buffer.alloc(80000, "E");
-      const data2 = Buffer.alloc(90000, "F");
+      const data1 = Buffer.alloc(35000, "E");
+      const data2 = Buffer.alloc(45000, "F");
 
       const chunks1 = Array.from(chunker1.generateChunks(PacketEvent.DATA, data1));
       const chunks2 = Array.from(chunker2.generateChunks(PacketEvent.DATA, data2));
@@ -233,7 +240,7 @@ describe("Packet System Tests", () => {
     test("不完整訊息處理", () => {
       const chunker = createChunker(7777);
       const reassembler = createReassembler();
-      const originalData = Buffer.alloc(100000, "G");
+      const originalData = Buffer.alloc(50000, "G");
 
       const chunks = Array.from(chunker.generateChunks(PacketEvent.DATA, originalData));
       expect(chunks.length).toBeGreaterThan(1);
@@ -254,7 +261,7 @@ describe("Packet System Tests", () => {
     test("超時清理機制測試", async () => {
       const chunker = createChunker(8888);
       const reassembler = createReassembler();
-      const originalData = Buffer.alloc(100000, "H");
+      const originalData = Buffer.alloc(35000, "H");
 
       const chunks = Array.from(chunker.generateChunks(PacketEvent.DATA, originalData));
 
@@ -285,7 +292,7 @@ describe("Packet System Tests", () => {
     test("重組器清理功能", () => {
       const chunker = createChunker(1010);
       const reassembler = createReassembler();
-      const testData = Buffer.alloc(100000, "I");
+      const testData = Buffer.alloc(35000, "I");
 
       const chunks = Array.from(chunker.generateChunks(PacketEvent.DATA, testData));
 
@@ -331,10 +338,15 @@ describe("Packet System Tests", () => {
       const chunker = createChunker(2020);
       const reassembler = createReassembler();
 
-      // 測試 CONNECT 事件
-      const connectData = Buffer.from("connect payload");
+      // 測試 CONNECT 事件 - 使用較大數據測試多 chunk
+      const connectData = Buffer.alloc(25000, "K");
       const connectChunks = Array.from(chunker.generateChunks(PacketEvent.CONNECT, connectData));
-      const connectResult = reassembler.processPacket(connectChunks[0]);
+
+      let connectResult = null;
+      for (const chunk of connectChunks) {
+        const result = reassembler.processPacket(chunk);
+        if (result) connectResult = result;
+      }
 
       expect(connectResult).not.toBeNull();
       expect(connectResult!.event).toBe(PacketEvent.CONNECT);
@@ -383,8 +395,8 @@ describe("Packet System Tests", () => {
       const chunker = createChunker(socketId);
       const reassembler = createReassembler();
 
-      // 創建 1MB 的測試數據
-      const originalData = Buffer.alloc(1024 * 1024);
+      // 創建 256KB 的測試數據
+      const originalData = Buffer.alloc(256 * 1024);
       for (let i = 0; i < originalData.length; i++) {
         originalData[i] = i % 256;
       }
@@ -416,7 +428,7 @@ describe("Packet System Tests", () => {
 
       // 創建多個不同大小的訊息
       const message1 = Buffer.from("First message");
-      const message2 = Buffer.alloc(80000, "X");
+      const message2 = Buffer.alloc(40000, "X");
       const message3 = Buffer.from("Third message");
 
       // 分別切片
