@@ -19,7 +19,7 @@ const Title = () => (
     </Box>
 
     <Typography variant="h6" component="h1">
-      1ureka.net.p2p
+      1ureka.net.p2p v1.0.0-alpha.2
     </Typography>
   </Box>
 );
