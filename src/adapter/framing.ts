@@ -72,12 +72,12 @@ const createChunker = () => {
  */
 const createReassemblerMap = () => {
   // socketId → (chunkId → chunk 陣列，依 chunkIndex 填充，缺塊為 null)
-  type RessemblerMap = Map<number, Map<number, Array<Buffer | null>>>;
+  type RessemblerMap = Map<number, Map<number, { event: PacketEvent; payload: Array<Buffer | null> }>>;
   const map: RessemblerMap = new Map();
   const expectedSeqMap = createSequenceMap();
 
   const addPacket = (header: PacketHeader, payload: Buffer) => {
-    const { socketId, chunkId, chunkIndex, totalChunks } = header;
+    const { socketId, event, chunkId, chunkIndex, totalChunks } = header;
 
     let messages = map.get(socketId);
     if (!messages) {
@@ -87,16 +87,16 @@ const createReassemblerMap = () => {
 
     let chunks = messages.get(chunkId);
     if (!chunks) {
-      chunks = new Array(totalChunks).fill(null);
+      chunks = { event, payload: new Array(totalChunks).fill(null) };
       messages.set(chunkId, chunks);
     }
 
-    if (!chunks[chunkIndex]) {
-      chunks[chunkIndex] = payload;
+    if (!chunks.payload[chunkIndex]) {
+      chunks.payload[chunkIndex] = payload;
     }
   };
 
-  function* flushPackets(socketId: number): Generator<Buffer> {
+  function* flushPackets(socketId: number): Generator<{ event: PacketEvent; data: Buffer }> {
     const messages = map.get(socketId);
     if (!messages) return;
 
@@ -106,10 +106,10 @@ const createReassemblerMap = () => {
 
       // 還沒收到或是還沒收齊
       if (!chunks) break;
-      if (!chunks.every((c) => c !== null)) break;
+      if (!chunks.payload.every((c) => c !== null)) break;
 
       // 收齊了，組合並移除
-      yield Buffer.concat(chunks);
+      yield { event: chunks.event, data: Buffer.concat(chunks.payload) };
       messages.delete(earliest);
       expectedSeqMap.use(socketId);
     }
@@ -128,8 +128,8 @@ function createReassembler() {
     const { header, payload } = decodePacket(packet);
     reassemblerMap.addPacket(header, payload);
 
-    for (const data of reassemblerMap.flushPackets(header.socketId)) {
-      yield { socketId: header.socketId, event: header.event, data };
+    for (const { event, data } of reassemblerMap.flushPackets(header.socketId)) {
+      yield { socketId: header.socketId, event, data };
     }
   }
 
