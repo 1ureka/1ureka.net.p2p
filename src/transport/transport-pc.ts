@@ -25,7 +25,7 @@ const createPeerConnection = () => {
   const dataChannelPromise = new Promise<RTCDataChannel>((resolve, reject) => {
     setState({ log: "Initializing RTCDataChannel with negotiated mode and fixed channel ID (0)" });
     // negotiated: true 時，只要 id 相同就能直接建立連線 (對稱寫法)，利用該機制來共用函數
-    const dataChannel = peerConnection.createDataChannel("data", { negotiated: true, id: 0 });
+    const dataChannel = peerConnection.createDataChannel("data", { negotiated: true, id: 0, ordered: false });
     dataChannel.onopen = () => resolve(dataChannel);
 
     dataChannel.onerror = (error) => {
