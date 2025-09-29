@@ -107,7 +107,7 @@ async function createClientAdapter(win: BrowserWindow, port: number) {
    */
   const handlePacketFromRTC = (_: unknown, buffer: Buffer) => {
     try {
-      for (const { socketId, event, data } of reassembler.processPacket(buffer)) {
+      for (const { socketId, event, data } of reassembler.processPacket(Buffer.from(buffer))) {
         if (event === PacketEvent.DATA) {
           handleDataFromRTC(socketId, data);
         }
@@ -122,6 +122,7 @@ async function createClientAdapter(win: BrowserWindow, port: number) {
   };
 
   server.on("connection", handleConnectFromLocal);
+  ipcMain.removeAllListeners(IPCChannel.FromRTC);
   ipcMain.on(IPCChannel.FromRTC, handlePacketFromRTC);
 }
 
