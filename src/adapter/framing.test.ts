@@ -7,10 +7,10 @@ import { describe, test, expect } from "vitest";
 describe("Packet System Tests", () => {
   describe("Chunker Tests", () => {
     test("小數據 - 小於 MAX_PAYLOAD_SIZE (16384 bytes)", () => {
-      const chunker = createChunker(1234);
+      const chunker = createChunker();
       const testData = Buffer.from("Hello, World!");
 
-      const chunks = Array.from(chunker.generateChunks(PacketEvent.DATA, testData));
+      const chunks = Array.from(chunker.generate(1234, PacketEvent.DATA, testData));
 
       // 小數據應該只產生一個 chunk
       expect(chunks).toHaveLength(1);
@@ -29,10 +29,10 @@ describe("Packet System Tests", () => {
     });
 
     test("中等數據 - 等於 MAX_PAYLOAD_SIZE (16384 bytes)", () => {
-      const chunker = createChunker(5678);
+      const chunker = createChunker();
       const testData = Buffer.alloc(16384, "A"); // 剛好 MAX_PAYLOAD_SIZE
 
-      const chunks = Array.from(chunker.generateChunks(PacketEvent.DATA, testData));
+      const chunks = Array.from(chunker.generate(5678, PacketEvent.DATA, testData));
 
       // 應該只產生一個 chunk
       expect(chunks).toHaveLength(1);
@@ -43,10 +43,10 @@ describe("Packet System Tests", () => {
     });
 
     test("大數據 - 大於 MAX_PAYLOAD_SIZE，需要切片", () => {
-      const chunker = createChunker(9999);
+      const chunker = createChunker();
       const testData = Buffer.alloc(40000, "B"); // 40KB 數據
 
-      const chunks = Array.from(chunker.generateChunks(PacketEvent.DATA, testData));
+      const chunks = Array.from(chunker.generate(9999, PacketEvent.DATA, testData));
 
       // 應該產生 3 個 chunks (40000 / 16384 = 2.44...)
       expect(chunks).toHaveLength(3);
@@ -71,13 +71,13 @@ describe("Packet System Tests", () => {
     });
 
     test("chunk_id 循環使用機制 (0-65535)", () => {
-      const chunker = createChunker(1111);
+      const chunker = createChunker();
       const testData = Buffer.from("test");
 
       // 生成多個 chunks 來驗證 chunk_id 遞增
-      const chunks1 = Array.from(chunker.generateChunks(PacketEvent.DATA, testData));
-      const chunks2 = Array.from(chunker.generateChunks(PacketEvent.DATA, testData));
-      const chunks3 = Array.from(chunker.generateChunks(PacketEvent.DATA, testData));
+      const chunks1 = Array.from(chunker.generate(1111, PacketEvent.DATA, testData));
+      const chunks2 = Array.from(chunker.generate(1111, PacketEvent.DATA, testData));
+      const chunks3 = Array.from(chunker.generate(1111, PacketEvent.DATA, testData));
 
       expect(chunks1[0].readUInt16BE(3)).toBe(0); // 第一次使用 chunk_id = 0
       expect(chunks2[0].readUInt16BE(3)).toBe(1); // 第二次使用 chunk_id = 1
@@ -86,27 +86,27 @@ describe("Packet System Tests", () => {
 
     test("邊界條件測試", () => {
       // 測試空數據
-      const chunker1 = createChunker(0);
+      const chunker1 = createChunker();
       const emptyData = Buffer.alloc(0);
-      const emptyChunks = Array.from(chunker1.generateChunks(PacketEvent.DATA, emptyData));
+      const emptyChunks = Array.from(chunker1.generate(0, PacketEvent.DATA, emptyData));
 
       expect(emptyChunks).toHaveLength(1);
       expect(emptyChunks[0].readUInt16BE(9)).toBe(0); // payload_size = 0
 
       // 測試最大 socketId
-      const chunker2 = createChunker(65535);
-      const maxSocketChunks = Array.from(chunker2.generateChunks(PacketEvent.CONNECT, Buffer.from("test")));
+      const chunker2 = createChunker();
+      const maxSocketChunks = Array.from(chunker2.generate(65535, PacketEvent.CONNECT, Buffer.from("test")));
       expect(maxSocketChunks[0].readUInt16BE(1)).toBe(65535);
 
       // 測試超出範圍的 socketId 應該拋出錯誤
       expect(() => {
-        const invalidChunker = createChunker(65536);
-        Array.from(invalidChunker.generateChunks(PacketEvent.DATA, Buffer.from("test")));
+        const invalidChunker = createChunker();
+        Array.from(invalidChunker.generate(65536, PacketEvent.DATA, Buffer.from("test")));
       }).toThrow("Socket ID 65536 exceeds maximum 65535");
     });
 
     test("超大數據測試 - 接近理論上限", () => {
-      const chunker = createChunker(2222);
+      const chunker = createChunker();
 
       // 測試需要超過 65535 chunks 的數據應該拋出錯誤
       // 65536 * 16384 = 1,073,741,824 bytes (1GB)
@@ -114,201 +114,142 @@ describe("Packet System Tests", () => {
 
       expect(() => {
         const oversizedData = Buffer.alloc(maxValidSize + 1);
-        Array.from(chunker.generateChunks(PacketEvent.DATA, oversizedData));
+        Array.from(chunker.generate(2222, PacketEvent.DATA, oversizedData));
       }).toThrow("Data too large: requires 65536 chunks, maximum is 65535");
     });
 
     test("不同事件類型測試", () => {
-      const chunker = createChunker(3333);
+      const chunker = createChunker();
       const testData = Buffer.from("event test");
 
       // 測試 CONNECT 事件
-      const connectChunks = Array.from(chunker.generateChunks(PacketEvent.CONNECT, testData));
+      const connectChunks = Array.from(chunker.generate(3333, PacketEvent.CONNECT, testData));
       expect(connectChunks[0].readUInt8(0)).toBe(PacketEvent.CONNECT);
 
       // 測試 CLOSE 事件
-      const closeChunks = Array.from(chunker.generateChunks(PacketEvent.CLOSE, testData));
+      const closeChunks = Array.from(chunker.generate(3333, PacketEvent.CLOSE, testData));
       expect(closeChunks[0].readUInt8(0)).toBe(PacketEvent.CLOSE);
 
       // 測試 DATA 事件
-      const dataChunks = Array.from(chunker.generateChunks(PacketEvent.DATA, testData));
+      const dataChunks = Array.from(chunker.generate(3333, PacketEvent.DATA, testData));
       expect(dataChunks[0].readUInt8(0)).toBe(PacketEvent.DATA);
     });
   });
 
   describe("Reassembler Tests", () => {
     test("單一 chunk 重組", () => {
-      const chunker = createChunker(4444);
+      const chunker = createChunker();
       const reassembler = createReassembler();
       const originalData = Buffer.from("Single chunk test");
 
-      const chunks = Array.from(chunker.generateChunks(PacketEvent.DATA, originalData));
+      const chunks = Array.from(chunker.generate(4444, PacketEvent.DATA, originalData));
       expect(chunks).toHaveLength(1);
 
-      const result = reassembler.processPacket(chunks[0]);
+      const results = Array.from(reassembler.processPacket(chunks[0]));
 
-      expect(result).not.toBeNull();
-      expect(result!.socketId).toBe(4444);
-      expect(result!.event).toBe(PacketEvent.DATA);
-      expect(result!.data.equals(originalData)).toBe(true);
+      expect(results).toHaveLength(1);
+      expect(results[0].socketId).toBe(4444);
+      expect(results[0].event).toBe(PacketEvent.DATA);
+      expect(results[0].data.equals(originalData)).toBe(true);
     });
 
     test("多 chunk 順序重組", () => {
-      const chunker = createChunker(5555);
+      const chunker = createChunker();
       const reassembler = createReassembler();
       const originalData = Buffer.alloc(50000, "C"); // 需要多個 chunks (約 4 個 chunks)
 
-      const chunks = Array.from(chunker.generateChunks(PacketEvent.DATA, originalData));
+      const chunks = Array.from(chunker.generate(5555, PacketEvent.DATA, originalData));
       expect(chunks.length).toBeGreaterThan(1);
 
       // 順序處理每個 chunk
-      let result = null;
+      const allResults: any[] = [];
       for (let i = 0; i < chunks.length; i++) {
-        result = reassembler.processPacket(chunks[i]);
-
-        if (i < chunks.length - 1) {
-          // 未完成的 chunks 應該返回 null
-          expect(result).toBeNull();
-        }
+        const results = Array.from(reassembler.processPacket(chunks[i]));
+        allResults.push(...results);
       }
 
       // 最後一個 chunk 應該返回完整的重組數據
-      expect(result).not.toBeNull();
-      expect(result!.socketId).toBe(5555);
-      expect(result!.event).toBe(PacketEvent.DATA);
-      expect(result!.data.equals(originalData)).toBe(true);
+      expect(allResults).toHaveLength(1);
+      expect(allResults[0].socketId).toBe(5555);
+      expect(allResults[0].event).toBe(PacketEvent.DATA);
+      expect(allResults[0].data.equals(originalData)).toBe(true);
     });
 
     test("多 chunk 亂序重組", () => {
-      const chunker = createChunker(6666);
+      const chunker = createChunker();
       const reassembler = createReassembler();
       const originalData = Buffer.alloc(60000, "D"); // 需要多個 chunks (約 4 個 chunks)
 
-      const chunks = Array.from(chunker.generateChunks(PacketEvent.DATA, originalData));
+      const chunks = Array.from(chunker.generate(6666, PacketEvent.DATA, originalData));
       expect(chunks.length).toBeGreaterThan(2);
 
       // 亂序處理 chunks (倒序)
-      let result = null;
+      const allResults: any[] = [];
       for (let i = chunks.length - 1; i >= 0; i--) {
-        result = reassembler.processPacket(chunks[i]);
-
-        if (i > 0) {
-          // 未完成的 chunks 應該返回 null
-          expect(result).toBeNull();
-        }
+        const results = Array.from(reassembler.processPacket(chunks[i]));
+        allResults.push(...results);
       }
 
       // 最後一個 chunk (實際是第一個) 應該返回完整的重組數據
-      expect(result).not.toBeNull();
-      expect(result!.data.equals(originalData)).toBe(true);
+      expect(allResults).toHaveLength(1);
+      expect(allResults[0].data.equals(originalData)).toBe(true);
     });
 
     test("多 socket 並行重組", () => {
-      const chunker1 = createChunker(1001);
-      const chunker2 = createChunker(1002);
+      const chunker1 = createChunker();
+      const chunker2 = createChunker();
       const reassembler = createReassembler();
 
       const data1 = Buffer.alloc(35000, "E");
       const data2 = Buffer.alloc(45000, "F");
 
-      const chunks1 = Array.from(chunker1.generateChunks(PacketEvent.DATA, data1));
-      const chunks2 = Array.from(chunker2.generateChunks(PacketEvent.DATA, data2));
+      const chunks1 = Array.from(chunker1.generate(1001, PacketEvent.DATA, data1));
+      const chunks2 = Array.from(chunker2.generate(1002, PacketEvent.DATA, data2));
 
       // 交錯處理兩個 socket 的 chunks
-      let result1 = null;
-      let result2 = null;
+      const allResults: any[] = [];
 
       for (let i = 0; i < Math.max(chunks1.length, chunks2.length); i++) {
         if (i < chunks1.length) {
-          result1 = reassembler.processPacket(chunks1[i]);
+          const results = Array.from(reassembler.processPacket(chunks1[i]));
+          allResults.push(...results);
         }
         if (i < chunks2.length) {
-          result2 = reassembler.processPacket(chunks2[i]);
+          const results = Array.from(reassembler.processPacket(chunks2[i]));
+          allResults.push(...results);
         }
       }
 
       // 兩個 socket 的數據都應該正確重組
-      expect(result1).not.toBeNull();
-      expect(result1!.socketId).toBe(1001);
-      expect(result1!.data.equals(data1)).toBe(true);
+      expect(allResults).toHaveLength(2);
 
-      expect(result2).not.toBeNull();
-      expect(result2!.socketId).toBe(1002);
-      expect(result2!.data.equals(data2)).toBe(true);
+      const result1 = allResults.find((r) => r.socketId === 1001);
+      const result2 = allResults.find((r) => r.socketId === 1002);
+
+      expect(result1).toBeDefined();
+      expect(result1.data.equals(data1)).toBe(true);
+
+      expect(result2).toBeDefined();
+      expect(result2.data.equals(data2)).toBe(true);
     });
 
     test("不完整訊息處理", () => {
-      const chunker = createChunker(7777);
+      const chunker = createChunker();
       const reassembler = createReassembler();
       const originalData = Buffer.alloc(50000, "G");
 
-      const chunks = Array.from(chunker.generateChunks(PacketEvent.DATA, originalData));
+      const chunks = Array.from(chunker.generate(7777, PacketEvent.DATA, originalData));
       expect(chunks.length).toBeGreaterThan(1);
 
       // 只處理部分 chunks
+      const allResults: any[] = [];
       for (let i = 0; i < chunks.length - 1; i++) {
-        const result = reassembler.processPacket(chunks[i]);
-        expect(result).toBeNull(); // 不完整應該返回 null
+        const results = Array.from(reassembler.processPacket(chunks[i]));
+        allResults.push(...results);
       }
 
-      // 檢查統計資訊
-      const stats = reassembler.getStats();
-      expect(stats.size).toBe(1); // 應該有一個未完成的項目
-      expect(stats.entries[0].receivedChunks).toBe(chunks.length - 1);
-      expect(stats.entries[0].totalChunks).toBe(chunks.length);
-    });
-
-    test("超時清理機制測試", async () => {
-      const chunker = createChunker(8888);
-      const reassembler = createReassembler();
-      const originalData = Buffer.alloc(35000, "H");
-
-      const chunks = Array.from(chunker.generateChunks(PacketEvent.DATA, originalData));
-
-      // 處理一部分 chunks
-      reassembler.processPacket(chunks[0]);
-
-      // 檢查有未完成項目
-      let stats = reassembler.getStats();
-      expect(stats.size).toBe(1);
-
-      // 模擬時間流逝 - 創建新的 reassembler 來測試 prune 邏輯
-      // 由於實際的超時是 60 秒，我們通過手動觸發 prune 來測試
-
-      // 等待一小段時間後處理新的封包觸發 prune
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      // 處理一個新的不相關封包來觸發 prune 檢查
-      const newChunker = createChunker(9999);
-      const newData = Buffer.from("trigger prune");
-      const newChunks = Array.from(newChunker.generateChunks(PacketEvent.DATA, newData));
-      reassembler.processPacket(newChunks[0]);
-
-      // 由於時間很短，未完成項目應該還在
-      stats = reassembler.getStats();
-      expect(stats.size).toBeGreaterThanOrEqual(1);
-    });
-
-    test("重組器清理功能", () => {
-      const chunker = createChunker(1010);
-      const reassembler = createReassembler();
-      const testData = Buffer.alloc(35000, "I");
-
-      const chunks = Array.from(chunker.generateChunks(PacketEvent.DATA, testData));
-
-      // 處理部分 chunks
-      for (let i = 0; i < chunks.length - 1; i++) {
-        reassembler.processPacket(chunks[i]);
-      }
-
-      // 確認有未完成項目
-      expect(reassembler.getStats().size).toBe(1);
-
-      // 清理所有項目
-      reassembler.close();
-
-      // 確認已清理
-      expect(reassembler.getStats().size).toBe(0);
+      // 不完整應該沒有返回結果
+      expect(allResults).toHaveLength(0);
     });
 
     test("錯誤封包處理", () => {
@@ -317,8 +258,8 @@ describe("Packet System Tests", () => {
       // 測試太小的封包
       const tooSmallPacket = Buffer.alloc(5);
       expect(() => {
-        reassembler.processPacket(tooSmallPacket);
-      }).toThrow("Packet too small");
+        Array.from(reassembler.processPacket(tooSmallPacket));
+      }).toThrow("Packet too small: expected at least 11 bytes, got 5");
 
       // 測試錯誤的 payload 大小
       const invalidPacket = Buffer.alloc(20);
@@ -330,69 +271,67 @@ describe("Packet System Tests", () => {
       invalidPacket.writeUInt16BE(50, 9); // payload_size (但實際只有 9 bytes payload)
 
       expect(() => {
-        reassembler.processPacket(invalidPacket);
-      }).toThrow("Packet size mismatch");
+        Array.from(reassembler.processPacket(invalidPacket));
+      }).toThrow("Packet size mismatch: expected 61, got 20");
     });
 
     test("不同事件類型重組", () => {
-      const chunker = createChunker(2020);
+      const chunker = createChunker();
       const reassembler = createReassembler();
 
       // 測試 CONNECT 事件 - 使用較大數據測試多 chunk
       const connectData = Buffer.alloc(25000, "K");
-      const connectChunks = Array.from(chunker.generateChunks(PacketEvent.CONNECT, connectData));
+      const connectChunks = Array.from(chunker.generate(2020, PacketEvent.CONNECT, connectData));
 
-      let connectResult = null;
+      const allResults: any[] = [];
       for (const chunk of connectChunks) {
-        const result = reassembler.processPacket(chunk);
-        if (result) connectResult = result;
+        const results = Array.from(reassembler.processPacket(chunk));
+        allResults.push(...results);
       }
 
-      expect(connectResult).not.toBeNull();
-      expect(connectResult!.event).toBe(PacketEvent.CONNECT);
-      expect(connectResult!.data.equals(connectData)).toBe(true);
+      expect(allResults).toHaveLength(1);
+      expect(allResults[0].event).toBe(PacketEvent.CONNECT);
+      expect(allResults[0].data.equals(connectData)).toBe(true);
 
       // 測試 CLOSE 事件
       const closeData = Buffer.from("close payload");
-      const closeChunks = Array.from(chunker.generateChunks(PacketEvent.CLOSE, closeData));
-      const closeResult = reassembler.processPacket(closeChunks[0]);
+      const closeChunks = Array.from(chunker.generate(2020, PacketEvent.CLOSE, closeData));
+      const closeResults = Array.from(reassembler.processPacket(closeChunks[0]));
 
-      expect(closeResult).not.toBeNull();
-      expect(closeResult!.event).toBe(PacketEvent.CLOSE);
-      expect(closeResult!.data.equals(closeData)).toBe(true);
+      expect(closeResults).toHaveLength(1);
+      expect(closeResults[0].event).toBe(PacketEvent.CLOSE);
+      expect(closeResults[0].data.equals(closeData)).toBe(true);
     });
   });
 
   describe("Chunker 與 Reassembler 整合測試", () => {
     test("完整循環測試 - 小數據", () => {
       const socketId = 3030;
-      const chunker = createChunker(socketId);
+      const chunker = createChunker();
       const reassembler = createReassembler();
 
       const originalData = Buffer.from("Hello, Integration Test!");
 
       // 切片
-      const chunks = Array.from(chunker.generateChunks(PacketEvent.DATA, originalData));
+      const chunks = Array.from(chunker.generate(socketId, PacketEvent.DATA, originalData));
 
       // 重組
-      let finalResult = null;
+      const allResults: any[] = [];
       for (const chunk of chunks) {
-        const result = reassembler.processPacket(chunk);
-        if (result) {
-          finalResult = result;
-        }
+        const results = Array.from(reassembler.processPacket(chunk));
+        allResults.push(...results);
       }
 
       // 驗證結果
-      expect(finalResult).not.toBeNull();
-      expect(finalResult!.socketId).toBe(socketId);
-      expect(finalResult!.event).toBe(PacketEvent.DATA);
-      expect(finalResult!.data.equals(originalData)).toBe(true);
+      expect(allResults).toHaveLength(1);
+      expect(allResults[0].socketId).toBe(socketId);
+      expect(allResults[0].event).toBe(PacketEvent.DATA);
+      expect(allResults[0].data.equals(originalData)).toBe(true);
     });
 
     test("完整循環測試 - 大數據", () => {
       const socketId = 4040;
-      const chunker = createChunker(socketId);
+      const chunker = createChunker();
       const reassembler = createReassembler();
 
       // 創建 256KB 的測試數據
@@ -402,28 +341,26 @@ describe("Packet System Tests", () => {
       }
 
       // 切片
-      const chunks = Array.from(chunker.generateChunks(PacketEvent.DATA, originalData));
+      const chunks = Array.from(chunker.generate(socketId, PacketEvent.DATA, originalData));
       expect(chunks.length).toBeGreaterThan(10); // 應該需要多個 chunks
 
       // 重組
-      let finalResult = null;
+      const allResults: any[] = [];
       for (const chunk of chunks) {
-        const result = reassembler.processPacket(chunk);
-        if (result) {
-          finalResult = result;
-        }
+        const results = Array.from(reassembler.processPacket(chunk));
+        allResults.push(...results);
       }
 
       // 驗證結果
-      expect(finalResult).not.toBeNull();
-      expect(finalResult!.socketId).toBe(socketId);
-      expect(finalResult!.event).toBe(PacketEvent.DATA);
-      expect(finalResult!.data.equals(originalData)).toBe(true);
+      expect(allResults).toHaveLength(1);
+      expect(allResults[0].socketId).toBe(socketId);
+      expect(allResults[0].event).toBe(PacketEvent.DATA);
+      expect(allResults[0].data.equals(originalData)).toBe(true);
     });
 
     test("多訊息並行處理", () => {
       const socketId = 5050;
-      const chunker = createChunker(socketId);
+      const chunker = createChunker();
       const reassembler = createReassembler();
 
       // 創建多個不同大小的訊息
@@ -432,19 +369,17 @@ describe("Packet System Tests", () => {
       const message3 = Buffer.from("Third message");
 
       // 分別切片
-      const chunks1 = Array.from(chunker.generateChunks(PacketEvent.DATA, message1));
-      const chunks2 = Array.from(chunker.generateChunks(PacketEvent.DATA, message2));
-      const chunks3 = Array.from(chunker.generateChunks(PacketEvent.CONNECT, message3));
+      const chunks1 = Array.from(chunker.generate(socketId, PacketEvent.DATA, message1));
+      const chunks2 = Array.from(chunker.generate(socketId, PacketEvent.DATA, message2));
+      const chunks3 = Array.from(chunker.generate(socketId, PacketEvent.CONNECT, message3));
 
       // 交錯處理所有 chunks
       const allChunks = [...chunks1, ...chunks2, ...chunks3];
       const results: any[] = [];
 
       for (const chunk of allChunks) {
-        const result = reassembler.processPacket(chunk);
-        if (result) {
-          results.push(result);
-        }
+        const chunkResults = Array.from(reassembler.processPacket(chunk));
+        results.push(...chunkResults);
       }
 
       // 應該收到 3 個完整訊息
@@ -468,7 +403,7 @@ describe("Packet System Tests", () => {
 
     test("壓力測試 - 大量小訊息", () => {
       const socketId = 6060;
-      const chunker = createChunker(socketId);
+      const chunker = createChunker();
       const reassembler = createReassembler();
 
       const messageCount = 1000;
@@ -480,17 +415,15 @@ describe("Packet System Tests", () => {
         const message = Buffer.from(`Message ${i}: ${"x".repeat(i % 100)}`);
         originalMessages.push(message);
 
-        const chunks = Array.from(chunker.generateChunks(PacketEvent.DATA, message));
+        const chunks = Array.from(chunker.generate(socketId, PacketEvent.DATA, message));
         allChunks.push(...chunks);
       }
 
       // 處理所有 chunks
       const results: any[] = [];
       for (const chunk of allChunks) {
-        const result = reassembler.processPacket(chunk);
-        if (result) {
-          results.push(result);
-        }
+        const chunkResults = Array.from(reassembler.processPacket(chunk));
+        results.push(...chunkResults);
       }
 
       // 應該收到所有訊息
