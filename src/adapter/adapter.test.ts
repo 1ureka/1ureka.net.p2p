@@ -23,7 +23,8 @@ const createMockElectronApp = () => {
   };
 
   const sendToPeer = (data: Buffer) => {
-    setTimeout(() => peerApp?.ipcMain.emit(IPCChannel.FromRTC, null, data), 50);
+    const delay = Math.floor(Math.random() * 100); // 模擬無序傳輸
+    setTimeout(() => peerApp?.ipcMain.emit(IPCChannel.FromRTC, null, data), delay);
   };
 
   const browserWindow = {
@@ -52,12 +53,14 @@ const createEnvironment = async () => {
   clientApp.setPeer(hostApp);
 
   vi.resetModules();
+  vi.clearAllMocks();
   vi.doMock("electron", () => ({ ipcMain: hostApp.ipcMain, BrowserWindow: vi.fn() }));
-  const { createHostAdapter } = await import("./adapter");
+  const { createHostAdapter } = await import("./adapter-host");
 
   vi.resetModules();
+  vi.clearAllMocks();
   vi.doMock("electron", () => ({ ipcMain: clientApp.ipcMain, BrowserWindow: vi.fn() }));
-  const { createClientAdapter } = await import("./adapter");
+  const { createClientAdapter } = await import("./adapter-client");
 
   return {
     createHostAdapter: (port: number) => createHostAdapter(hostApp.browserWindow as any, port),
@@ -66,7 +69,7 @@ const createEnvironment = async () => {
 };
 
 describe("Adapter System Tests", () => {
-  it("[e2e] [echo] [client→server] [client 先關閉]", async () => {
+  it("[e2e] [echo] [client→server]", async () => {
     const { createHostAdapter, createClientAdapter } = await createEnvironment();
 
     // 真實 Echo Server
@@ -94,5 +97,47 @@ describe("Adapter System Tests", () => {
     await new Promise((res) => setTimeout(res, 500));
   }, 5000);
 
-  // TODO:  it("[e2e] [echo] [server→client] [server 先關閉]", async () => {}, 5000);
+  it("[e2e] [echo] [many sockets each sending 64KB]", async () => {
+    const { createHostAdapter, createClientAdapter } = await createEnvironment();
+
+    // 真實 Echo Server
+    const echoServer = net.createServer((socket) => socket.on("data", (d) => socket.write(d)));
+    await new Promise<void>((res) => echoServer.listen(0, res));
+    const echoPort = (echoServer.address() as any).port;
+
+    await createHostAdapter(echoPort);
+    await createClientAdapter(6001);
+
+    // 建立一個 64KB 的測試資料
+    const bigBuffer = Buffer.alloc(64 * 1024, "a");
+
+    // 來 10 個連線，每個都送 64KB
+    const totalClients = 100;
+    const results = await Promise.all(
+      Array.from({ length: totalClients }).map(
+        (_, i) =>
+          new Promise<boolean>((resolve, reject) => {
+            const client = net.connect(6001, "127.0.0.1");
+
+            client.on("error", reject);
+
+            client.on("data", (data) => {
+              const ok = data.equals(bigBuffer);
+              client.destroy();
+              resolve(ok);
+            });
+
+            client.write(bigBuffer);
+          })
+      )
+    );
+
+    // 每個連線回來的資料都要正確
+    expect(results.every((r) => r)).toBe(true);
+
+    echoServer.close();
+    await new Promise((res) => setTimeout(res, 500));
+  }, 5000);
+
+  // TODO:  it("[e2e] [http] [server→client] [server 先關閉]", async () => {}, 5000);
 });

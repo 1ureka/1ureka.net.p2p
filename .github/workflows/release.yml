@@ -47,7 +47,7 @@ jobs:
           # 在 Windows 壓縮成 zip
           $folderPath = "${{ steps.find_folder.outputs.folder_path }}"
           $folderName = "${{ steps.find_folder.outputs.folder_name }}"
-          $zipName = "$folderName-win32-x64.zip"
+          $zipName = "$folderName.zip"
 
           # 確保 out 目錄存在
           if (!(Test-Path "out")) {
