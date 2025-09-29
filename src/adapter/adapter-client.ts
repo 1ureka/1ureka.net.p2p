@@ -1,7 +1,7 @@
 import net from "net";
 import { ipcMain, type BrowserWindow } from "electron";
 import { createReporter } from "@/adapter/report";
-import { tryListen } from "@/adapter/adapter-utils";
+import { checkLock, tryListen } from "@/adapter/adapter-utils";
 import { PacketEvent } from "@/adapter/packet";
 import { createChunker, createReassembler } from "@/adapter/framing";
 import { IPCChannel } from "@/ipc";
@@ -10,6 +10,8 @@ import { IPCChannel } from "@/ipc";
  * 建立 Client 端的 Adapter (建立一個虛擬 TCP 伺服器讓本地的 TCP 客戶端連接)
  */
 async function createClientAdapter(win: BrowserWindow, port: number) {
+  if (!checkLock(win)) return;
+
   const { reportLog, reportError, reportStatus } = createReporter("Client", win);
   reportLog({ message: `Connecting to TCP Proxy server at localhost:${port}` });
   reportStatus("connecting");

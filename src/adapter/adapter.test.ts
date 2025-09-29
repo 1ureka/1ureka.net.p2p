@@ -53,11 +53,11 @@ const createEnvironment = async () => {
 
   vi.resetModules();
   vi.doMock("electron", () => ({ ipcMain: hostApp.ipcMain, BrowserWindow: vi.fn() }));
-  const { createHostAdapter } = await import("./adapter");
+  const { createHostAdapter } = await import("./adapter-host");
 
   vi.resetModules();
   vi.doMock("electron", () => ({ ipcMain: clientApp.ipcMain, BrowserWindow: vi.fn() }));
-  const { createClientAdapter } = await import("./adapter");
+  const { createClientAdapter } = await import("./adapter-client");
 
   return {
     createHostAdapter: (port: number) => createHostAdapter(hostApp.browserWindow as any, port),

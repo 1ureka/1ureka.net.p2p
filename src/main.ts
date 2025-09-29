@@ -1,9 +1,11 @@
 import os from "node:os";
 import path from "node:path";
 import started from "electron-squirrel-startup";
+
 import { app, BrowserWindow, Menu, ipcMain } from "electron";
-import { createAdapter } from "@/adapter/adapter";
-import { IPCChannel } from "./ipc";
+import { createHostAdapter } from "@/adapter/adapter-host";
+import { createClientAdapter } from "@/adapter/adapter-client";
+import { IPCChannel } from "@/ipc";
 
 Menu.setApplicationMenu(null);
 
@@ -28,8 +30,13 @@ const createWindow = () => {
 
   //   mainWindow.webContents.openDevTools();
 
-  ipcMain.on(IPCChannel.AdapterStart, (event, port, role) => {
-    createAdapter(mainWindow, port, role);
+  ipcMain.on(IPCChannel.AdapterStart, (_, port, role) => {
+    if (role === "host") {
+      createHostAdapter(mainWindow, port);
+    }
+    if (role === "client") {
+      createClientAdapter(mainWindow, port);
+    }
   });
 
   ipcMain.handle(IPCChannel.OSInfo, () => {

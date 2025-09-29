@@ -1,7 +1,7 @@
 import net from "net";
 import { ipcMain, type BrowserWindow } from "electron";
 import { createReporter } from "@/adapter/report";
-import { tryConnect } from "@/adapter/adapter-utils";
+import { checkLock, tryConnect } from "@/adapter/adapter-utils";
 import { PacketEvent } from "@/adapter/packet";
 import { createChunker, createReassembler } from "@/adapter/framing";
 import { IPCChannel } from "@/ipc";
@@ -10,6 +10,8 @@ import { IPCChannel } from "@/ipc";
  * 建立 Host 端的 Adapter (連接到本地的 TCP 伺服器)
  */
 async function createHostAdapter(win: BrowserWindow, port: number) {
+  if (!checkLock(win)) return;
+
   const { reportLog, reportWarn, reportError, reportStatus } = createReporter("Host", win);
   reportLog({ message: `Creating host adapter to TCP server at localhost:${port}` });
   reportStatus("connecting");
