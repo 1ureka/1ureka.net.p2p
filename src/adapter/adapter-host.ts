@@ -23,6 +23,7 @@ async function createHostAdapter(win: BrowserWindow, port: number) {
   const chunker = createChunker();
   const reassembler = createReassembler();
   const sockets: Map<number, net.Socket> = new Map();
+  const socketPromises: Map<number, Promise<void>> = new Map();
 
   /**
    * 處理來自 RTC 端的 CONNECT 封包，建立對應的 TCP socket 連線
@@ -33,9 +34,16 @@ async function createHostAdapter(win: BrowserWindow, port: number) {
       return;
     }
 
-    const socket = net.connect(port, "::", () => {
-      reportLog({ message: `TCP socket connected for socket ${socketId}` });
-    });
+    const socket = net.connect(port, "::");
+    socketPromises.set(
+      socketId,
+      new Promise((res) => {
+        socket.on("connect", () => {
+          res();
+          reportLog({ message: `TCP socket connected for socket ${socketId}` });
+        });
+      })
+    );
 
     sockets.set(socketId, socket);
 
@@ -102,12 +110,18 @@ async function createHostAdapter(win: BrowserWindow, port: number) {
    */
   const handlePacketFromRTC = (_: unknown, buffer: Buffer) => {
     try {
-      for (const { socketId, event, data } of reassembler.processPacket(buffer)) {
+      for (const { socketId, event, data } of reassembler.processPacket(Buffer.from(buffer))) {
         if (event === PacketEvent.CONNECT) {
           handleConnectFromRTC(socketId);
         }
         if (event === PacketEvent.DATA) {
-          handleDataFromRTC(socketId, data);
+          const promise = socketPromises.get(socketId);
+          if (!promise) {
+            reportError({ message: `Socket ${socketId} does not exist, cannot process incoming DATA packet.` });
+          } else {
+            // 利用 then 會順序執行的特性，保持 TCP 資料順序
+            promise.then(() => handleDataFromRTC(socketId, data));
+          }
         }
         if (event === PacketEvent.CLOSE) {
           handleCloseFromRTC(socketId);
@@ -119,6 +133,7 @@ async function createHostAdapter(win: BrowserWindow, port: number) {
     }
   };
 
+  ipcMain.removeAllListeners(IPCChannel.FromRTC);
   ipcMain.on(IPCChannel.FromRTC, handlePacketFromRTC);
 }
 
