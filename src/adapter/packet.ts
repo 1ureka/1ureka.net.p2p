@@ -19,6 +19,13 @@ type SocketPair = {
   dstPort: number; // 目標 Port (0-65535)
 };
 
+/**
+ * 將 SocketPair 轉換為字串，方便用作 Map (避免物件引用問題)或是日誌輸出
+ */
+const socketPairToString = (pair: SocketPair): string => {
+  return `(${pair.srcAddr}:${pair.srcPort} => ${pair.dstAddr}:${pair.dstPort})`;
+};
+
 // 封包 Header 結構，格式詳見 README.md
 interface PacketHeader {
   event: PacketEvent; // 事件類型 (0=DATA, 1=CLOSE, 2=CONNECT, …)
@@ -152,4 +159,4 @@ function decodePacket(packet: Buffer): { header: PacketHeader; payload: Buffer }
   return { header, payload };
 }
 
-export { encodePacket, decodePacket, PacketEvent, PacketHeader, SocketPair };
+export { encodePacket, decodePacket, socketPairToString, PacketEvent, PacketHeader, SocketPair };
