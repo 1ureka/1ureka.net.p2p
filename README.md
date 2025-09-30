@@ -345,4 +345,45 @@ const bindDataChannelMonitor = (dataChannel, onUpdate) => {
 
 ## 信令 (Signaling)
 
-TODO
+為了建立 P2P 連線，兩端必須交換連線資訊（SDP 描述與 ICE 候選）。專案採用基於 **HTTP 的會話式信令伺服器**。
+
+### 會話生命週期
+
+1. **Host 創建會話**
+   ```ts
+   const session = await createSession(); // 產生唯一的 Session ID
+   ```
+
+2. **Client 加入會話**
+   ```ts
+   const session = await joinSession(sessionId); // 使用 Host 提供的 ID 加入
+   ```
+
+3. **信令交換**
+   - Host 發送 `offer`（SDP + ICE candidates）
+   - Client 接收 `offer` 並發送 `answer`
+   - 雙方完成 WebRTC 連線建立
+
+4. **長輪詢機制**
+   ```ts
+   // 長輪詢等待對方信令，伺服器端 5 秒超時，客戶端 100ms 重試
+   for await (const { signal } of pollingSession(id, "offer")) {
+     if (signal.offer) {
+       await setRemote(signal.offer.sdp, signal.offer.candidate);
+       break;
+     }
+   }
+   ```
+
+### 伺服器 API
+
+- `POST /session` - 創建新會話
+- `POST /session/{id}` - 加入會話
+- `GET /session/{id}?for={event}` - 長輪詢會話狀態
+- `PUT /session/{id}/signal` - 發送信令
+
+### 安全性與限制
+
+- **會話 TTL**：伺服器會自動清理過期的會話，避免資源洩漏。
+- **無狀態設計**：信令伺服器不儲存任何敏感資料，僅協助交換公開的連線資訊。
+- **一次性使用**：每個 Session ID 僅能用於單次連線建立，連線斷開後需重新創建。
