@@ -12,7 +12,7 @@ enum PacketEvent {
   CONNECT = 2,
 }
 
-type ConnectionTuple = {
+type SocketPair = {
   srcAddr: string; // 來源 IP 位址 (IPv4 或 IPv6)
   srcPort: number; // 來源 Port (0-65535)
   dstAddr: string; // 目標 IP 位址 (IPv4 或 IPv6)
@@ -22,7 +22,7 @@ type ConnectionTuple = {
 // 封包 Header 結構，格式詳見 README.md
 interface PacketHeader {
   event: PacketEvent; // 事件類型 (0=DATA, 1=CLOSE, 2=CONNECT, …)
-  connectionTuple: ConnectionTuple; // 來源與目標的 IP 與 Port
+  socketPair: SocketPair; // 來源與目標的 IP 與 Port
   streamSeq: number; // 該封包所屬的資料流序號 (0-65535)
   chunkIndex: number; // 該封包在所在資料流的指標 (0-65535)
   chunkTotal: number; // 該資料流被切了多少 (1-65535)
@@ -78,16 +78,16 @@ function encodePacket(header: PacketHeader, payload: Buffer): Buffer {
   packet.writeUInt8(header.event, offset);
   offset += 1;
   // [1-16] src_addr (16 bytes)
-  createIPAddress(header.connectionTuple.srcAddr).copy(packet, offset);
+  createIPAddress(header.socketPair.srcAddr).copy(packet, offset);
   offset += 16;
   // [17-18] src_port (2 bytes)
-  packet.writeUInt16BE(header.connectionTuple.srcPort, offset);
+  packet.writeUInt16BE(header.socketPair.srcPort, offset);
   offset += 2;
   // [19-34] dst_addr (16 bytes)
-  createIPAddress(header.connectionTuple.dstAddr).copy(packet, offset);
+  createIPAddress(header.socketPair.dstAddr).copy(packet, offset);
   offset += 16;
   // [35-36] dst_port (2 bytes)
-  packet.writeUInt16BE(header.connectionTuple.dstPort, offset);
+  packet.writeUInt16BE(header.socketPair.dstPort, offset);
   offset += 2;
   // [37-38] stream_seq (2 bytes)
   packet.writeUInt16BE(header.streamSeq, offset);
@@ -143,7 +143,7 @@ function decodePacket(packet: Buffer): { header: PacketHeader; payload: Buffer }
 
   const header: PacketHeader = {
     event,
-    connectionTuple: { srcAddr, srcPort, dstAddr, dstPort },
+    socketPair: { srcAddr, srcPort, dstAddr, dstPort },
     streamSeq,
     chunkIndex,
     chunkTotal,
@@ -152,4 +152,4 @@ function decodePacket(packet: Buffer): { header: PacketHeader; payload: Buffer }
   return { header, payload };
 }
 
-export { encodePacket, decodePacket, PacketEvent, PacketHeader, ConnectionTuple };
+export { encodePacket, decodePacket, PacketEvent, PacketHeader, SocketPair };
