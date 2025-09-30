@@ -230,23 +230,17 @@ Adapter 透過自訂協定中的 **識別碼與事件封包** 將單一 DataChan
 | [17–18] | 2    | src_port     | Uint16    | 來源 Port                             |
 | [19–34] | 16   | dst_addr     | Uint8[16] | 目標 IP 位址 (IPv4 映射成 IPv6 格式)  |
 | [35–36] | 2    | dst_port     | Uint16    | 目標 Port                             |
-| [37–38] | 2    | chunk_id     | Uint16    | 資料流片段 ID                         |
-| [39–40] | 2    | chunk_index  | Uint16    | 本片段在訊息中的序號                  |
-| [41–42] | 2    | total_chunks | Uint16    | 總片段數                              |
-| [43–44] | 2    | payload_size | Uint16    | 本片段資料大小                        |
-| [45– ]  | N    | payload      | Uint8[]   | 真正的 TCP 資料                       |
+| [37–38] | 2    | stream_seq   | Uint16    | 該封包所屬的資料流序號                |
+| [39–40] | 2    | chunk_index  | Uint16    | 該封包在所在資料流的對應指標          |
+| [41–42] | 2    | total_chunks | Uint16    | 該資料流被切了多少份                  |
+| [43– ]  | N    | payload      | Uint8[]   | 真正的 TCP 資料                       |
 
 ### 補充說明
 
-- **payload_size 的設計**
-  - DataChannel 單次訊息的實務上限約 **65535 bytes**。
-  - 扣除協定 header 的 **45 bytes**，最大 payload 剛好是 **65490 bytes**。
-  - 這確保 `payload_size` 可以完全由 `Uint16` 表示，無需額外擴展。
-
 - **循環使用**
-  - `chunk_id` **MUST 實作循環使用**。
+  - `stream_seq` **MUST 實作循環使用**。
   - 上限皆為 65535，當編號達到最大值後，必須回到 0 重新分配。
-  - 任何尚未完成的 chunk_id 不得被覆寫，實作方 SHOULD 確保安全回收。
+  - 任何尚未完成的 stream_seq 不得被覆寫，實作方 SHOULD 確保安全回收。
   - 因此該協定能支撐同時多達 65535 個未完成的訊息。
 
 ---
@@ -350,11 +344,13 @@ const bindDataChannelMonitor = (dataChannel, onUpdate) => {
 ### 會話生命週期
 
 1. **Host 創建會話**
+
    ```ts
    const session = await createSession(); // 產生唯一的 Session ID
    ```
 
 2. **Client 加入會話**
+
    ```ts
    const session = await joinSession(sessionId); // 使用 Host 提供的 ID 加入
    ```

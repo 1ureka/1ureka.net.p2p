@@ -3,7 +3,7 @@ import { encodePacket, decodePacket } from "@/adapter/packet";
 
 // 協定常數定義
 const MAX_PAYLOAD_SIZE = 16384; // 協定中 framing 實際用到的最大 payload 大小 (16KB)
-const MAX_CHUNK_ID = 65535; // chunk_id 的最大值
+const MAX_SEQUENCE = 65535; // 序號的最大值
 const MAX_TOTAL_CHUNKS = 65535; // total_chunks 的最大值
 
 /**
@@ -13,10 +13,10 @@ const createSequenceMap = () => {
   type Value = number; // 同時代表 下一個要使用的序號(chunker) 或是 目前的最早序號(ressembler)
   const map = new Map<SocketPair, Value>();
 
-  // 取得並遞增序號，循環使用 0 ~ MAX_CHUNK_ID
+  // 取得並遞增序號，循環使用 0 ~ MAX_SEQUENCE
   const use = (pair: SocketPair) => {
     const current = map.get(pair) || 0;
-    map.set(pair, (current + 1) % (MAX_CHUNK_ID + 1));
+    map.set(pair, (current + 1) % (MAX_SEQUENCE + 1));
     return current;
   };
 
@@ -29,14 +29,14 @@ const createSequenceMap = () => {
 };
 
 /**
- * 建立 Chunker，用於將訊息切割成多個 chunk
+ * 建立 Chunker，用於將資料流切割成多個 chunk
  */
 const createChunker = () => {
   type GeneratorReturnType = Generator<Buffer, void, unknown>;
   const { use } = createSequenceMap();
 
   /**
-   * 將單個大訊息切割成多個 chunk ，每次使用時會消耗一次內部的 chunk_id (Generator 函數)
+   * 將單個大資料流切割成多個 chunk ，每次使用時會消耗一次內部的序號 (Generator 函數)
    */
   const generate = function* (socketPair: SocketPair, event: PacketEvent, data: Buffer): GeneratorReturnType {
     const streamSeq = use(socketPair);
@@ -113,7 +113,7 @@ const createReassemblerMap = () => {
 };
 
 /**
- * 建立重組器，用於將接收到的 chunk 重組成完整訊息
+ * 建立重組器，用於將接收到的 packet 重組成原本的資料流
  */
 function createReassembler() {
   const reassemblerMap = createReassemblerMap();
