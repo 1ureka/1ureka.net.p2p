@@ -129,42 +129,11 @@ Client 能直接使用 Host 分享出來的服務，就像在自己電腦上一�
 
 以下流程圖展示了 TCP 資料如何透過本系統進行傳輸：
 
-```mermaid
-sequenceDiagram
-    participant AP as 本地應用
-    participant CB as Client Adapter
-    participant DC as WebRTC
-    participant HB as Host Adapter
-    participant SR as 本地服務
-
-    AP->>CB: 收到本地應用連線請求
-    CB->>CB: 產生必要資訊
-    CB->>DC: CONNECT 封包
-    DC->>HB: CONNECT 封包
-    HB->>HB: 若符合規則
-    HB->>SR: 建立新的 TCP 連線至服務
-
-    AP->>CB: 收到應用程式的資料
-    CB->>CB: 切片與封裝標頭
-    CB->>DC: DATA 封包
-    DC->>HB: DATA 封包
-    HB->>HB: 封包解析與重組
-    HB->>SR: 寫入資料到 TCP 服務
-
-    SR->>HB: 服務回應資料
-    HB->>HB: 切片與封裝標頭
-    HB->>DC: DATA 封包
-    DC->>CB: DATA 封包
-    CB->>CB: 封包解析與重組
-    CB->>AP: 寫入資料到 TCP 連線
-
-    AP->>CB: 關閉連線
-    CB->>CB: 釋放資源
-    CB->>DC: CLOSE 封包
-    DC->>HB: CLOSE 封包
-    HB->>HB: 釋放資源
-    HB->>SR: 關閉 TCP 連線
-```
+| 階段        | 本地應用                | Client Adapter                          | WebRTC    | Host Adapter                              | 本地服務                       |
+| ----------- | ----------------------- | --------------------------------------- | --------- | ----------------------------------------- | ------------------------------ |
+| **CONNECT** | 發出連線請求          | 產生包含目的位址與端口的 CONNECT 封包 | ⇀ | 檢查規則，通過後嘗試連接到指定 TCP 服務 | 建立連線或無法連線時觸發 CLOSE |
+| **DATA**    | 傳送資料流/寫入資料流 | 切分與封裝/解析與重組 DATA 封包       | ⇆    | 切分與封裝/解析與重組 DATA 封包         | 傳送資料流/寫入資料流        |
+| **CLOSE**   | 關閉連線              | 釋放資源並傳送 CLOSE 封包             | ⇆   | 釋放資源並傳送 CLOSE 封包               | 關閉連線                     |
 
 ---
 
