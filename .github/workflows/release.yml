@@ -19,6 +19,7 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: 22
+          cache: "npm"
 
       - name: Install deps
         run: npm ci
@@ -47,7 +48,8 @@ jobs:
           # 在 Windows 壓縮成 zip
           $folderPath = "${{ steps.find_folder.outputs.folder_path }}"
           $folderName = "${{ steps.find_folder.outputs.folder_name }}"
-          $zipName = "$folderName.zip"
+          $version = "${{ github.event.inputs.version }}"
+          $zipName = "$folderName-$version.zip"
 
           # 確保 out 目錄存在
           if (!(Test-Path "out")) {
