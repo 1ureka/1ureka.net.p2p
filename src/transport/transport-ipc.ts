@@ -1,5 +1,5 @@
 import { IPCChannel } from "@/ipc";
-import { setState } from "@/transport/store";
+import { report } from "@/transport/store";
 import { createDataChannelSender } from "@/transport/transport-sender";
 
 /**
@@ -17,10 +17,10 @@ const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
       } else if (ArrayBuffer.isView(buffer)) {
         window.electron.send(IPCChannel.FromRTC, buffer);
       } else {
-        setState({ error: "Received invalid data type from DataChannel" });
+        report({ error: "Received invalid data type from DataChannel" });
       }
     } catch (error) {
-      setState({ error: "Failed to process data received from DataChannel" });
+      report({ error: "Failed to process data received from DataChannel" });
     }
   };
 
@@ -32,10 +32,10 @@ const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
       } else if (ArrayBuffer.isView(buffer)) {
         sender.push(buffer as ArrayBufferView<ArrayBuffer>);
       } else {
-        setState({ error: "Received invalid data type from IPC" });
+        report({ error: "Received invalid data type from IPC" });
       }
     } catch (error) {
-      setState({ error: "Failed to send data through DataChannel" });
+      report({ error: "Failed to send data through DataChannel" });
     }
   };
 

@@ -1,4 +1,4 @@
-import { getLock, setState } from "@/transport/store";
+import { getLock, report, setStatus } from "@/transport/store";
 import { createPeerConnection } from "@/transport/transport-pc";
 import { bindDataChannelIPC } from "@/transport/transport-ipc";
 import { createSession, joinSession, pollingSession, sendSignal } from "./session-utils";
@@ -16,11 +16,13 @@ const getErrorMessage = (error: unknown, fallback: string) => {
  */
 const startSession = async (sessionId?: string) => {
   if (getLock()) {
-    setState({ status: "failed", error: "Connection has already been established or is in progress" });
+    setStatus("failed");
+    report({ error: "Connection has already been established or is in progress" });
     return;
   }
 
-  setState({ status: "connecting", history: [] });
+  setStatus("connecting");
+  report({ history: [] });
   let responseId: string | null = null;
 
   try {
@@ -29,7 +31,7 @@ const startSession = async (sessionId?: string) => {
       const { id } = await createSession();
       responseId = id;
       for await (const session of pollingSession(id, "join")) {
-        setState({ log: "Waiting for client to join session..." });
+        report({ log: "Waiting for client to join session..." });
         if (session.status === "joined") break;
       }
     } else {
@@ -38,7 +40,8 @@ const startSession = async (sessionId?: string) => {
       responseId = id;
     }
   } catch (error) {
-    setState({ status: "failed", error: getErrorMessage(error, "Failed to create or join session") });
+    setStatus("failed");
+    report({ error: getErrorMessage(error, "Failed to create or join session") });
     return;
   }
 
@@ -52,7 +55,7 @@ const startSession = async (sessionId?: string) => {
 
       // 3. 等待對方的 answer
       for await (const { signal } of pollingSession(responseId, "answer")) {
-        setState({ log: "Waiting for client's answer..." });
+        report({ log: "Waiting for client's answer..." });
         if (signal.answer) {
           await setRemote(signal.answer.sdp, signal.answer.candidate);
           break;
@@ -61,7 +64,7 @@ const startSession = async (sessionId?: string) => {
     } else {
       // 2. 等待對方的 offer
       for await (const { signal } of pollingSession(responseId, "offer")) {
-        setState({ log: "Waiting for host's offer..." });
+        report({ log: "Waiting for host's offer..." });
         if (signal.offer) {
           await setRemote(signal.offer.sdp, signal.offer.candidate);
           break;
@@ -72,7 +75,8 @@ const startSession = async (sessionId?: string) => {
       await sendSignal(responseId, { type: "answer", sdp: description, candidate: candidates });
     }
   } catch (error) {
-    setState({ status: "failed", error: getErrorMessage(error, "Failed to establish WebRTC connection") });
+    setStatus("failed");
+    report({ error: getErrorMessage(error, "Failed to establish WebRTC connection") });
     close();
     return;
   }
@@ -81,9 +85,11 @@ const startSession = async (sessionId?: string) => {
     // 4. 等待 DataChannel 開啟
     const dataChannel = await getDataChannel(WAIT_DATA_CHANNEL_TIMEOUT);
     bindDataChannelIPC(dataChannel);
-    setState({ status: "connected", log: "DataChannel established successfully" });
+    setStatus("connected");
+    report({ log: "DataChannel established successfully" });
   } catch (error) {
-    setState({ status: "failed", error: getErrorMessage(error, "Failed to open DataChannel") });
+    setStatus("failed");
+    report({ error: getErrorMessage(error, "Failed to open DataChannel") });
     close();
     return;
   }

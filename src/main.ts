@@ -5,6 +5,7 @@ import started from "electron-squirrel-startup";
 import { app, BrowserWindow, Menu, ipcMain } from "electron";
 import { createHostAdapter } from "@/adapter/adapter-host";
 import { createClientAdapter } from "@/adapter/adapter-client";
+import { createReporter } from "@/adapter/report";
 import { IPCChannel } from "@/ipc";
 
 Menu.setApplicationMenu(null);
@@ -30,6 +31,8 @@ const createWindow = () => {
 
   //   mainWindow.webContents.openDevTools();
 
+  const { reportLog } = createReporter("main", mainWindow);
+
   ipcMain.on(IPCChannel.AdapterStart, (_, port, role) => {
     if (role === "host") {
       createHostAdapter(mainWindow, port);
@@ -40,6 +43,7 @@ const createWindow = () => {
   });
 
   ipcMain.handle(IPCChannel.OSInfo, () => {
+    reportLog({ message: "Getting OS hostname" });
     return os.hostname();
   });
 };

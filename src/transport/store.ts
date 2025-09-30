@@ -1,47 +1,60 @@
 import { create } from "zustand";
 import type { ConnectionStatus, ConnectionLogEntry } from "@/utils";
+import type { Session } from "@/transport/session-utils";
 
 // 給 UI 使用 (read only)
 
-const useTransport = create<{ status: ConnectionStatus; history: ConnectionLogEntry[] }>(() => ({
+type SessionState = {
+  status: ConnectionStatus;
+  history: ConnectionLogEntry[];
+  session: Session;
+};
+
+const useSession = create<SessionState>(() => ({
   status: "disconnected",
   history: [],
+  session: { id: "", host: "", client: "", status: "waiting", createdAt: "", signal: {} },
 }));
 
-export { useTransport };
+export { useSession };
 
 // 給邏輯使用 (set only)
 
-const store = useTransport;
+const store = useSession;
+
+const getLock = () => {
+  return store.getState().status === "connecting" || store.getState().status === "connected";
+};
+
+const setSessionState = (session: Session) => {
+  store.setState((prev) => ({ ...prev, session }));
+};
+
+const setStatus = (status: ConnectionStatus) => {
+  store.setState((prev) => ({ ...prev, status }));
+};
 
 type PrimitiveState = {
-  status: ConnectionStatus;
   log: string;
   error: string;
   history: never[]; // 只能清空
 };
 
-const getLock = () => store.getState().status === "connecting" || store.getState().status === "connected";
-
-const setState = (partial: Partial<PrimitiveState>) => {
+const report = (partial: Partial<PrimitiveState>) => {
   const now = Date.now();
 
   store.setState((prev) => {
     // 進度
     let history = prev.history;
     if (partial.log !== undefined) {
-      history = [...prev.history, { module: "webrtc", level: "info", message: partial.log, timestamp: now }];
+      const entry = { module: "webrtc", level: "info", message: partial.log, timestamp: now } as const;
+      history = [...prev.history, entry];
     }
 
     // 錯誤
     if (partial.error !== undefined) {
-      history = [...history, { module: "webrtc", level: "error", message: partial.error, timestamp: now }];
-    }
-
-    // 狀態
-    let status = prev.status;
-    if (partial.status !== undefined) {
-      status = partial.status;
+      const entry = { module: "webrtc", level: "error", message: partial.error, timestamp: now } as const;
+      history = [...history, entry];
     }
 
     // 歷史只能清空 (若該次呼叫也帶如了 progress, error, 則忽略(在這裡覆蓋))
@@ -49,8 +62,8 @@ const setState = (partial: Partial<PrimitiveState>) => {
       history = [];
     }
 
-    return { status, history };
+    return { history };
   });
 };
 
-export { setState, getLock };
+export { report, getLock, setSessionState, setStatus };

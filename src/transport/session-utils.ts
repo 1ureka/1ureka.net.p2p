@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { IPCChannel } from "@/ipc";
+import { setSessionState } from "@/transport/store";
 
 /**
  * Session-based WebRTC API 相關的 schema 與型別
@@ -47,8 +48,9 @@ const createSession = async (): Promise<Session> => {
     throw new Error(`Failed to create session, status code: ${response.status}`);
   }
 
-  const session = await response.json();
-  return SessionSchema.parse(session);
+  const session = SessionSchema.parse(await response.json());
+  setSessionState(session);
+  return session;
 };
 
 /**
@@ -70,8 +72,9 @@ const joinSession = async (id: string): Promise<Session> => {
     throw new Error(`Failed to join session, status code: ${response.status}`);
   }
 
-  const session = await response.json();
-  return SessionSchema.parse(session);
+  const session = SessionSchema.parse(await response.json());
+  setSessionState(session);
+  return session;
 };
 
 /**
@@ -86,7 +89,9 @@ async function* pollingSession(id: string, event: "join" | "offer" | "answer") {
       throw new Error("Session has been deleted due to TTL");
     }
 
-    yield SessionSchema.parse(await response.json());
+    const session = SessionSchema.parse(await response.json());
+    setSessionState(session);
+    yield session;
   }
 }
 
@@ -107,4 +112,4 @@ const sendSignal = async (id: string, data: z.infer<typeof SignalRequestSchema>)
   }
 };
 
-export { createSession, joinSession, pollingSession, sendSignal };
+export { createSession, joinSession, pollingSession, sendSignal, type Session };
