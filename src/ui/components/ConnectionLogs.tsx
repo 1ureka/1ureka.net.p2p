@@ -71,8 +71,6 @@ const getRow = (params: ConnectionLogEntry & { current: boolean }) => {
 const ConnectionLogs = () => {
   const history1 = useAdapter((state) => state.history);
   const history2 = useSession((state) => state.history);
-  console.log([...history1, ...history2]);
-
   const history = mergeRepeatedLogs([...history1, ...history2].sort((a, b) => a.timestamp - b.timestamp));
 
   return (

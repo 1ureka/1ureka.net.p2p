@@ -9,7 +9,7 @@ import { IPCChannel } from "@/ipc";
 /**
  * 建立 Host 端的 Adapter (連接到本地的 TCP 伺服器)
  */
-async function createHostAdapter(win: BrowserWindow) {
+function createHostAdapter(win: BrowserWindow) {
   if (!checkLock(win)) return;
 
   const { reportLog, reportWarn, reportError, reportStatus } = createReporter("Host", win);
