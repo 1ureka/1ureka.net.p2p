@@ -1,84 +1,81 @@
 import net from "net";
 import { ipcMain, type BrowserWindow } from "electron";
 import { createReporter } from "@/adapter/report";
-import { checkLock, tryConnect } from "@/adapter/adapter-utils";
-import { PacketEvent } from "@/adapter/packet";
+import { checkLock } from "@/adapter/adapter-utils";
+import { PacketEvent, type SocketPair } from "@/adapter/packet";
 import { createChunker, createReassembler } from "@/adapter/framing";
 import { IPCChannel } from "@/ipc";
 
 /**
  * 建立 Host 端的 Adapter (連接到本地的 TCP 伺服器)
  */
-async function createHostAdapter(win: BrowserWindow, port: number) {
+async function createHostAdapter(win: BrowserWindow) {
   if (!checkLock(win)) return;
 
   const { reportLog, reportWarn, reportError, reportStatus } = createReporter("Host", win);
-  reportLog({ message: `Creating host adapter to TCP server at localhost:${port}` });
   reportStatus("connecting");
-
-  if (!(await tryConnect(win, port))) return;
 
   // 以下進入 connected 狀態，因此不需考慮清理，請查閱 README.md
 
   const chunker = createChunker();
   const reassembler = createReassembler();
-  const sockets: Map<number, net.Socket> = new Map();
-  const socketPromises: Map<number, Promise<void>> = new Map();
+  const sockets: Map<SocketPair, net.Socket> = new Map();
+  const socketPromises: Map<SocketPair, Promise<void>> = new Map();
 
   /**
    * 處理來自 RTC 端的 CONNECT 封包，建立對應的 TCP socket 連線
    */
-  const handleConnectFromRTC = (socketId: number) => {
-    if (sockets.has(socketId)) {
-      reportWarn({ message: `Socket ${socketId} already exists, ignoring CONNECT request.` });
+  const handleConnectFromRTC = (socketPair: SocketPair) => {
+    if (sockets.has(socketPair)) {
+      reportWarn({ message: `Socket (${socketPair}) already exists, ignoring CONNECT request.` });
       return;
     }
 
-    const socket = net.connect(port, "::");
+    const socket = net.connect(socketPair.dstPort, socketPair.dstAddr);
     socketPromises.set(
-      socketId,
+      socketPair,
       new Promise((res) => {
         socket.on("connect", () => {
           res();
-          reportLog({ message: `TCP socket connected for socket ${socketId}` });
+          reportLog({ message: `TCP socket connected for socket (${socketPair})` });
         });
       })
     );
 
-    sockets.set(socketId, socket);
+    sockets.set(socketPair, socket);
 
     const handleErrorFromLocal = (error: Error) => {
       socket.destroy(); // 觸發 close 事件，close 事件會通知對端
       reportError({
-        message: `TCP socket for socket ${socketId} encountered an error and closing`,
+        message: `TCP socket for socket (${socketPair}) encountered an error and closing`,
         data: { error },
       });
     };
 
     const handleDataFromLocal = (chunk: Buffer) => {
       try {
-        for (const packet of chunker.generate(socketId, PacketEvent.DATA, chunk)) {
+        for (const packet of chunker.generate(socketPair, PacketEvent.DATA, chunk)) {
           win.webContents.send(IPCChannel.FromTCP, packet);
         }
       } catch (error) {
-        reportError({ message: `Error processing data for socket ${socketId}`, data: { error } });
+        reportError({ message: `Error processing data for socket (${socketPair})`, data: { error } });
       }
     };
 
     const handleCloseFromLocal = () => {
       try {
-        for (const packet of chunker.generate(socketId, PacketEvent.CLOSE, Buffer.alloc(0))) {
+        for (const packet of chunker.generate(socketPair, PacketEvent.CLOSE, Buffer.alloc(0))) {
           win.webContents.send(IPCChannel.FromTCP, packet);
         }
       } catch (error) {
-        reportError({ message: `Error processing close for socket ${socketId}`, data: { error } });
+        reportError({ message: `Error processing close for socket (${socketPair})`, data: { error } });
       }
 
       socket.off("close", handleCloseFromLocal);
       socket.off("error", handleErrorFromLocal);
       socket.off("data", handleDataFromLocal);
-      sockets.delete(socketId);
-      reportLog({ message: `TCP socket closed for socket ${socketId}` });
+      sockets.delete(socketPair);
+      reportLog({ message: `TCP socket closed for socket (${socketPair})` });
     };
 
     socket.on("close", handleCloseFromLocal);
@@ -89,10 +86,10 @@ async function createHostAdapter(win: BrowserWindow, port: number) {
   /**
    * 處理來自 RTC 端的 DATA 封包，將資料寫入對應的 TCP socket
    */
-  const handleDataFromRTC = (socketId: number, data: Buffer) => {
-    const success = sockets.get(socketId)?.write(data);
+  const handleDataFromRTC = (socketPair: SocketPair, data: Buffer) => {
+    const success = sockets.get(socketPair)?.write(data);
     if (!success) {
-      const message = `Socket ${socketId} does not exist or is not writable, cannot process incoming packet.`;
+      const message = `Socket (${socketPair}) does not exist or is not writable, cannot process incoming packet.`;
       return reportError({ message });
     }
   };
@@ -100,9 +97,9 @@ async function createHostAdapter(win: BrowserWindow, port: number) {
   /**
    * 處理來自 RTC 端的 CLOSE 封包，將對應的 TCP socket 關閉
    */
-  const handleCloseFromRTC = (socketId: number) => {
-    sockets.get(socketId)?.destroy();
-    reportLog({ message: `TCP socket closed by remote client for socket ${socketId}` });
+  const handleCloseFromRTC = (socketPair: SocketPair) => {
+    sockets.get(socketPair)?.destroy();
+    reportLog({ message: `TCP socket closed by remote client for socket (${socketPair})` });
   };
 
   /**
@@ -110,21 +107,21 @@ async function createHostAdapter(win: BrowserWindow, port: number) {
    */
   const handlePacketFromRTC = (_: unknown, buffer: Buffer) => {
     try {
-      for (const { socketId, event, data } of reassembler.processPacket(Buffer.from(buffer))) {
+      for (const { pair, event, data } of reassembler.processPacket(Buffer.from(buffer))) {
         if (event === PacketEvent.CONNECT) {
-          handleConnectFromRTC(socketId);
+          handleConnectFromRTC(pair);
         }
         if (event === PacketEvent.DATA) {
-          const promise = socketPromises.get(socketId);
+          const promise = socketPromises.get(pair);
           if (!promise) {
-            reportError({ message: `Socket ${socketId} does not exist, cannot process incoming DATA packet.` });
+            reportError({ message: `Socket (${pair}) does not exist, cannot process incoming DATA packet.` });
           } else {
             // 利用 then 會順序執行的特性，保持 TCP 資料順序
-            promise.then(() => handleDataFromRTC(socketId, data));
+            promise.then(() => handleDataFromRTC(pair, data));
           }
         }
         if (event === PacketEvent.CLOSE) {
-          handleCloseFromRTC(socketId);
+          handleCloseFromRTC(pair);
         }
       }
     } catch (error) {
