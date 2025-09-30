@@ -9,7 +9,7 @@ const colorMap: Record<ConnectionStatus, string> = {
 } as const;
 
 const ConnectionIndicator = ({ status }: { status: ConnectionStatus }) => (
-  <Box sx={{ display: "grid", placeItems: "center", width: 32 }}>
+  <Box sx={{ display: "grid", placeItems: "center", pr: 1, translate: "0px -1px" }}>
     <Box
       sx={{
         width: 12,
