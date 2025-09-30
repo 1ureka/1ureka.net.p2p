@@ -22,3 +22,31 @@ export type ConnectionLogEntry = {
   timestamp: number;
   data?: Record<string, unknown>;
 };
+
+// 合併連續重複的日誌條目
+export function mergeRepeatedLogs(logs: ConnectionLogEntry[]): ConnectionLogEntry[] {
+  const getOriginalMessage = (message: string) => message.replace(/ \(x\d+\)$/, "");
+
+  const getLogKey = (log: ConnectionLogEntry) => `${log.level}:${log.module}:${getOriginalMessage(log.message)}`;
+
+  const formatLog = (log: ConnectionLogEntry, count: number) =>
+    count > 1
+      ? { ...log, message: `${getOriginalMessage(log.message)} (x${count})` }
+      : { ...log, message: getOriginalMessage(log.message) };
+
+  return logs.reduce<ConnectionLogEntry[]>((acc, current) => {
+    const last = acc[acc.length - 1];
+
+    if (last && getLogKey(last) === getLogKey(current)) {
+      // 如果與前一個日誌相同，更新計數
+      const count = last.message.match(/\(x(\d+)\)$/)?.[1];
+      const newCount = count ? parseInt(count) + 1 : 2;
+      acc[acc.length - 1] = formatLog(current, newCount);
+    } else {
+      // 如果不同，直接添加
+      acc.push(formatLog(current, 1));
+    }
+
+    return acc;
+  }, []);
+}
