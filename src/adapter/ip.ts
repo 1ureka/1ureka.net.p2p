@@ -62,16 +62,21 @@ const parseAddressBuffer = (buffer: Buffer): string => {
 };
 
 /**
- * 特殊可用 socketPair 作為 key 的 Map
+ * 抽象類別：SocketPair 集合，提供統一的 key 生成方法
  */
-class SocketPairMap<V> {
-  private map = new Map<string, V>();
-
-  private getKey(pair: SocketPair): string {
+abstract class AbstractSocketPairCollection {
+  protected getKey(pair: SocketPair): string {
     const srcIP = toIPv6(ipaddr.process(pair.srcAddr)).toNormalizedString();
     const dstIP = toIPv6(ipaddr.process(pair.dstAddr)).toNormalizedString();
     return `${srcIP}:${pair.srcPort}=>${dstIP}:${pair.dstPort}`;
   }
+}
+
+/**
+ * 特殊可用 socketPair 作為 key 的 Map
+ */
+class SocketPairMap<V> extends AbstractSocketPairCollection {
+  private map = new Map<string, V>();
 
   set(pair: SocketPair, value: V): void {
     this.map.set(this.getKey(pair), value);
@@ -98,4 +103,40 @@ class SocketPairMap<V> {
   }
 }
 
-export { SocketPair, createAddressBuffer, parseAddressBuffer, stringifySocketPair, SocketPairMap };
+/**
+ * 特殊可用 socketPair 作為 key 的 Set
+ */
+class SocketPairSet extends AbstractSocketPairCollection {
+  private set = new Map<string, SocketPair>();
+
+  add(pair: SocketPair): this {
+    this.set.set(this.getKey(pair), pair);
+    return this;
+  }
+
+  has(pair: SocketPair): boolean {
+    return this.set.has(this.getKey(pair));
+  }
+
+  delete(pair: SocketPair): boolean {
+    return this.set.delete(this.getKey(pair));
+  }
+
+  clear(): void {
+    this.set.clear();
+  }
+
+  get size(): number {
+    return this.set.size;
+  }
+
+  values(): IterableIterator<SocketPair> {
+    return this.set.values();
+  }
+
+  [Symbol.iterator](): IterableIterator<SocketPair> {
+    return this.values();
+  }
+}
+
+export { SocketPair, createAddressBuffer, parseAddressBuffer, stringifySocketPair, SocketPairMap, SocketPairSet };
