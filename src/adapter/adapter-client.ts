@@ -24,8 +24,8 @@ function createClientAdapter(win: BrowserWindow) {
    */
   const handleConnectFromLocal = (socket: net.Socket, dstAddr: string, dstPort: number) => {
     const socketPair: SocketPair = {
-      srcAddr: socket.remoteAddress!,
-      srcPort: socket.remotePort!,
+      srcAddr: socket.remoteAddress!, //eslint-disable-line @typescript-eslint/no-non-null-assertion
+      srcPort: socket.remotePort!, //eslint-disable-line @typescript-eslint/no-non-null-assertion
       dstAddr,
       dstPort,
     };

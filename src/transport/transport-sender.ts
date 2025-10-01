@@ -22,7 +22,7 @@ function createDataChannelSender(dataChannel: RTCDataChannel, threshold = 64 * 1
     }
 
     while (queue.length > 0) {
-      const chunk = queue.shift()!;
+      const chunk = queue.shift()!; // eslint-disable-line @typescript-eslint/no-non-null-assertion
 
       if (chunk instanceof ArrayBuffer) {
         dataChannel.send(chunk);

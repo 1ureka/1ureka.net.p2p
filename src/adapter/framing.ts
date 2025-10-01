@@ -40,7 +40,7 @@ const createChunker = () => {
    * 將單個大資料流切割成多個 chunk ，每次使用時會消耗一次內部的序號 (Generator 函數)
    */
   const generate = function* (socketPair: SocketPair, event: PacketEvent, data: Buffer): GeneratorReturnType {
-    const streamSeq = use(socketPair);
+    const streamSeq = use(socketPair); // eslint-disable-line react-hooks/rules-of-hooks
 
     // 計算需要多少個 chunk
     const chunkTotal = Math.max(1, Math.ceil(data.length / MAX_PAYLOAD_SIZE));
