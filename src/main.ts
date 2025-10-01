@@ -31,14 +31,29 @@ const createWindow = () => {
 
   //   mainWindow.webContents.openDevTools();
 
-  const { reportLog } = createReporter("main", mainWindow);
+  return mainWindow;
+};
 
-  ipcMain.on(IPCChannel.AdapterStart, (_, port, role) => {
-    if (role === "host") {
-      createHostAdapter(mainWindow, port);
-    }
-    if (role === "client") {
-      createClientAdapter(mainWindow, port);
+const handleReady = () => {
+  const mainWindow = createWindow();
+
+  const { reportLog, reportError } = createReporter("main", mainWindow);
+  let lock = false;
+
+  ipcMain.on(IPCChannel.AdapterStartHost, () => {
+    if (lock) return;
+    lock = true;
+    createHostAdapter(mainWindow);
+  });
+
+  ipcMain.on(IPCChannel.AdapterStartClient, async (_, port) => {
+    if (lock) return;
+    lock = true;
+    const { createMapping } = createClientAdapter(mainWindow);
+    try {
+      await createMapping({ srcAddr: "::", srcPort: 3000, dstAddr: "::", dstPort: port });
+    } catch (error) {
+      reportError({ message: "Failed to create initial mapping", data: { error } });
     }
   });
 
@@ -48,8 +63,10 @@ const createWindow = () => {
   });
 };
 
-// 不打算支援 macOS
-app.on("ready", createWindow);
-app.on("window-all-closed", () => {
+const handleWindowAllClosed = () => {
   app.quit();
-});
+};
+
+// 不打算支援 macOS
+app.on("ready", handleReady);
+app.on("window-all-closed", handleWindowAllClosed);

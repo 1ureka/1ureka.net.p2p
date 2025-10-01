@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 enum IPCChannel {
-  AdapterStart = "adapter.start",
+  AdapterStartHost = "adapter.start.host",
+  AdapterStartClient = "adapter.start.client",
   AdapterStop = "adapter.stop",
   AdapterStatus = "adapter.status",
   AdapterLogs = "adapter.logs",

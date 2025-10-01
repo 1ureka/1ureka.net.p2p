@@ -75,12 +75,11 @@ const SessionPanel = () => {
 
 const HostPanel = () => {
   const status = useSession((state) => state.status);
-  const [port, setPort] = useState(3000);
 
   const handleClick = useCallback(async () => {
     const result = await startSession();
-    if (result) window.electron.send(IPCChannel.AdapterStart, port, "host");
-  }, [port]);
+    if (result) window.electron.send(IPCChannel.AdapterStartHost);
+  }, []);
 
   return (
     <LayoutBox>
@@ -91,7 +90,6 @@ const HostPanel = () => {
         <b>127.0.0.1:25565</b> (Minecraft), <b>192.168.*:*</b> (internal network), or <b>*:*</b> (VPN mode).
       </LayoutText>
 
-      <NumberProperty value={port} onChange={(value) => setPort(value)} step={1} min={1025} max={65535} />
       <LayoutButton onClick={handleClick} disabled={status === "connected"} loading={status === "connecting"}>
         Create Session
       </LayoutButton>
@@ -106,7 +104,7 @@ const ClientPanel = () => {
 
   const handleClick = useCallback(async () => {
     const result = await startSession(sessionId);
-    if (result) window.electron.send(IPCChannel.AdapterStart, port, "client");
+    if (result) window.electron.send(IPCChannel.AdapterStartClient, port);
   }, [port, sessionId]);
 
   return (
