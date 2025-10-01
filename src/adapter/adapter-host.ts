@@ -86,6 +86,7 @@ function createHostAdapter(win: BrowserWindow) {
       socket.off("error", handleErrorFromLocal);
       socket.off("data", handleDataFromLocal);
       sockets.delete(socketPair);
+      socketPromises.delete(socketPair);
       reportLog({ message: `TCP socket closed for socket ${stringifySocketPair(socketPair)}` });
     };
 
