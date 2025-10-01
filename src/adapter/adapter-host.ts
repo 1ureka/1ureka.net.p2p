@@ -7,18 +7,12 @@ import { PacketEvent } from "@/adapter/packet";
 import { createChunker, createReassembler } from "@/adapter/framing";
 import { SocketPairMap, stringifySocketPair, type SocketPair } from "@/adapter/ip";
 
-import { checkLock } from "@/adapter/adapter-utils";
-
 /**
  * 建立 Host 端的 Adapter (連接到本地的 TCP 伺服器)
  */
 function createHostAdapter(win: BrowserWindow) {
-  if (!checkLock(win)) return;
-
-  const { reportLog, reportWarn, reportError, reportStatus } = createReporter("Host", win);
-  reportStatus("connecting");
-
-  // 以下進入 connected 狀態，因此不需考慮清理，請查閱 README.md
+  const { reportLog, reportWarn, reportError, clearHistory } = createReporter("Host", win);
+  clearHistory();
 
   const chunker = createChunker();
   const reassembler = createReassembler();

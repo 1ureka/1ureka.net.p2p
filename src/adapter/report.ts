@@ -1,14 +1,11 @@
 import { IPCChannel } from "@/ipc";
 import { createStore } from "zustand/vanilla";
 import type { BrowserWindow } from "electron";
-import type { ConnectionStatus, ConnectionLogEntry } from "@/utils";
+import type { ConnectionLogEntry } from "@/utils";
 
-const store = createStore<{ status: ConnectionStatus; history: ConnectionLogEntry[] }>(() => ({
-  status: "disconnected",
+const store = createStore<{ history: ConnectionLogEntry[] }>(() => ({
   history: [],
 }));
-
-const getLock = () => store.getState().status === "connecting" || store.getState().status === "connected";
 
 const getReportMethods = (level: "info" | "warn" | "error") => {
   if (level === "info") return console.log;
@@ -38,22 +35,14 @@ const createReporter = (module: string, win: BrowserWindow) => {
     });
   };
 
-  const reportStatus = (status: ConnectionStatus) => {
-    store.setState((prev) => {
-      if (status === prev.status) return { ...prev };
-      win.webContents.send(IPCChannel.AdapterStatus, status);
-      return { ...prev, status };
-    });
-  };
-
   const clearHistory = () => {
     store.setState((prev) => ({ ...prev, history: [] }));
     win.webContents.send(IPCChannel.AdapterLogs, []);
   };
 
-  return { reportLog, reportError, reportWarn, reportStatus, clearHistory };
+  return { reportLog, reportError, reportWarn, clearHistory };
 };
 
 type Reporter = ReturnType<typeof createReporter>;
 
-export { createReporter, getLock, type Reporter };
+export { createReporter, type Reporter };

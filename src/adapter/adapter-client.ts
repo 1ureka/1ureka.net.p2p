@@ -6,20 +6,14 @@ import { createReporter } from "@/adapter/report";
 import { PacketEvent } from "@/adapter/packet";
 import { createChunker, createReassembler } from "@/adapter/framing";
 import { SocketPairMap, stringifySocketPair, type SocketPair } from "@/adapter/ip";
-
-import { checkLock } from "@/adapter/adapter-utils";
 import { defer } from "@/utils";
 
 /**
  * 建立 Client 端的 Adapter (建立虛擬 TCP 伺服器讓本地的 TCP 客戶端連接)
  */
 function createClientAdapter(win: BrowserWindow) {
-  if (!checkLock(win)) return;
-
-  const { reportLog, reportError, reportStatus } = createReporter("Client", win);
-  reportStatus("connecting");
-
-  // 以下進入 connected 狀態，因此不需考慮清理，請查閱 README.md
+  const { reportLog, reportError, clearHistory } = createReporter("Client", win);
+  clearHistory();
 
   const chunker = createChunker();
   const reassembler = createReassembler();
