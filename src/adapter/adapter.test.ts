@@ -148,4 +148,39 @@ describe("Adapter System Tests", () => {
     echoServer.close();
     await new Promise((res) => setTimeout(res, 500));
   }, 5000);
+
+  it("[e2e] [echo] [multiple mappings]", async () => {
+    const { createMapping } = await createEnvironment();
+
+    // 建立兩個不同 echo server
+    const echoServer1 = net.createServer((s) => s.on("data", (d) => s.write("S1:" + d)));
+    const echoServer2 = net.createServer((s) => s.on("data", (d) => s.write("S2:" + d)));
+
+    await new Promise<void>((res) => echoServer1.listen(0, res));
+    await new Promise<void>((res) => echoServer2.listen(0, res));
+
+    const echoPort1 = (echoServer1.address() as any).port;
+    const echoPort2 = (echoServer2.address() as any).port;
+
+    await createMapping({ srcAddr: "127.0.0.1", srcPort: 6003, dstAddr: "127.0.0.1", dstPort: echoPort1 });
+    await createMapping({ srcAddr: "127.0.0.1", srcPort: 6004, dstAddr: "127.0.0.1", dstPort: echoPort2 });
+
+    const res1 = await new Promise<string>((resolve) => {
+      const c = net.connect(6003, "127.0.0.1");
+      c.once("data", (d) => resolve(d.toString()));
+      c.write("hello");
+    });
+
+    const res2 = await new Promise<string>((resolve) => {
+      const c = net.connect(6004, "127.0.0.1");
+      c.once("data", (d) => resolve(d.toString()));
+      c.write("world");
+    });
+
+    expect(res1).toBe("S1:hello");
+    expect(res2).toBe("S2:world");
+
+    echoServer1.close();
+    echoServer2.close();
+  }, 5000);
 });
