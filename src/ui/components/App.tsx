@@ -2,9 +2,9 @@ import LanRoundedIcon from "@mui/icons-material/LanRounded";
 import { Box, Typography } from "@mui/material";
 import { AnimatePresence, motion } from "motion/react";
 
-import { LayoutColumn, LayoutRow } from "@/ui/components/Layout";
 import { Background } from "@/ui/components/Background";
-import { ClientPanel, HostPanel, LogPanel, SessionPanel } from "@/ui/components/Panels";
+import { LayoutColumn, LayoutRow } from "@/ui/components/Layout";
+import { ClientPanel, HostPanel, LogPanel, SessionPanel, SocketPanel, TrafficPanel } from "@/ui/components/Panels";
 import { useSession } from "@/transport/store";
 
 const Title = () => (
@@ -72,12 +72,16 @@ const App = () => (
       <Title />
       <LeftPanels />
     </LayoutColumn>
-    <LayoutColumn sx={{ gridTemplateRows: "1fr", height: 1 }}>
+    <LayoutColumn sx={{ gridTemplateRows: "1fr 0.5fr", height: 1 }}>
       <LogPanel />
+      <LayoutRow>
+        <SocketPanel />
+        <TrafficPanel />
+      </LayoutRow>
     </LayoutColumn>
 
     <Typography variant="caption" sx={{ position: "absolute", bottom: 8, left: 8, color: "text.disabled" }}>
-      v1.0.0-alpha.3
+      v1.0.0-alpha.4
     </Typography>
   </LayoutRow>
 );

@@ -9,6 +9,7 @@ import { LayoutBox, LayoutButton, LayoutRow, LayoutText, LayoutTitle } from "@/u
 import { NumberProperty, TextProperty } from "@/ui/components/Property";
 import { ConnectionIndicator } from "@/ui/components/ConnectionIndicator";
 import { ConnectionLogs } from "@/ui/components/ConnectionLogs";
+import { ConnectionSockets } from "@/ui/components/ConnectionSockets";
 
 const SessionPanel = () => {
   const session = useSession((state) => state.session);
@@ -145,4 +146,29 @@ const LogPanel = () => {
   );
 };
 
-export { SessionPanel, HostPanel, ClientPanel, LogPanel };
+const SocketPanel = () => {
+  return (
+    <LayoutBox sx={{ "& > div": { gridTemplateRows: "auto auto 1fr" } }}>
+      <LayoutTitle>???</LayoutTitle>
+      <LayoutText>???</LayoutText>
+
+      <LayoutBox sx={{ "& > div": { gridTemplateRows: "1fr" } }}>
+        <ConnectionSockets />
+      </LayoutBox>
+    </LayoutBox>
+  );
+};
+
+const TrafficPanel = () => {
+  return (
+    <LayoutBox sx={{ "& > div": { gridTemplateRows: "auto 1fr" } }}>
+      <LayoutTitle>???</LayoutTitle>
+      <LayoutRow>
+        <LayoutBox sx={{ "& > div": { gridTemplateRows: "1fr" } }}></LayoutBox>
+        <LayoutBox sx={{ "& > div": { gridTemplateRows: "1fr" } }}></LayoutBox>
+      </LayoutRow>
+    </LayoutBox>
+  );
+};
+
+export { SessionPanel, HostPanel, ClientPanel, LogPanel, SocketPanel, TrafficPanel };
