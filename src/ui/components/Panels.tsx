@@ -134,12 +134,9 @@ const LogPanel = () => {
   return (
     <LayoutBox sx={{ "& > div": { gridTemplateRows: "auto auto 1fr" } }}>
       <LayoutTitle>Connection Logs</LayoutTitle>
-      <LayoutText>
-        Real-time logs showing connection events, session status changes, and diagnostic information to help
-        troubleshoot any connection issues.
-      </LayoutText>
+      <LayoutText>Real-time logs of connection events and session status changes.</LayoutText>
 
-      <LayoutBox sx={{ my: 1, "& > div": { gridTemplateRows: "1fr" } }}>
+      <LayoutBox sx={{ "& > div": { gridTemplateRows: "1fr" } }}>
         <ConnectionLogs />
       </LayoutBox>
     </LayoutBox>
@@ -149,8 +146,8 @@ const LogPanel = () => {
 const SocketPanel = () => {
   return (
     <LayoutBox sx={{ "& > div": { gridTemplateRows: "auto auto 1fr" } }}>
-      <LayoutTitle>???</LayoutTitle>
-      <LayoutText>???</LayoutText>
+      <LayoutTitle>Active Sockets</LayoutTitle>
+      <LayoutText sx={{ WebkitLineClamp: 1 }}>List of all active logical socket connections.</LayoutText>
 
       <LayoutBox sx={{ "& > div": { gridTemplateRows: "1fr" } }}>
         <ConnectionSockets />
@@ -161,11 +158,12 @@ const SocketPanel = () => {
 
 const TrafficPanel = () => {
   return (
-    <LayoutBox sx={{ "& > div": { gridTemplateRows: "auto 1fr" } }}>
-      <LayoutTitle>???</LayoutTitle>
+    <LayoutBox sx={{ "& > div": { gridTemplateRows: "auto auto 1fr" } }}>
+      <LayoutTitle>Network Traffic</LayoutTitle>
+      <LayoutText sx={{ WebkitLineClamp: 1 }}>Monitor upload and download rates in real time.</LayoutText>
       <LayoutRow>
-        <LayoutBox sx={{ "& > div": { gridTemplateRows: "1fr" } }}></LayoutBox>
-        <LayoutBox sx={{ "& > div": { gridTemplateRows: "1fr" } }}></LayoutBox>
+        <LayoutBox sx={{ "& > div": { gridTemplateRows: "1fr" } }}>{/* TODO: 傳出速率 */}</LayoutBox>
+        <LayoutBox sx={{ "& > div": { gridTemplateRows: "1fr" } }}>{/* TODO: 傳入速率 */}</LayoutBox>
       </LayoutRow>
     </LayoutBox>
   );
