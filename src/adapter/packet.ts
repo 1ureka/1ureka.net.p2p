@@ -1,4 +1,4 @@
-import * as ipaddr from "ipaddr.js";
+import { createAddressBuffer, parseAddressBuffer, SocketPair } from "@/adapter/ip";
 
 // Header 常數定義
 const HEADER_SIZE = 43; // 43 bytes 固定 header 大小
@@ -12,20 +12,6 @@ enum PacketEvent {
   CONNECT = 2,
 }
 
-type SocketPair = {
-  srcAddr: string; // 來源 IP 位址 (IPv4 或 IPv6)
-  srcPort: number; // 來源 Port (0-65535)
-  dstAddr: string; // 目標 IP 位址 (IPv4 或 IPv6)
-  dstPort: number; // 目標 Port (0-65535)
-};
-
-/**
- * 將 SocketPair 轉換為字串，方便用作 Map (避免物件引用問題)或是日誌輸出
- */
-const socketPairToString = (pair: SocketPair): string => {
-  return `(${pair.srcAddr}:${pair.srcPort} => ${pair.dstAddr}:${pair.dstPort})`;
-};
-
 // 封包 Header 結構，格式詳見 README.md
 interface PacketHeader {
   event: PacketEvent; // 事件類型 (0=DATA, 1=CLOSE, 2=CONNECT, …)
@@ -34,37 +20,6 @@ interface PacketHeader {
   chunkIndex: number; // 該封包在所在資料流的指標 (0-65535)
   chunkTotal: number; // 該資料流被切了多少 (1-65535)
 }
-
-/**
- * 解析並轉換 IP 地址為 16 字節的 Buffer
- */
-const createIPAddress = (ip: string): Buffer => {
-  try {
-    // 解析並驗證 IP 地址
-    const addr = ipaddr.process(ip);
-
-    // 將 IPv4 轉換為 IPv6 映射格式，IPv6 保持原樣
-    let ipv6Addr: ipaddr.IPv6;
-    if (addr.kind() === "ipv4") {
-      const ipv4 = addr as ipaddr.IPv4;
-      ipv6Addr = ipv4.toIPv4MappedAddress();
-    } else {
-      ipv6Addr = addr as ipaddr.IPv6;
-    }
-
-    // 轉換為 16 字節的 Buffer
-    return Buffer.from(ipv6Addr.toByteArray());
-  } catch (error) {
-    throw new Error(`Invalid IP address: ${ip}`);
-  }
-};
-
-/**
- * 解析並轉換 Buffer 為可以丟給 net.connect 的 IP 字串
- */
-const parseIPAddress = (buffer: Buffer): string => {
-  return ipaddr.fromByteArray(Array.from(buffer)).toString();
-};
 
 /**
  * 將 Header 和 payload 編碼成一個完整的封包
@@ -85,13 +40,13 @@ function encodePacket(header: PacketHeader, payload: Buffer): Buffer {
   packet.writeUInt8(header.event, offset);
   offset += 1;
   // [1-16] src_addr (16 bytes)
-  createIPAddress(header.socketPair.srcAddr).copy(packet, offset);
+  createAddressBuffer(header.socketPair.srcAddr).copy(packet, offset);
   offset += 16;
   // [17-18] src_port (2 bytes)
   packet.writeUInt16BE(header.socketPair.srcPort, offset);
   offset += 2;
   // [19-34] dst_addr (16 bytes)
-  createIPAddress(header.socketPair.dstAddr).copy(packet, offset);
+  createAddressBuffer(header.socketPair.dstAddr).copy(packet, offset);
   offset += 16;
   // [35-36] dst_port (2 bytes)
   packet.writeUInt16BE(header.socketPair.dstPort, offset);
@@ -125,13 +80,13 @@ function decodePacket(packet: Buffer): { header: PacketHeader; payload: Buffer }
   const event = packet.readUInt8(offset);
   offset += 1;
   // [1-16] src_addr
-  const srcAddr = parseIPAddress(packet.subarray(offset, offset + 16));
+  const srcAddr = parseAddressBuffer(packet.subarray(offset, offset + 16));
   offset += 16;
   // [17-18] src_port
   const srcPort = packet.readUInt16BE(offset);
   offset += 2;
   // [19-34] dst_addr
-  const dstAddr = parseIPAddress(packet.subarray(offset, offset + 16));
+  const dstAddr = parseAddressBuffer(packet.subarray(offset, offset + 16));
   offset += 16;
   // [35-36] dst_port
   const dstPort = packet.readUInt16BE(offset);
@@ -159,4 +114,4 @@ function decodePacket(packet: Buffer): { header: PacketHeader; payload: Buffer }
   return { header, payload };
 }
 
-export { encodePacket, decodePacket, socketPairToString, PacketEvent, PacketHeader, SocketPair };
+export { encodePacket, decodePacket, PacketEvent, PacketHeader };
