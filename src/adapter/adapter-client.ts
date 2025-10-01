@@ -12,7 +12,7 @@ import { defer } from "@/utils";
  * 建立 Client 端的 Adapter (建立虛擬 TCP 伺服器讓本地的 TCP 客戶端連接)
  */
 function createClientAdapter(win: BrowserWindow) {
-  const { reportLog, reportError, clearHistory } = createReporter("Client", win);
+  const { reportLog, reportError, clearHistory, reportConnection } = createReporter("Client", win);
   clearHistory();
 
   const chunker = createChunker();
@@ -36,8 +36,9 @@ function createClientAdapter(win: BrowserWindow) {
       return;
     }
 
-    reportLog({ message: `New socket ${stringifySocketPair(socketPair)} connected.` });
     sockets.set(socketPair, socket);
+    reportLog({ message: `New socket ${stringifySocketPair(socketPair)} connected.` });
+    reportConnection(socketPair, "add");
 
     try {
       for (const packet of chunker.generate(socketPair, PacketEvent.CONNECT, Buffer.alloc(0))) {
@@ -89,7 +90,9 @@ function createClientAdapter(win: BrowserWindow) {
       socket.off("error", handleErrorFromLocal);
       socket.off("data", handleDataFromLocal);
       sockets.delete(socketPair);
+
       reportLog({ message: `TCP socket closed for socket ${stringifySocketPair(socketPair)}` });
+      reportConnection(socketPair, "del");
     };
 
     socket.on("close", handleCloseFromLocal);

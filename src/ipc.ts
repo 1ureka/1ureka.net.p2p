@@ -5,6 +5,7 @@ enum IPCChannel {
   AdapterStartClient = "adapter.start.client",
   AdapterStop = "adapter.stop",
   AdapterLogs = "adapter.logs",
+  AdapterSocket = "adapter.socket",
   FromTCP = "data.from.tcp",
   FromRTC = "data.from.rtc",
   OSInfo = "os.info",

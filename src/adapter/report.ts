@@ -2,6 +2,7 @@ import { IPCChannel } from "@/ipc";
 import { createStore } from "zustand/vanilla";
 import type { BrowserWindow } from "electron";
 import type { ConnectionLogEntry } from "@/utils";
+import type { SocketPair } from "@/adapter/ip";
 
 const store = createStore<{ history: ConnectionLogEntry[] }>(() => ({
   history: [],
@@ -37,7 +38,11 @@ const createReporter = (module: string, win: BrowserWindow) => {
     win.webContents.send(IPCChannel.AdapterLogs, []);
   };
 
-  return { reportLog, reportError, reportWarn, clearHistory };
+  const reportConnection = (pair: SocketPair, type: "add" | "del") => {
+    win.webContents.send(IPCChannel.AdapterSocket, { pair, type });
+  };
+
+  return { reportLog, reportError, reportWarn, clearHistory, reportConnection };
 };
 
 export { createReporter };

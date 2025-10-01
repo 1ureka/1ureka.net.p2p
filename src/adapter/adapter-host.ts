@@ -11,7 +11,7 @@ import { SocketPairMap, stringifySocketPair, type SocketPair } from "@/adapter/i
  * 建立 Host 端的 Adapter (連接到本地的 TCP 伺服器)
  */
 function createHostAdapter(win: BrowserWindow) {
-  const { reportLog, reportWarn, reportError, clearHistory } = createReporter("Host", win);
+  const { reportLog, reportWarn, reportError, clearHistory, reportConnection } = createReporter("Host", win);
   clearHistory();
 
   const chunker = createChunker();
@@ -37,6 +37,7 @@ function createHostAdapter(win: BrowserWindow) {
         socket.on("connect", () => {
           res();
           reportLog({ message: `TCP socket connected for socket ${stringifySocketPair(socketPair)}` });
+          reportConnection(socketPair, "add");
         });
       })
     );
@@ -81,7 +82,9 @@ function createHostAdapter(win: BrowserWindow) {
       socket.off("data", handleDataFromLocal);
       sockets.delete(socketPair);
       socketPromises.delete(socketPair);
+
       reportLog({ message: `TCP socket closed for socket ${stringifySocketPair(socketPair)}` });
+      reportConnection(socketPair, "del");
     };
 
     socket.on("close", handleCloseFromLocal);
