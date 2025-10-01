@@ -62,23 +62,29 @@ const createEnvironment = async () => {
   vi.doMock("electron", () => ({ ipcMain: clientApp.ipcMain, BrowserWindow: vi.fn() }));
   const { createClientAdapter } = await import("./adapter-client");
 
-  return {
-    createHostAdapter: (port: number) => createHostAdapter(hostApp.browserWindow as any, port),
-    createClientAdapter: (port: number) => createClientAdapter(clientApp.browserWindow as any, port),
-  };
+  createHostAdapter(hostApp.browserWindow as any);
+  const clientAdapter = createClientAdapter(clientApp.browserWindow as any);
+
+  if (!clientAdapter) throw new Error("Client Adapter creation failed");
+
+  return clientAdapter;
 };
 
 describe("Adapter System Tests", () => {
   it("[e2e] [echo] [client→server]", async () => {
-    const { createHostAdapter, createClientAdapter } = await createEnvironment();
+    const { createMapping } = await createEnvironment();
 
     // 真實 Echo Server
     const echoServer = net.createServer((socket) => socket.on("data", (d) => socket.write(d)));
     await new Promise<void>((res) => echoServer.listen(0, res));
     const echoPort = (echoServer.address() as any).port;
 
-    await createHostAdapter(echoPort);
-    await createClientAdapter(6000);
+    await createMapping({
+      srcAddr: "127.0.0.1",
+      srcPort: 6000,
+      dstAddr: "127.0.0.1",
+      dstPort: echoPort,
+    });
 
     // 測試程式的 TCP client
     const tcpClient = net.connect(6000, "127.0.0.1");
@@ -98,15 +104,19 @@ describe("Adapter System Tests", () => {
   }, 5000);
 
   it("[e2e] [echo] [many sockets each sending 64KB]", async () => {
-    const { createHostAdapter, createClientAdapter } = await createEnvironment();
+    const { createMapping } = await createEnvironment();
 
     // 真實 Echo Server
     const echoServer = net.createServer((socket) => socket.on("data", (d) => socket.write(d)));
     await new Promise<void>((res) => echoServer.listen(0, res));
     const echoPort = (echoServer.address() as any).port;
 
-    await createHostAdapter(echoPort);
-    await createClientAdapter(6001);
+    await createMapping({
+      srcAddr: "127.0.0.1",
+      srcPort: 6001,
+      dstAddr: "127.0.0.1",
+      dstPort: echoPort,
+    });
 
     // 建立一個 64KB 的測試資料
     const bigBuffer = Buffer.alloc(64 * 1024, "a");
@@ -138,6 +148,4 @@ describe("Adapter System Tests", () => {
     echoServer.close();
     await new Promise((res) => setTimeout(res, 500));
   }, 5000);
-
-  // TODO:  it("[e2e] [http] [server→client] [server 先關閉]", async () => {}, 5000);
 });
