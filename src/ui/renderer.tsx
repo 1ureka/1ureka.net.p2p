@@ -15,7 +15,7 @@ export const theme = createTheme({
   typography: {
     fontFamily: `"Comfortaa", "jf openhuninn"`,
     fontSize: 14,
-    button: { textTransform: "none", lineHeight: 1.2 },
+    button: { lineHeight: 1.2, fontWeight: 600 },
   },
   spacing: "0.5rem",
   shape: { borderRadius: 6 },
