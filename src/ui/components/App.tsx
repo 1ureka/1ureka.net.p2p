@@ -4,7 +4,8 @@ import { AnimatePresence, motion } from "motion/react";
 
 import { Background } from "@/ui/components/Background";
 import { LayoutColumn, LayoutRow } from "@/ui/components/Layout";
-import { ClientPanel, HostPanel, LogPanel, SessionPanel, SocketPanel, TrafficPanel } from "@/ui/components/Panels";
+import { ClientPanel, HostPanel, SessionPanel, HowToChoosePanel } from "@/ui/components/Panels";
+import { LogPanel, SocketPanel, TrafficPanel } from "@/ui/components/Panels";
 import { useSession } from "@/transport/store";
 
 const Title = () => (
@@ -42,6 +43,16 @@ const LeftPanels = () => {
           exit={{ opacity: 0, x: -20 }}
         >
           <ClientPanel />
+        </motion.div>
+      ) : null}
+      {!sessionId ? (
+        <motion.div
+          key={"how-to-choose-panel"}
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+        >
+          <HowToChoosePanel />
         </motion.div>
       ) : null}
       {sessionId ? (
