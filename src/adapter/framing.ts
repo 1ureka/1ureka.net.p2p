@@ -1,5 +1,6 @@
-import type { PacketEvent, PacketHeader, SocketPair } from "@/adapter/packet";
-import { encodePacket, decodePacket, socketPairToString } from "@/adapter/packet";
+import type { PacketEvent, PacketHeader } from "@/adapter/packet";
+import { encodePacket, decodePacket } from "@/adapter/packet";
+import { type SocketPair, SocketPairMap } from "@/adapter/ip";
 
 // 協定常數定義
 const MAX_PAYLOAD_SIZE = 16384; // 協定中 framing 實際用到的最大 payload 大小 (16KB)
@@ -11,20 +12,18 @@ const MAX_TOTAL_CHUNKS = 65535; // total_chunks 的最大值
  */
 const createSequenceMap = () => {
   type Value = number; // 同時代表 下一個要使用的序號(chunker) 或是 目前的最早序號(ressembler)
-  const map = new Map<string, Value>();
+  const map = new SocketPairMap<Value>();
 
   // 取得並遞增序號，循環使用 0 ~ MAX_SEQUENCE
   const use = (pair: SocketPair) => {
-    const pairStr = socketPairToString(pair);
-    const current = map.get(pairStr) || 0;
-    map.set(pairStr, (current + 1) % (MAX_SEQUENCE + 1));
+    const current = map.get(pair) || 0;
+    map.set(pair, (current + 1) % (MAX_SEQUENCE + 1));
     return current;
   };
 
   // 取得當前序號但不遞增
   const get = (pair: SocketPair) => {
-    const pairStr = socketPairToString(pair);
-    return map.get(pairStr) || 0;
+    return map.get(pair) || 0;
   };
 
   return { use, get };
@@ -68,18 +67,17 @@ const createChunker = () => {
  */
 const createReassemblerMap = () => {
   // socketPair → (streamSeq → chunk 陣列，依 chunkIndex 填充，缺塊為 null)
-  type RessemblerMap = Map<string, Map<number, { event: PacketEvent; payload: Array<Buffer | null> }>>;
-  const map: RessemblerMap = new Map();
+  type RessemblerMap = SocketPairMap<Map<number, { event: PacketEvent; payload: Array<Buffer | null> }>>;
+  const map: RessemblerMap = new SocketPairMap();
   const expectedSeqMap = createSequenceMap();
 
   const addPacket = (header: PacketHeader, payload: Buffer) => {
     const { socketPair, event, streamSeq, chunkIndex, chunkTotal } = header;
 
-    const socketPairStr = socketPairToString(socketPair);
-    let messages = map.get(socketPairStr);
+    let messages = map.get(socketPair);
     if (!messages) {
       messages = new Map();
-      map.set(socketPairStr, messages);
+      map.set(socketPair, messages);
     }
 
     let chunks = messages.get(streamSeq);
@@ -94,8 +92,7 @@ const createReassemblerMap = () => {
   };
 
   function* flushPackets(socketPair: SocketPair): Generator<{ event: PacketEvent; data: Buffer }> {
-    const socketPairStr = socketPairToString(socketPair);
-    const messages = map.get(socketPairStr);
+    const messages = map.get(socketPair);
     if (!messages) return;
 
     while (true) {
