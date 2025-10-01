@@ -27,13 +27,17 @@ const toIPv6 = (addr: ipaddr.IPv4 | ipaddr.IPv6): ipaddr.IPv6 => {
  * 將 IP 地址轉換為可讀字串，IPv4-mapped IPv6 會轉回 IPv4 字串
  */
 const stringifyAddress = (ip: string) => {
-  const addr = ipaddr.process(ip);
+  try {
+    const addr = ipaddr.process(ip);
 
-  if (addr.kind() === "ipv6" && (addr as ipaddr.IPv6).isIPv4MappedAddress()) {
-    return (addr as ipaddr.IPv6).toIPv4Address().toString();
+    if (addr.kind() === "ipv6" && (addr as ipaddr.IPv6).isIPv4MappedAddress()) {
+      return (addr as ipaddr.IPv6).toIPv4Address().toString();
+    }
+
+    return addr.toNormalizedString();
+  } catch (error) {
+    return ip + " (Invalid)";
   }
-
-  return addr.toNormalizedString();
 };
 
 /**
