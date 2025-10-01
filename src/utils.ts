@@ -15,7 +15,7 @@ export async function tryCatch<T>(promise: Promise<T>): Promise<Result<T>> {
 
 export function defer<T>() {
   let resolve!: (value: T | PromiseLike<T>) => void;
-  let reject!: (reason?: any) => void;
+  let reject!: (reason: Error) => void;
 
   const promise = new Promise<T>((res, rej) => {
     resolve = res;

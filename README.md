@@ -268,7 +268,7 @@ const { getDataChannel, getLocal, setRemote, close } = createPeerConnection();
   - `unregister` → 必須在 `onclose` / `onerror` 自動移除監聽器、釋放自己創建的資源。
 
 - **框架保證**：
-  核心 `createWebRTCSession` 已經保證整體連線的 **主生命週期**，插件只需管理「自己多出來的部分」。
+  核心 `createPeerConnection` 已經保證整體連線的 **主生命週期**，插件只需管理「自己多出來的部分」。
 - **類似 Blender 插件機制**：
   - Blender 規範每個插件必須有 `register/unregister`。
   - 在這裡，`bindDataChannelX` 就是自帶 register/unregister 的函式，應用本身不需要知道如何清理。
