@@ -5,6 +5,8 @@ import AddBoxRoundedIcon from "@mui/icons-material/AddBoxRounded";
 import SignpostRoundedIcon from "@mui/icons-material/SignpostRounded";
 import StopRoundedIcon from "@mui/icons-material/StopRounded";
 import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
+import FileDownloadRoundedIcon from "@mui/icons-material/FileDownloadRounded";
+import FileUploadRoundedIcon from "@mui/icons-material/FileUploadRounded";
 
 import { Box, BoxProps, Button, Divider, Tab, Tabs, Typography } from "@mui/material";
 import { AnimatePresence, motion } from "motion/react";
@@ -195,7 +197,30 @@ const App = () => {
           <MappingCard />
         </Box>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <Box sx={{ display: "grid", gridTemplateRows: "1fr 1fr", gap: 2 }}></Box>
+          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+            <Card>
+              <CardHeader>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "text.secondary" }}>
+                  <Typography variant="subtitle1" component="h2" sx={{ color: "text.primary" }}>
+                    Egress
+                  </Typography>
+                  <FileUploadRoundedIcon color="inherit" />
+                </Box>
+              </CardHeader>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "text.secondary" }}>
+                  <Typography variant="subtitle1" component="h2" sx={{ color: "text.primary" }}>
+                    Ingress
+                  </Typography>
+                  <FileDownloadRoundedIcon color="inherit" />
+                </Box>
+              </CardHeader>
+            </Card>
+          </Box>
+
           <EventsCard />
         </Box>
       </Box>

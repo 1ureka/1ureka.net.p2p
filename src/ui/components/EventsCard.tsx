@@ -36,6 +36,12 @@ function getRandomItem<T>(arr: T[]): T {
 function generateMockLogs(count: number): ConnectionLogEntry[] {
   const now = Date.now();
   const logs: ConnectionLogEntry[] = [];
+  const data = {
+    retryCount: Math.floor(Math.random() * 5),
+    errorMessage: "Sample error message",
+    errorCode: "SAMPLE_CODE",
+    status: "active",
+  };
 
   for (let i = 0; i < count; i++) {
     const levels: ConnectionLogLevel[] = ["info", "info", "info", "info", "info", "warn", "error"];
@@ -46,7 +52,7 @@ function generateMockLogs(count: number): ConnectionLogEntry[] {
       module: getRandomItem(modules),
       message: getRandomItem(logMessages[level]),
       timestamp: now - Math.floor(Math.random() * 1000 * 60 * 60), // 過去一小時內
-      data: Math.random() > 0.6 ? { retryCount: Math.floor(Math.random() * 5) } : undefined,
+      data: Math.random() > 0.6 ? data : undefined,
     };
     logs.push(entry);
   }
@@ -74,6 +80,32 @@ const EventsSummary = () => {
       </Box>
     </Box>
   );
+};
+
+const formatData = (data: Record<string, unknown>) => {
+  try {
+    // 檢查是否是 Error 物件
+    if (data.error && typeof data.error === "object") {
+      const error = data.error;
+      if ("message" in error) return `Error: ${error.message}`;
+      if ("code" in error) return `Error code: ${error.code}`;
+    }
+
+    // 對於其他類型的 data，嘗試格式化為可讀的字串
+    const entries = Object.entries(data);
+    if (entries.length === 0) return null;
+
+    return entries
+      .map(([key, value]) => {
+        if (typeof value === "string" || typeof value === "number") {
+          return `${key}: ${value}`;
+        }
+        return `${key}: ${JSON.stringify(value)}`;
+      })
+      .join(", ");
+  } catch {
+    return JSON.stringify(data);
+  }
 };
 
 const formatLevel = (level: ConnectionLogLevel) => {
@@ -120,6 +152,8 @@ const EventsLog = ({ log }: { log: ConnectionLogEntry }) => {
     "div:hover > div > &": { color: colors.hover },
   };
 
+  const dataString = log.data ? formatData(log.data) : null;
+
   return (
     <Box sx={{ position: "relative", "&:hover": { filter: "brightness(1.25)" }, py: 0.5, px: 1.5 }}>
       <Box sx={{ position: "absolute", inset: 0, pointerEvents: "none", bgcolor, opacity: 0.25 }} />
@@ -137,6 +171,15 @@ const EventsLog = ({ log }: { log: ConnectionLogEntry }) => {
           {log.message}
         </Typography>
       </Box>
+
+      {dataString && (
+        <Typography
+          variant="caption"
+          sx={{ fontFamily: "Ubuntu", color: "text.secondary", ml: 1, ...ellipsisSx, WebkitLineClamp: 2 }}
+        >
+          {dataString}
+        </Typography>
+      )}
     </Box>
   );
 };
