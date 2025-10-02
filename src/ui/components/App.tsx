@@ -2,7 +2,6 @@ import DirectionsBoatRoundedIcon from "@mui/icons-material/DirectionsBoatRounded
 import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
 import CodeRoundedIcon from "@mui/icons-material/CodeRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
-import ListAltRoundedIcon from "@mui/icons-material/ListAltRounded";
 import AddBoxRoundedIcon from "@mui/icons-material/AddBoxRounded";
 import SignpostRoundedIcon from "@mui/icons-material/SignpostRounded";
 import StopRoundedIcon from "@mui/icons-material/StopRounded";
@@ -12,8 +11,10 @@ import { Box, BoxProps, Button, Divider, Tab, Tabs, Typography } from "@mui/mate
 import { AnimatePresence, motion } from "motion/react";
 
 import { useTabs } from "@/ui/tabs";
-import { centerTextSx, ellipsisSx } from "../theme";
+import { centerTextSx, ellipsisSx } from "@/ui/theme";
 import { ConnectionIndicator } from "./ConnectionIndicator";
+import { EventsCard } from "@/ui/components/EventsCard";
+import { Card, CardHeader } from "@/ui/components/Card";
 
 const HeaderTitle = () => {
   return (
@@ -90,21 +91,6 @@ const Header = () => {
 
 // ------------------------------------------------------------
 
-const Card = ({ children }: { children: React.ReactNode }) => {
-  return <Box sx={{ bgcolor: "background.paper", borderRadius: 2 }}>{children}</Box>;
-};
-
-const CardHeader = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, p: 1.5, px: 3 }}>{children}</Box>
-      <Divider sx={{ borderWidth: 1.5, mx: 1 }} />
-    </>
-  );
-};
-
-// ------------------------------------------------------------
-
 const SessionCardLabel = ({ children }: { children: React.ReactNode }) => {
   return (
     <Typography variant="body2" sx={{ color: "text.secondary", textWrap: "nowrap" }}>
@@ -168,42 +154,6 @@ const SessionCard = () => {
           {new Date().toLocaleString()}
         </Typography>
       </Box>
-    </Card>
-  );
-};
-
-// ------------------------------------------------------------
-
-const EventsCard = () => {
-  return (
-    <Card>
-      <CardHeader>
-        <Typography variant="subtitle1" component="h2">
-          Events
-        </Typography>
-
-        <Box sx={{ flexGrow: 1 }} />
-
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, color: "text.secondary" }}>
-          <Button color="inherit" sx={{ py: 0.5 }} startIcon={<ListAltRoundedIcon fontSize="small" />}>
-            <Typography variant="button" sx={{ textTransform: "none", textWrap: "nowrap", ...centerTextSx }}>
-              View all logs
-            </Typography>
-          </Button>
-          <Box sx={{ px: 1.5, py: 1, borderRadius: 99, position: "relative", overflow: "hidden" }}>
-            <Box sx={{ position: "absolute", inset: 0, bgcolor: "error.main", opacity: 0.2 }} />
-            <Typography
-              variant="body2"
-              color="error"
-              sx={{ position: "relative", fontWeight: "bold", textWrap: "nowrap", ...centerTextSx }}
-            >
-              3 errors
-            </Typography>
-          </Box>
-        </Box>
-      </CardHeader>
-
-      <Box sx={{ height: 350, overflow: "auto" }}></Box>
     </Card>
   );
 };
@@ -315,6 +265,7 @@ const App = () => {
           <MappingCard />
         </Box>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <Box sx={{ display: "grid", gridTemplateRows: "1fr 1fr", gap: 2 }}></Box>
           <EventsCard />
         </Box>
       </Box>
