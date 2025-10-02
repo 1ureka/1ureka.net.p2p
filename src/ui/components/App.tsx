@@ -1,7 +1,6 @@
 import DirectionsBoatRoundedIcon from "@mui/icons-material/DirectionsBoatRounded";
 import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
 import CodeRoundedIcon from "@mui/icons-material/CodeRounded";
-import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import AddBoxRoundedIcon from "@mui/icons-material/AddBoxRounded";
 import SignpostRoundedIcon from "@mui/icons-material/SignpostRounded";
 import StopRoundedIcon from "@mui/icons-material/StopRounded";
@@ -12,9 +11,9 @@ import { AnimatePresence, motion } from "motion/react";
 
 import { useTabs } from "@/ui/tabs";
 import { centerTextSx, ellipsisSx } from "@/ui/theme";
-import { ConnectionIndicator } from "./ConnectionIndicator";
-import { EventsCard } from "@/ui/components/EventsCard";
 import { Card, CardHeader } from "@/ui/components/Card";
+import { EventsCard } from "@/ui/components/EventsCard";
+import { SessionCard } from "@/ui/components/SessionCard";
 
 const HeaderTitle = () => {
   return (
@@ -86,75 +85,6 @@ const Header = () => {
       <Divider sx={{ my: 2, borderWidth: 1.5 }} />
       <HeaderTabs />
     </Box>
-  );
-};
-
-// ------------------------------------------------------------
-
-const SessionCardLabel = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <Typography variant="body2" sx={{ color: "text.secondary", textWrap: "nowrap" }}>
-      {children}
-    </Typography>
-  );
-};
-
-const SessionCardCopyButton = () => {
-  return (
-    <Box sx={{ color: "text.secondary", translate: "0px -1.5px", height: 0, display: "grid", placeItems: "center" }}>
-      <Button sx={{ m: 0, p: 0.5, minWidth: 0, height: 0, opacity: 0 }} color="inherit">
-        <ContentCopyRoundedIcon fontSize="small" />
-      </Button>
-
-      <Button sx={{ position: "absolute", m: 0, p: 0.5, minWidth: 0 }} color="inherit">
-        <ContentCopyRoundedIcon fontSize="small" />
-      </Button>
-    </Box>
-  );
-};
-
-const SessionCard = () => {
-  return (
-    <Card>
-      <CardHeader>
-        <Typography variant="subtitle1" component="h2">
-          Session
-        </Typography>
-      </CardHeader>
-
-      <Box sx={{ display: "grid", gridTemplateColumns: "0.3fr 1fr", gap: 2, p: 2.5, px: 3 }}>
-        <SessionCardLabel>Status</SessionCardLabel>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-          <ConnectionIndicator status="connected" />
-          <Typography variant="body2" sx={{ color: "success.main", ...ellipsisSx }}>
-            Connected
-          </Typography>
-        </Box>
-
-        <SessionCardLabel>Host</SessionCardLabel>
-        <Typography variant="body2" sx={ellipsisSx}>
-          Laptop-Z1FK8
-        </Typography>
-
-        <SessionCardLabel>Client</SessionCardLabel>
-        <Typography variant="body2" sx={ellipsisSx}>
-          --
-        </Typography>
-
-        <SessionCardLabel>Session ID</SessionCardLabel>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Typography variant="body2" sx={ellipsisSx}>
-            123e4567-e89b-12d3-a456-426614174000
-          </Typography>
-          <SessionCardCopyButton />
-        </Box>
-
-        <SessionCardLabel>Created at</SessionCardLabel>
-        <Typography variant="body2" sx={ellipsisSx}>
-          {new Date().toLocaleString()}
-        </Typography>
-      </Box>
-    </Card>
   );
 };
 
