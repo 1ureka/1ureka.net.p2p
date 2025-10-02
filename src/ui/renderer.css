@@ -16,9 +16,10 @@
 @font-face {
   font-family: "Ubuntu";
   font-style: normal;
-  font-weight: 300 700;
+  /* font-weight: 300 700; */
+  font-weight: 500;
   font-display: block;
-  src: url("./fonts/UbuntuMono-Regular.ttf") format("truetype");
+  src: url("./fonts/UbuntuSansMono-VariableFont_wght.ttf") format("truetype");
 }
 
 * {
