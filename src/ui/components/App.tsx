@@ -1,100 +1,325 @@
-import LanRoundedIcon from "@mui/icons-material/LanRounded";
-import { Box, Typography } from "@mui/material";
+import DirectionsBoatRoundedIcon from "@mui/icons-material/DirectionsBoatRounded";
+import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
+import CodeRoundedIcon from "@mui/icons-material/CodeRounded";
+import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
+import ListAltRoundedIcon from "@mui/icons-material/ListAltRounded";
+import AddBoxRoundedIcon from "@mui/icons-material/AddBoxRounded";
+import SignpostRoundedIcon from "@mui/icons-material/SignpostRounded";
+import StopRoundedIcon from "@mui/icons-material/StopRounded";
+import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
+
+import { Box, BoxProps, Button, Divider, Tab, Tabs, Typography } from "@mui/material";
 import { AnimatePresence, motion } from "motion/react";
 
-import { Background } from "@/ui/components/Background";
-import { LayoutColumn, LayoutRow } from "@/ui/components/Layout";
-import { ClientPanel, HostPanel, SessionPanel, HowToChoosePanel } from "@/ui/components/Panels";
-import { LogPanel, SocketPanel, TrafficPanel } from "@/ui/components/Panels";
-import { useSession } from "@/transport/store";
+import { useTabs } from "@/ui/tabs";
+import { centerTextSx, ellipsisSx } from "../theme";
+import { ConnectionIndicator } from "./ConnectionIndicator";
 
-const Title = () => (
-  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3, p: 1.5 }}>
-    <Box sx={{ bgcolor: "primary.main", p: 1, borderRadius: 1 }}>
-      <LanRoundedIcon fontSize="large" sx={{ display: "block", color: "text.primary" }} />
-    </Box>
-
-    <Typography variant="h6" component="h1">
-      1ureka.net.p2p
-    </Typography>
-  </Box>
-);
-
-const LeftPanels = () => {
-  const sessionId = useSession((state) => state.session.id);
-
+const HeaderTitle = () => {
   return (
-    <AnimatePresence mode="popLayout" initial={false}>
-      {!sessionId ? (
-        <motion.div
-          key={"host-panel"}
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-        >
-          <HostPanel />
-        </motion.div>
-      ) : null}
-      {!sessionId ? (
-        <motion.div
-          key={"client-panel"}
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-        >
-          <ClientPanel />
-        </motion.div>
-      ) : null}
-      {!sessionId ? (
-        <motion.div
-          key={"how-to-choose-panel"}
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-        >
-          <HowToChoosePanel />
-        </motion.div>
-      ) : null}
-      {sessionId ? (
-        <motion.div
-          key={"session-panel"}
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-        >
-          <SessionPanel />
-        </motion.div>
-      ) : null}
-    </AnimatePresence>
+    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+      <DirectionsBoatRoundedIcon fontSize="large" color="primary" />
+      <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+        <Typography variant="h5" component="h1" sx={{ ...centerTextSx }}>
+          1ureka.net.p2p
+        </Typography>
+        <Typography variant="body1" sx={{ color: "text.secondary", textWrap: "nowrap", ...centerTextSx }}>
+          v1.0.0-alpha.5
+        </Typography>
+      </Box>
+    </Box>
   );
 };
 
-const rootSx = {
-  width: "100dvw",
-  height: "100dvh",
-  p: 2.5,
-  gridTemplateColumns: "400px minmax(400px, 1fr)",
+const HeaderLinks = () => {
+  return (
+    <Box sx={{ color: "text.secondary", display: "flex", alignItems: "center", gap: 2 }}>
+      <Button color="inherit" sx={{ textTransform: "none", textWrap: "nowrap" }} startIcon={<HelpRoundedIcon />}>
+        help & support
+      </Button>
+      <Button color="inherit" sx={{ textTransform: "none", textWrap: "nowrap" }} startIcon={<CodeRoundedIcon />}>
+        source code
+      </Button>
+    </Box>
+  );
 };
 
-const App = () => (
-  <LayoutRow sx={rootSx}>
-    <Background />
-    <LayoutColumn>
-      <Title />
-      <LeftPanels />
-    </LayoutColumn>
-    <LayoutColumn sx={{ gridTemplateRows: "1fr 0.5fr", height: 1 }}>
-      <LogPanel />
-      <LayoutRow>
-        <SocketPanel />
-        <TrafficPanel />
-      </LayoutRow>
-    </LayoutColumn>
+const HeaderTabs = () => {
+  const { tab, pages, setTab } = useTabs();
 
-    <Typography variant="caption" sx={{ position: "absolute", bottom: 8, left: 8, color: "text.disabled" }}>
-      v1.0.0-alpha.4
+  return (
+    <Tabs
+      value={tab}
+      onChange={(_, v) => setTab(v)}
+      slotProps={{ indicator: { children: <span className="MuiTabs-indicatorSpan" /> } }}
+      sx={{
+        "& .MuiTabs-indicator": { display: "flex", justifyContent: "center", bgcolor: "transparent" },
+        "& .MuiTabs-indicatorSpan": { maxWidth: 40, width: 1, bgcolor: "primary.main" },
+        "& .MuiTab-root": { textTransform: "none", "&:not(.Mui-selected):hover": { color: "text.primary" } },
+      }}
+    >
+      {pages.map(({ label, value, disabled }) => (
+        <Tab key={value} label={label} value={value} disabled={disabled} />
+      ))}
+    </Tabs>
+  );
+};
+
+const headerSx: BoxProps["sx"] = {
+  px: 4,
+  pt: 2,
+  bgcolor: "background.paper",
+  position: "sticky",
+  top: 0,
+  zIndex: 1,
+  minWidth: "fit-content",
+};
+
+const Header = () => {
+  return (
+    <Box sx={headerSx}>
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }}>
+        <HeaderTitle />
+        <HeaderLinks />
+      </Box>
+      <Divider sx={{ my: 2, borderWidth: 1.5 }} />
+      <HeaderTabs />
+    </Box>
+  );
+};
+
+// ------------------------------------------------------------
+
+const Card = ({ children }: { children: React.ReactNode }) => {
+  return <Box sx={{ bgcolor: "background.paper", borderRadius: 2 }}>{children}</Box>;
+};
+
+const CardHeader = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2, p: 1.5, px: 3 }}>{children}</Box>
+      <Divider sx={{ borderWidth: 1.5, mx: 1 }} />
+    </>
+  );
+};
+
+// ------------------------------------------------------------
+
+const SessionCardLabel = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <Typography variant="body2" sx={{ color: "text.secondary", textWrap: "nowrap" }}>
+      {children}
     </Typography>
-  </LayoutRow>
-);
+  );
+};
+
+const SessionCardCopyButton = () => {
+  return (
+    <Box sx={{ color: "text.secondary", translate: "0px -1.5px", height: 0, display: "grid", placeItems: "center" }}>
+      <Button sx={{ m: 0, p: 0.5, minWidth: 0, height: 0, opacity: 0 }} color="inherit">
+        <ContentCopyRoundedIcon fontSize="small" />
+      </Button>
+
+      <Button sx={{ position: "absolute", m: 0, p: 0.5, minWidth: 0 }} color="inherit">
+        <ContentCopyRoundedIcon fontSize="small" />
+      </Button>
+    </Box>
+  );
+};
+
+const SessionCard = () => {
+  return (
+    <Card>
+      <CardHeader>
+        <Typography variant="subtitle1" component="h2">
+          Session
+        </Typography>
+      </CardHeader>
+
+      <Box sx={{ display: "grid", gridTemplateColumns: "0.3fr 1fr", gap: 2, p: 2.5, px: 3 }}>
+        <SessionCardLabel>Status</SessionCardLabel>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          <ConnectionIndicator status="connected" />
+          <Typography variant="body2" sx={{ color: "success.main", ...ellipsisSx }}>
+            Connected
+          </Typography>
+        </Box>
+
+        <SessionCardLabel>Host</SessionCardLabel>
+        <Typography variant="body2" sx={ellipsisSx}>
+          Laptop-Z1FK8
+        </Typography>
+
+        <SessionCardLabel>Client</SessionCardLabel>
+        <Typography variant="body2" sx={ellipsisSx}>
+          --
+        </Typography>
+
+        <SessionCardLabel>Session ID</SessionCardLabel>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Typography variant="body2" sx={ellipsisSx}>
+            123e4567-e89b-12d3-a456-426614174000
+          </Typography>
+          <SessionCardCopyButton />
+        </Box>
+
+        <SessionCardLabel>Created at</SessionCardLabel>
+        <Typography variant="body2" sx={ellipsisSx}>
+          {new Date().toLocaleString()}
+        </Typography>
+      </Box>
+    </Card>
+  );
+};
+
+// ------------------------------------------------------------
+
+const EventsCard = () => {
+  return (
+    <Card>
+      <CardHeader>
+        <Typography variant="subtitle1" component="h2">
+          Events
+        </Typography>
+
+        <Box sx={{ flexGrow: 1 }} />
+
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, color: "text.secondary" }}>
+          <Button color="inherit" sx={{ py: 0.5 }} startIcon={<ListAltRoundedIcon fontSize="small" />}>
+            <Typography variant="button" sx={{ textTransform: "none", textWrap: "nowrap", ...centerTextSx }}>
+              View all logs
+            </Typography>
+          </Button>
+          <Box sx={{ px: 1.5, py: 1, borderRadius: 99, position: "relative", overflow: "hidden" }}>
+            <Box sx={{ position: "absolute", inset: 0, bgcolor: "error.main", opacity: 0.2 }} />
+            <Typography
+              variant="body2"
+              color="error"
+              sx={{ position: "relative", fontWeight: "bold", textWrap: "nowrap", ...centerTextSx }}
+            >
+              3 errors
+            </Typography>
+          </Box>
+        </Box>
+      </CardHeader>
+
+      <Box sx={{ height: 350, overflow: "auto" }}></Box>
+    </Card>
+  );
+};
+
+// ------------------------------------------------------------
+
+function formatElapsed(elapsed: number) {
+  const hours = Math.floor(elapsed / 3600);
+  const minutes = Math.floor((elapsed % 3600) / 60);
+  const seconds = elapsed % 60;
+
+  // padStart(2, '0') 讓數字補成兩位數
+  return [String(hours).padStart(2, "0"), String(minutes).padStart(2, "0"), String(seconds).padStart(2, "0")].join(":");
+}
+
+const MappingCardListItem = ({ index, content, elapsed }: { index: number; content: string; elapsed: number }) => {
+  return (
+    <Box
+      sx={{
+        display: "grid",
+        gridTemplateColumns: "1fr auto",
+        gridAutoRows: "auto",
+        gap: 0.5,
+        "& div:nth-of-type(2n)": { justifySelf: "end" },
+        py: 1.5,
+        px: 3,
+      }}
+    >
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "text.secondary" }}>
+        <SignpostRoundedIcon color="inherit" fontSize="small" />
+        <Typography variant="body2">mapping #{index}</Typography>
+      </Box>
+
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Button sx={{ minWidth: 0, p: 0.5 }} color="warning">
+          <StopRoundedIcon fontSize="small" />
+        </Button>
+        <Button sx={{ minWidth: 0, p: 0.5 }} color="error">
+          <DeleteForeverRoundedIcon fontSize="small" />
+        </Button>
+      </Box>
+
+      <Box>
+        <Typography variant="body2" sx={{ ...ellipsisSx, fontFamily: "Ubuntu" }}>
+          {content}
+        </Typography>
+      </Box>
+
+      <Box>
+        <Typography variant="body2" sx={{ color: "text.secondary", pr: 1, ...ellipsisSx }}>
+          {formatElapsed(elapsed)}
+        </Typography>
+      </Box>
+    </Box>
+  );
+};
+
+const MappingCardList = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <Box sx={{ display: "flex", flexDirection: "column", "& > div:nth-of-type(2n)": { bgcolor: "divider" } }}>
+      {children}
+    </Box>
+  );
+};
+
+const MappingCard = () => {
+  return (
+    <Card>
+      <CardHeader>
+        <Typography variant="subtitle1" component="h2">
+          Mappings
+        </Typography>
+
+        <Box sx={{ flexGrow: 1 }} />
+
+        <Button sx={{ py: 0.5, px: 1 }} startIcon={<AddBoxRoundedIcon />}>
+          <Typography variant="body2" sx={{ textTransform: "none", textWrap: "nowrap", ...centerTextSx }}>
+            Add
+          </Typography>
+        </Button>
+      </CardHeader>
+
+      <MappingCardList>
+        <MappingCardListItem index={1} content={"0.0.0.0.0.0:52234 <=> 0.0.0.0.0.0:52235"} elapsed={12345} />
+        <MappingCardListItem index={2} content={"0.0.0.0.0.0:3000 <=> 0.0.0.0.0.0:3000"} elapsed={1255} />
+        <MappingCardListItem index={3} content={"0.0.0.0.0.0:4000 <=> 0.0.0.0.0.0:4000"} elapsed={6789} />
+        <MappingCardListItem index={4} content={"0.0.0.0.0.0:5000 <=> 192.168.1.1:5000"} elapsed={9876} />
+      </MappingCardList>
+
+      <Box sx={{ p: 1 }} />
+    </Card>
+  );
+};
+
+// ------------------------------------------------------------
+
+const App = () => {
+  return (
+    <Box
+      sx={{ height: "100dvh", overflow: "auto" }}
+      component={motion.div}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+    >
+      <Header />
+      <Box sx={{ display: "grid", gridTemplateColumns: "0.75fr 1fr", alignItems: "start", gap: 2, px: 4, py: 3 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <SessionCard />
+          <MappingCard />
+        </Box>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <EventsCard />
+        </Box>
+      </Box>
+    </Box>
+  );
+};
 
 export { App };
