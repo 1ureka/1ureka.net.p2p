@@ -1,6 +1,9 @@
+import { createAddressBuffer, parseAddressBuffer, SocketPair } from "@/adapter/ip";
+
 // Header 常數定義
-const HEADER_SIZE = 11; // 11 bytes 固定 header 大小
-const MAX_PAYLOAD_SIZE = 65525; // 該協定最大可承受的 payload 大小 (65535 - HEADER_SIZE + 1)
+const HEADER_SIZE = 43; // 43 bytes 固定 header 大小
+const MAX_PACKET_SIZE = 65535; // 封包總大小上限
+const MAX_PAYLOAD_SIZE = MAX_PACKET_SIZE - HEADER_SIZE; // 65492
 
 // 事件類型
 enum PacketEvent {
@@ -12,46 +15,52 @@ enum PacketEvent {
 // 封包 Header 結構，格式詳見 README.md
 interface PacketHeader {
   event: PacketEvent; // 事件類型 (0=DATA, 1=CLOSE, 2=CONNECT, …)
-  socketId: number; // 對應一條 TCP socket 連線 (0-65535)
-  chunkId: number; // 一次完整訊息的唯一識別 (0-65535)
-  chunkIndex: number; // 本片段序號 (0-65535)
-  totalChunks: number; // 總片段數 (1-65535)
-  payloadSize: number; // 本片段大小 (0-65525)
+  socketPair: SocketPair; // 來源與目標的 IP 與 Port
+  streamSeq: number; // 該封包所屬的資料流序號 (0-65535)
+  chunkIndex: number; // 該封包在所在資料流的指標 (0-65535)
+  chunkTotal: number; // 該資料流被切了多少 (1-65535)
 }
 
 /**
  * 將 Header 和 payload 編碼成一個完整的封包
  */
 function encodePacket(header: PacketHeader, payload: Buffer): Buffer {
-  if (payload.length !== header.payloadSize) {
-    throw new Error(`Payload size mismatch: expected ${header.payloadSize}, got ${payload.length}`);
+  if (payload.length > MAX_PAYLOAD_SIZE) {
+    throw new Error(`Payload size ${payload.length} exceeds maximum ${MAX_PAYLOAD_SIZE}`);
   }
 
-  if (header.payloadSize > MAX_PAYLOAD_SIZE) {
-    throw new Error(`Payload size ${header.payloadSize} exceeds maximum ${MAX_PAYLOAD_SIZE}`);
+  if (header.chunkTotal < 1) {
+    throw new Error("chunkTotal must be >= 1");
   }
 
   const packet = Buffer.allocUnsafe(HEADER_SIZE + payload.length);
   let offset = 0;
 
   // [0] event (1 byte)
-  packet.writeUInt8(header.event, offset++);
-  // [1-2] socket_id (2 bytes)
-  packet.writeUInt16BE(header.socketId, offset);
+  packet.writeUInt8(header.event, offset);
+  offset += 1;
+  // [1-16] src_addr (16 bytes)
+  createAddressBuffer(header.socketPair.srcAddr).copy(packet, offset);
+  offset += 16;
+  // [17-18] src_port (2 bytes)
+  packet.writeUInt16BE(header.socketPair.srcPort, offset);
   offset += 2;
-  // [3-4] chunk_id (2 bytes)
-  packet.writeUInt16BE(header.chunkId, offset);
+  // [19-34] dst_addr (16 bytes)
+  createAddressBuffer(header.socketPair.dstAddr).copy(packet, offset);
+  offset += 16;
+  // [35-36] dst_port (2 bytes)
+  packet.writeUInt16BE(header.socketPair.dstPort, offset);
   offset += 2;
-  // [5-6] chunk_index (2 bytes)
+  // [37-38] stream_seq (2 bytes)
+  packet.writeUInt16BE(header.streamSeq, offset);
+  offset += 2;
+  // [39-40] chunk_index (2 bytes)
   packet.writeUInt16BE(header.chunkIndex, offset);
   offset += 2;
-  // [7-8] total_chunks (2 bytes)
-  packet.writeUInt16BE(header.totalChunks, offset);
+  // [41-42] chunk_total (2 bytes)
+  packet.writeUInt16BE(header.chunkTotal, offset);
   offset += 2;
-  // [9-10] payload_size (2 bytes)
-  packet.writeUInt16BE(header.payloadSize, offset);
-  offset += 2;
-  // [11-] payload
+  // [43-] payload
   payload.copy(packet, offset);
 
   return packet;
@@ -68,33 +77,40 @@ function decodePacket(packet: Buffer): { header: PacketHeader; payload: Buffer }
   let offset = 0;
 
   // [0] event
-  const event = packet.readUInt8(offset++);
-  // [1-2] socket_id
-  const socketId = packet.readUInt16BE(offset);
+  const event = packet.readUInt8(offset);
+  offset += 1;
+  // [1-16] src_addr
+  const srcAddr = parseAddressBuffer(packet.subarray(offset, offset + 16));
+  offset += 16;
+  // [17-18] src_port
+  const srcPort = packet.readUInt16BE(offset);
   offset += 2;
-  // [3-4] chunk_id
-  const chunkId = packet.readUInt16BE(offset);
+  // [19-34] dst_addr
+  const dstAddr = parseAddressBuffer(packet.subarray(offset, offset + 16));
+  offset += 16;
+  // [35-36] dst_port
+  const dstPort = packet.readUInt16BE(offset);
   offset += 2;
-  // [5-6] chunk_index
+  // [37-38] stream_seq
+  const streamSeq = packet.readUInt16BE(offset);
+  offset += 2;
+  // [39-40] chunk_index
   const chunkIndex = packet.readUInt16BE(offset);
   offset += 2;
-  // [7-8] total_chunks
-  const totalChunks = packet.readUInt16BE(offset);
+  // [41-42] chunk_total
+  const chunkTotal = packet.readUInt16BE(offset);
   offset += 2;
-  // [9-10] payload_size
-  const payloadSize = packet.readUInt16BE(offset);
-  offset += 2;
-
-  // 驗證 payload 大小
-  const expectedPacketSize = HEADER_SIZE + payloadSize;
-  if (packet.length !== expectedPacketSize) {
-    throw new Error(`Packet size mismatch: expected ${expectedPacketSize}, got ${packet.length}`);
-  }
-
-  // [11-] payload
+  // [43-] payload
   const payload = packet.subarray(offset);
 
-  const header: PacketHeader = { event, socketId, chunkId, chunkIndex, totalChunks, payloadSize };
+  const header: PacketHeader = {
+    event,
+    socketPair: { srcAddr, srcPort, dstAddr, dstPort },
+    streamSeq,
+    chunkIndex,
+    chunkTotal,
+  };
+
   return { header, payload };
 }
 

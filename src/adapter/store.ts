@@ -1,16 +1,29 @@
 import { IPCChannel } from "@/ipc";
 import { create } from "zustand";
-import type { ConnectionStatus, ConnectionLogEntry } from "@/utils";
+import type { ConnectionLogEntry } from "@/utils";
+import { type SocketPair, SocketPairSet } from "@/adapter/ip";
 
-const useAdapter = create<{ status: ConnectionStatus; history: ConnectionLogEntry[] }>((set) => {
-  window.electron.on(IPCChannel.AdapterStatus, (status: ConnectionStatus) => {
-    set((prev) => ({ ...prev, status }));
-  });
+type AdapterState = {
+  history: ConnectionLogEntry[];
+  sockets: SocketPair[];
+};
+
+const useAdapter = create<AdapterState>((set) => {
+  const socketSet = new SocketPairSet();
+
   window.electron.on(IPCChannel.AdapterLogs, (history: ConnectionLogEntry[]) => {
     set((prev) => ({ ...prev, history }));
   });
 
-  return { status: "disconnected", history: [] };
+  window.electron.on(IPCChannel.AdapterSocket, ({ pair, type }: { pair: SocketPair; type: "add" | "del" }) => {
+    set((prev) => {
+      if (type === "add") socketSet.add(pair);
+      else socketSet.delete(pair);
+      return { ...prev, sockets: Array.from(socketSet) };
+    });
+  });
+
+  return { history: [], sockets: Array.from(socketSet) };
 });
 
 export { useAdapter };

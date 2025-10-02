@@ -71,19 +71,16 @@ const getRow = (params: ConnectionLogEntry & { current: boolean }) => {
 const ConnectionLogs = () => {
   const history1 = useAdapter((state) => state.history);
   const history2 = useSession((state) => state.history);
-  console.log([...history1, ...history2]);
-
   const history = mergeRepeatedLogs([...history1, ...history2].sort((a, b) => a.timestamp - b.timestamp));
+  const historyRev = [...history].reverse();
 
   return (
     <Box
       sx={{
         position: "relative",
-        overflow: "hidden",
+        overflowY: "auto",
         display: "flex",
-        flexDirection: "column-reverse",
-        justifyContent: "flex-end",
-        borderRadius: 2,
+        flexDirection: "column",
         p: 1.5,
         height: 1,
         fontFamily: "Ubuntu",
@@ -97,7 +94,7 @@ const ConnectionLogs = () => {
         </LayoutBox>
       )}
       <AnimatePresence>
-        {history.map((item, index) => (
+        {historyRev.map((item, index) => (
           <motion.div
             key={item.timestamp + item.message + index}
             layout
@@ -106,7 +103,7 @@ const ConnectionLogs = () => {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
           >
-            {getRow({ ...item, current: index === history.length - 1 })}
+            {getRow({ ...item, current: index === 0 })}
           </motion.div>
         ))}
       </AnimatePresence>

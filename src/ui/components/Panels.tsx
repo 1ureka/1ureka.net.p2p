@@ -1,5 +1,6 @@
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DoneRoundedIcon from "@mui/icons-material/DoneRounded";
+import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import { useCallback, useRef, useState } from "react";
 import { startSession } from "@/transport/session";
 import { useSession } from "@/transport/store";
@@ -9,6 +10,7 @@ import { LayoutBox, LayoutButton, LayoutRow, LayoutText, LayoutTitle } from "@/u
 import { NumberProperty, TextProperty } from "@/ui/components/Property";
 import { ConnectionIndicator } from "@/ui/components/ConnectionIndicator";
 import { ConnectionLogs } from "@/ui/components/ConnectionLogs";
+import { ConnectionSockets } from "@/ui/components/ConnectionSockets";
 
 const SessionPanel = () => {
   const session = useSession((state) => state.session);
@@ -75,25 +77,21 @@ const SessionPanel = () => {
 
 const HostPanel = () => {
   const status = useSession((state) => state.status);
-  const [port, setPort] = useState(3000);
 
   const handleClick = useCallback(async () => {
     const result = await startSession();
-    if (result) window.electron.send(IPCChannel.AdapterStart, port, "host");
-  }, [port]);
+    if (result) window.electron.send(IPCChannel.AdapterStartHost);
+  }, []);
 
   return (
     <LayoutBox>
       <LayoutTitle>Create Session (Host)</LayoutTitle>
       <LayoutText>
-        As the <b>Host</b>, you will share local TCP services for others to use. After creating a session, a unique
-        Session ID will be generated to share with Clients. You can manage access rules for services like
-        <b>127.0.0.1:25565</b> (Minecraft), <b>192.168.*:*</b> (internal network), or <b>*:*</b> (VPN mode).
+        Share local TCP services with others. A unique Session ID will be generated for Clients to join.
       </LayoutText>
 
-      <NumberProperty value={port} onChange={(value) => setPort(value)} step={1} min={1025} max={65535} />
       <LayoutButton onClick={handleClick} disabled={status === "connected"} loading={status === "connecting"}>
-        Create Session
+        Create
       </LayoutButton>
     </LayoutBox>
   );
@@ -106,17 +104,13 @@ const ClientPanel = () => {
 
   const handleClick = useCallback(async () => {
     const result = await startSession(sessionId);
-    if (result) window.electron.send(IPCChannel.AdapterStart, port, "client");
+    if (result) window.electron.send(IPCChannel.AdapterStartClient, port);
   }, [port, sessionId]);
 
   return (
     <LayoutBox>
       <LayoutTitle>Join Session (Client)</LayoutTitle>
-      <LayoutText>
-        As the <b>Client</b>, you will use remote services shared by the Host as if they were local. Enter the Session
-        ID provided by the Host to establish connection. You can configure local port mappings like{" "}
-        <b>localhost:25565 &rArr; 127.0.0.1:25565</b> to connect local apps to remote Minecraft servers.
-      </LayoutText>
+      <LayoutText>Connect to services shared by the Host using the Session ID.</LayoutText>
 
       <NumberProperty value={port} onChange={(value) => setPort(value)} step={1} min={1025} max={65535} />
       <TextProperty value={sessionId} onChange={(e) => setSessionId(e.target.value)} placeholder="Enter Session ID" />
@@ -125,7 +119,23 @@ const ClientPanel = () => {
         disabled={status === "connected" || sessionId.trim() === ""}
         loading={status === "connecting"}
       >
-        Join Session
+        Join
+      </LayoutButton>
+    </LayoutBox>
+  );
+};
+
+const HowToChoosePanel = () => {
+  const handleOpenLink = () => {
+    // TODO: window.electron.openExternal("https://github.com/1ureka/1ureka.net.p2p#應用場景");
+  };
+
+  return (
+    <LayoutBox sx={{ "& > div": { gridTemplateRows: "auto auto" } }}>
+      <LayoutTitle>How to Choose?</LayoutTitle>
+      <LayoutText>For details on when to create or join a session, see the guide below:</LayoutText>
+      <LayoutButton onClick={handleOpenLink} endIcon={<OpenInNewRoundedIcon />}>
+        Open Guide
       </LayoutButton>
     </LayoutBox>
   );
@@ -135,16 +145,39 @@ const LogPanel = () => {
   return (
     <LayoutBox sx={{ "& > div": { gridTemplateRows: "auto auto 1fr" } }}>
       <LayoutTitle>Connection Logs</LayoutTitle>
-      <LayoutText>
-        Real-time logs showing connection events, session status changes, and diagnostic information to help
-        troubleshoot any connection issues.
-      </LayoutText>
+      <LayoutText>Real-time logs of connection events and session status changes.</LayoutText>
 
-      <LayoutBox sx={{ my: 1, "& > div": { gridTemplateRows: "1fr" } }}>
+      <LayoutBox sx={{ "& > div": { gridTemplateRows: "1fr" } }}>
         <ConnectionLogs />
       </LayoutBox>
     </LayoutBox>
   );
 };
 
-export { SessionPanel, HostPanel, ClientPanel, LogPanel };
+const SocketPanel = () => {
+  return (
+    <LayoutBox sx={{ "& > div": { gridTemplateRows: "auto auto 1fr" } }}>
+      <LayoutTitle>Active Sockets</LayoutTitle>
+      <LayoutText sx={{ WebkitLineClamp: 1 }}>List of all active logical socket connections.</LayoutText>
+
+      <LayoutBox sx={{ "& > div": { gridTemplateRows: "1fr" } }}>
+        <ConnectionSockets />
+      </LayoutBox>
+    </LayoutBox>
+  );
+};
+
+const TrafficPanel = () => {
+  return (
+    <LayoutBox sx={{ "& > div": { gridTemplateRows: "auto auto 1fr" } }}>
+      <LayoutTitle>Network Traffic</LayoutTitle>
+      <LayoutText sx={{ WebkitLineClamp: 1 }}>Monitor upload and download rates in real time.</LayoutText>
+      <LayoutRow>
+        <LayoutBox sx={{ "& > div": { gridTemplateRows: "1fr" } }}>{/* TODO: 傳出速率 */}</LayoutBox>
+        <LayoutBox sx={{ "& > div": { gridTemplateRows: "1fr" } }}>{/* TODO: 傳入速率 */}</LayoutBox>
+      </LayoutRow>
+    </LayoutBox>
+  );
+};
+
+export { SessionPanel, HostPanel, ClientPanel, HowToChoosePanel, LogPanel, SocketPanel, TrafficPanel };
