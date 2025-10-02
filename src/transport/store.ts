@@ -41,19 +41,21 @@ type PrimitiveState = {
 };
 
 const report = (partial: Partial<PrimitiveState>) => {
-  const now = Date.now();
-
   store.setState((prev) => {
+    const module = "webrtc";
+    const timestamp = Date.now();
+    const id = crypto.randomUUID();
+
     // 進度
     let history = prev.history;
     if (partial.log !== undefined) {
-      const entry = { module: "webrtc", level: "info", message: partial.log, timestamp: now } as const;
+      const entry = { id, module, level: "info", message: partial.log, timestamp } as const;
       history = [...prev.history, entry];
     }
 
     // 錯誤
     if (partial.error !== undefined) {
-      const entry = { module: "webrtc", level: "error", message: partial.error, timestamp: now } as const;
+      const entry = { id, module, level: "error", message: partial.error, timestamp } as const;
       history = [...history, entry];
     }
 

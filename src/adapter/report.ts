@@ -1,5 +1,6 @@
 import { IPCChannel } from "@/ipc";
 import { createStore } from "zustand/vanilla";
+import { randomUUID } from "crypto";
 import type { BrowserWindow } from "electron";
 import type { ConnectionLogEntry } from "@/utils";
 import type { SocketPair } from "@/adapter/ip";
@@ -15,8 +16,8 @@ const getReportMethods = (level: "info" | "warn" | "error") => {
 };
 
 const createReporter = (module: string, win: BrowserWindow) => {
-  const report = (entry: Omit<ConnectionLogEntry, "timestamp" | "module">) => {
-    const logEntry: ConnectionLogEntry = { ...entry, module, timestamp: Date.now() };
+  const report = (entry: Omit<ConnectionLogEntry, "id" | "timestamp" | "module">) => {
+    const logEntry: ConnectionLogEntry = { ...entry, module, timestamp: Date.now(), id: randomUUID() };
 
     const { level, message, data } = logEntry;
     getReportMethods(level)(module, level.toUpperCase(), message, data ?? "");
@@ -28,7 +29,7 @@ const createReporter = (module: string, win: BrowserWindow) => {
     });
   };
 
-  type ReportMethod = (entry: Omit<ConnectionLogEntry, "level" | "timestamp" | "module">) => void;
+  type ReportMethod = (entry: Omit<ConnectionLogEntry, "id" | "level" | "timestamp" | "module">) => void;
   const reportLog: ReportMethod = (entry) => report({ ...entry, level: "info" });
   const reportError: ReportMethod = (entry) => report({ ...entry, level: "error" });
   const reportWarn: ReportMethod = (entry) => report({ ...entry, level: "warn" });
