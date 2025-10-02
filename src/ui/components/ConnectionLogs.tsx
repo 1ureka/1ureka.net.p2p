@@ -96,7 +96,7 @@ const ConnectionLogs = () => {
       <AnimatePresence>
         {historyRev.map((item, index) => (
           <motion.div
-            key={item.timestamp + item.message + index}
+            key={item.id}
             layout
             initial={{ opacity: 0, scale: 0.95, x: -20 }}
             animate={{ opacity: 1, scale: 1, x: 0 }}
