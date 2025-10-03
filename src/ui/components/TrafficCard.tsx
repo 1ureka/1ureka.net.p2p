@@ -79,38 +79,38 @@ const TrafficChart = () => {
   );
 };
 
-const EgressCard = () => {
+const TrafficCard = () => {
   return (
     <Card>
-      <CardHeader>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "text.secondary" }}>
-          <Typography variant="subtitle1" component="h2" sx={{ color: "text.primary" }}>
-            Egress
-          </Typography>
-          <FileUploadRoundedIcon color="inherit" />
-        </Box>
-      </CardHeader>
+      <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
+        <Box>
+          <CardHeader>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "text.secondary" }}>
+              <Typography variant="subtitle1" component="h2" sx={{ color: "text.primary" }}>
+                Egress
+              </Typography>
+              <FileUploadRoundedIcon color="inherit" />
+            </Box>
+          </CardHeader>
 
-      <TrafficChart />
+          <TrafficChart />
+        </Box>
+
+        <Box>
+          <CardHeader>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "text.secondary" }}>
+              <Typography variant="subtitle1" component="h2" sx={{ color: "text.primary" }}>
+                Ingress
+              </Typography>
+              <FileDownloadRoundedIcon color="inherit" />
+            </Box>
+          </CardHeader>
+
+          <TrafficChart />
+        </Box>
+      </Box>
     </Card>
   );
 };
 
-const IngressCard = () => {
-  return (
-    <Card>
-      <CardHeader>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "text.secondary" }}>
-          <Typography variant="subtitle1" component="h2" sx={{ color: "text.primary" }}>
-            Ingress
-          </Typography>
-          <FileDownloadRoundedIcon color="inherit" />
-        </Box>
-      </CardHeader>
-
-      <TrafficChart />
-    </Card>
-  );
-};
-
-export { EgressCard, IngressCard };
+export { TrafficCard };
