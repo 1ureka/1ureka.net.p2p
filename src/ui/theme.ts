@@ -6,41 +6,13 @@ declare module "@mui/material/styles" {
   }
 }
 
-const publicGithubPalette = {
-  primary: { main: "#58A6FF" }, // GitHub 夜間主題裡的 accent 藍色
-  background: {
-    default: "#0D1117", // GitHub Dark 的主背景色
-    paper: "#161B22", // 較淺一層背景色
-  },
-  text: {
-    primary: "#C9D1D9", // 主要文字色
-    secondary: "#8B949E", // 輔助文字
-    disabled: "#484F58", // 禁用文字
-  },
-  divider: "#30363D", // 分隔線顏色
-} as const;
-
-const loginGithubPalette = {
-  primary: { main: "#58A6FF" }, // GitHub 夜間主題裡的 accent 藍色
-  background: {
-    header: "#151b23",
-    default: "#212830",
-    paper: "#2a313c",
-  },
-  text: {
-    primary: "#C9D1D9", // 主要文字色
-    secondary: "#8B949E", // 輔助文字
-    disabled: "#484F58", // 禁用文字
-  },
-  divider: "#30363D", // 分隔線顏色
-} as const;
-
 export const theme = createTheme({
   palette: {
     mode: "dark",
-    // primary: { main: "#71A5BF" },
-    // background: { default: "#0b0f10", paper: "#192024" },
-    ...loginGithubPalette,
+    primary: { main: "#58A6FF" },
+    background: { header: "#151b23", default: "#212830", paper: "#2a313c" },
+    text: { primary: "#C9D1D9", secondary: "#8B949E", disabled: "#484F58" },
+    divider: "#30363D",
   },
   typography: {
     fontFamily: `"Comfortaa", "jf openhuninn"`,
