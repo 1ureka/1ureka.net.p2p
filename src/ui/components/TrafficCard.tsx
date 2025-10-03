@@ -1,11 +1,12 @@
 import FileUploadRoundedIcon from "@mui/icons-material/FileUploadRounded";
 import FileDownloadRoundedIcon from "@mui/icons-material/FileDownloadRounded";
-import { Box, Typography } from "@mui/material";
+import QueryStatsRoundedIcon from "@mui/icons-material/QueryStatsRounded";
+import { Box, Button, Typography } from "@mui/material";
 import { create } from "zustand";
 
 import { Card, CardHeader } from "@/ui/components/Card";
 import { LineChart } from "@mui/x-charts/LineChart";
-import { theme } from "@/ui/theme";
+import { centerTextSx, theme } from "@/ui/theme";
 
 type Point = { timestamp: number; rate: number };
 
@@ -69,7 +70,7 @@ const TrafficChart = () => {
       ]}
       height={250}
       grid={{ vertical: true, horizontal: true }}
-      sx={{ "& .MuiAreaElement-root": { fill: "url(#Gradient)" } }}
+      sx={{ "& .MuiAreaElement-root": { fill: "url(#Gradient)" }, mb: -2, ml: -1.5 }}
     >
       <linearGradient id="Gradient" x1="0%" y1="100%" x2="0%" y2="0%">
         <stop offset="0%" stopColor={theme.palette.primary.main} stopOpacity={0.3} />
@@ -83,13 +84,13 @@ const TrafficCard = () => {
   return (
     <Card>
       <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
-        <Box>
+        <Box sx={{ borderRight: (theme) => `2px solid ${theme.palette.divider}` }}>
           <CardHeader>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "text.secondary" }}>
               <Typography variant="subtitle1" component="h2" sx={{ color: "text.primary" }}>
                 Egress
               </Typography>
-              <FileUploadRoundedIcon color="inherit" />
+              <FileUploadRoundedIcon color="inherit" fontSize="small" />
             </Box>
           </CardHeader>
 
@@ -102,7 +103,17 @@ const TrafficCard = () => {
               <Typography variant="subtitle1" component="h2" sx={{ color: "text.primary" }}>
                 Ingress
               </Typography>
-              <FileDownloadRoundedIcon color="inherit" />
+              <FileDownloadRoundedIcon color="inherit" fontSize="small" />
+            </Box>
+
+            <Box sx={{ flex: 1 }} />
+
+            <Box sx={{ color: "text.secondary" }}>
+              <Button color="inherit" sx={{ py: 0.5 }} startIcon={<QueryStatsRoundedIcon fontSize="small" />}>
+                <Typography variant="button" sx={{ textTransform: "none", textWrap: "nowrap", ...centerTextSx }}>
+                  open metrics
+                </Typography>
+              </Button>
             </Box>
           </CardHeader>
 
