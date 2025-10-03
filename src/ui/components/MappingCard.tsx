@@ -60,7 +60,18 @@ const MappingCardListItem = ({ index, content, elapsed }: { index: number; conte
 
 const MappingCardList = ({ children }: { children: React.ReactNode }) => {
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", "& > div:nth-of-type(2n)": { bgcolor: "divider" } }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        "& > div:nth-of-type(2n)": {
+          bgcolor: "background.paper",
+          borderTop: "1px solid",
+          borderBottom: "1px solid",
+          borderColor: "divider",
+        },
+      }}
+    >
       {children}
     </Box>
   );
