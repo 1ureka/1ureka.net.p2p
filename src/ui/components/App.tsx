@@ -5,7 +5,7 @@ import { Header } from "@/ui/components/Header";
 import { EventsCard } from "@/ui/components/EventsCard";
 import { SessionCard } from "@/ui/components/SessionCard";
 import { MappingCard } from "@/ui/components/MappingCard";
-import { EgressCard, IngressCard } from "@/ui/components/TrafficCard";
+import { TrafficCard } from "@/ui/components/TrafficCard";
 
 const App = () => {
   return (
@@ -15,19 +15,17 @@ const App = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
-      <Header />
-      <Box sx={{ display: "grid", gridTemplateColumns: "0.75fr 1fr", alignItems: "start", gap: 2, px: 4, py: 3 }}>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <SessionCard />
-          <MappingCard />
-        </Box>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
-            <EgressCard />
-            <IngressCard />
+      <Box sx={{ minWidth: "fit-content" }}>
+        <Header />
+        <Box sx={{ display: "grid", gridTemplateColumns: "0.75fr 1fr", gap: 2, px: 4, py: 3 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <SessionCard />
+            <MappingCard />
           </Box>
-
-          <EventsCard />
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <TrafficCard />
+            <EventsCard />
+          </Box>
         </Box>
       </Box>
     </Box>
