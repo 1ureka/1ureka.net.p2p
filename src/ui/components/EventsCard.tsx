@@ -65,7 +65,7 @@ const EventsSummary = () => {
     <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, color: "text.secondary" }}>
       <Button color="inherit" sx={{ py: 0.5 }} startIcon={<ListAltRoundedIcon fontSize="small" />}>
         <Typography variant="button" sx={{ textTransform: "none", textWrap: "nowrap", ...centerTextSx }}>
-          View all logs
+          view all logs
         </Typography>
       </Button>
       <Box sx={{ px: 1.5, py: 1, borderRadius: 99, position: "relative", overflow: "hidden" }}>

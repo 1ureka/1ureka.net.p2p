@@ -35,10 +35,10 @@ const MappingCardListItem = ({ index, content, elapsed }: { index: number; conte
       </Box>
 
       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-        <Button sx={{ minWidth: 0, p: 0.5 }} color="warning">
+        <Button sx={{ minWidth: 0, p: 0.5 }} color="inherit">
           <StopRoundedIcon fontSize="small" />
         </Button>
-        <Button sx={{ minWidth: 0, p: 0.5 }} color="error">
+        <Button sx={{ minWidth: 0, p: 0.5 }} color="inherit">
           <DeleteForeverRoundedIcon fontSize="small" />
         </Button>
       </Box>
