@@ -1,5 +1,11 @@
 import { createTheme } from "@mui/material/styles";
 
+declare module "@mui/material/styles" {
+  interface TypeBackground {
+    header: string;
+  }
+}
+
 const publicGithubPalette = {
   primary: { main: "#58A6FF" }, // GitHub 夜間主題裡的 accent 藍色
   background: {
@@ -17,8 +23,9 @@ const publicGithubPalette = {
 const loginGithubPalette = {
   primary: { main: "#58A6FF" }, // GitHub 夜間主題裡的 accent 藍色
   background: {
-    default: "#151b23", // GitHub Dark 的主背景色
-    paper: "#212830", // 較淺一層背景色
+    header: "#151b23",
+    default: "#212830",
+    paper: "#2a313c",
   },
   text: {
     primary: "#C9D1D9", // 主要文字色
