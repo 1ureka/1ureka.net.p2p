@@ -1,8 +1,9 @@
 import { create } from "zustand";
 import type { ConnectionStatus, ConnectionLogEntry } from "@/utils";
 import type { Session } from "@/transport/session-utils";
+import { startSession } from "@/transport/session";
 
-// 給 UI 使用 (read only)
+// 給 UI 使用 (read only + handler)
 
 type SessionState = {
   status: ConnectionStatus;
@@ -16,56 +17,56 @@ const useSession = create<SessionState>(() => ({
   session: { id: "", host: "", client: "", status: "waiting", createdAt: "", signal: {} },
 }));
 
-export { useSession };
+const preHandle = () => {
+  const { status } = useSession.getState();
+
+  if (status === "connecting" || status === "connected") {
+    useSession.setState((prev) => ({ ...prev, status: "failed" }));
+    reportError({ message: "Connection has already been established or is in progress" });
+    return false;
+  }
+
+  useSession.setState((prev) => ({ ...prev, status: "connecting", history: [] }));
+  return true;
+};
+
+const handleCreateSession = async () => {
+  if (!preHandle()) return;
+  const result = await startSession();
+  if (!result) useSession.setState((prev) => ({ ...prev, status: "failed" }));
+};
+
+const handleJoinSession = async (sessionId: string) => {
+  if (!preHandle()) return;
+  const result = await startSession(sessionId);
+  if (!result) useSession.setState((prev) => ({ ...prev, status: "failed" }));
+};
+
+export { useSession, handleCreateSession, handleJoinSession };
 
 // 給邏輯使用 (set only)
 
-const store = useSession;
-
-const getLock = () => {
-  return store.getState().status === "connecting" || store.getState().status === "connected";
-};
-
 const setSessionState = (session: Session) => {
-  store.setState((prev) => ({ ...prev, session }));
+  useSession.setState((prev) => ({ ...prev, session }));
 };
 
-const setStatus = (status: ConnectionStatus) => {
-  store.setState((prev) => ({ ...prev, status }));
-};
+const report = (entry: Omit<ConnectionLogEntry, "id" | "timestamp" | "module">) => {
+  const logEntry: ConnectionLogEntry = {
+    ...entry,
+    module: "webrtc",
+    timestamp: Date.now(),
+    id: crypto.randomUUID(),
+  };
 
-type PrimitiveState = {
-  log: string;
-  error: string;
-  history: never[]; // 只能清空
-};
-
-const report = (partial: Partial<PrimitiveState>) => {
-  store.setState((prev) => {
-    const module = "webrtc";
-    const timestamp = Date.now();
-    const id = crypto.randomUUID();
-
-    // 進度
-    let history = prev.history;
-    if (partial.log !== undefined) {
-      const entry = { id, module, level: "info", message: partial.log, timestamp } as const;
-      history = [...prev.history, entry];
-    }
-
-    // 錯誤
-    if (partial.error !== undefined) {
-      const entry = { id, module, level: "error", message: partial.error, timestamp } as const;
-      history = [...history, entry];
-    }
-
-    // 歷史只能清空 (若該次呼叫也帶如了 progress, error, 則忽略(在這裡覆蓋))
-    if (partial.history !== undefined) {
-      history = [];
-    }
-
-    return { history };
+  useSession.setState((prev) => {
+    const history = [...prev.history, logEntry].slice(-250);
+    return { ...prev, history };
   });
 };
 
-export { report, getLock, setSessionState, setStatus };
+type ReportMethod = (entry: Omit<ConnectionLogEntry, "id" | "level" | "timestamp" | "module">) => void;
+const reportLog: ReportMethod = (entry) => report({ ...entry, level: "info" });
+const reportError: ReportMethod = (entry) => report({ ...entry, level: "error" });
+const reportWarn: ReportMethod = (entry) => report({ ...entry, level: "warn" });
+
+export { reportLog, reportError, reportWarn, setSessionState };

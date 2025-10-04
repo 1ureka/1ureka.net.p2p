@@ -1,11 +1,11 @@
-import { report, setStatus } from "@/transport/store";
+import { reportLog } from "@/transport/store";
 
 /**
  * 創建一個只會有一個 RTCDataChannel，且生命週期與 RTCPeerConnection 綁定的 WebRTC 連線
  * 提供適合 Vanilla ICE 的 API
  */
 const createPeerConnection = () => {
-  report({ log: "Creating RTCPeerConnection with Google STUN servers configuration" });
+  reportLog({ message: "Creating RTCPeerConnection with Google STUN servers configuration" });
   const localCandidates: string[] = [];
   const peerConnection = new RTCPeerConnection({
     iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }],
@@ -13,8 +13,8 @@ const createPeerConnection = () => {
 
   peerConnection.onconnectionstatechange = () => {
     const { connectionState } = peerConnection;
-    report({
-      log: `RTCPeerConnection state transition detected: ${connectionState}. Monitoring for terminal states.`,
+    reportLog({
+      message: `RTCPeerConnection state transition detected: ${connectionState}. Monitoring for terminal states.`,
     });
     if (["closed", "disconnected", "failed"].includes(connectionState)) close();
   };
@@ -23,7 +23,7 @@ const createPeerConnection = () => {
    * 創建一個只會有一個 RTCDataChannel，且生命週期與 RTCPeerConnection 綁定
    */
   const dataChannelPromise = new Promise<RTCDataChannel>((resolve, reject) => {
-    report({ log: "Initializing RTCDataChannel with negotiated mode and fixed channel ID (0)" });
+    reportLog({ message: "Initializing RTCDataChannel with negotiated mode and fixed channel ID (0)" });
     // negotiated: true 時，只要 id 相同就能直接建立連線 (對稱寫法)，利用該機制來共用函數
     const dataChannel = peerConnection.createDataChannel("data", { negotiated: true, id: 0, ordered: false });
     dataChannel.onopen = () => resolve(dataChannel);
@@ -42,7 +42,7 @@ const createPeerConnection = () => {
    * 創建本地 ICE Candidate 收集器
    */
   const candidatePromise = new Promise<string[]>((resolve) => {
-    report({ log: "Setting up local ICE candidate collection handler and starting gathering process" });
+    reportLog({ message: "Setting up local ICE candidate collection handler and starting gathering process" });
 
     peerConnection.onicecandidate = (event) => {
       const candidate = event.candidate;
@@ -56,16 +56,17 @@ const createPeerConnection = () => {
    */
   const close = () => {
     peerConnection.close(); // 根據 w3c ED，其是冪等，因此不需擔心重複呼叫
-    setStatus("disconnected");
-    report({ log: "RTCPeerConnection and associated DataChannel have been safely closed and resources released" });
+    reportLog({
+      message: "RTCPeerConnection and associated DataChannel have been safely closed and resources released",
+    });
   };
 
   /**
    * 獲取該連線的唯一的 RTCDataChannel，並且可以設定超時時間
    */
   const getDataChannel = (timeout: number) => {
-    report({
-      log: `Waiting for DataChannel to open with ${timeout}ms timeout. Establishing peer-to-peer connection...`,
+    reportLog({
+      message: `Waiting for DataChannel to open with ${timeout}ms timeout. Establishing peer-to-peer connection...`,
     });
     return Promise.race([
       dataChannelPromise,
@@ -79,19 +80,23 @@ const createPeerConnection = () => {
    * 獲取本地描述與本地 ICE Candidate，並且可以設定 ICE 收集時間
    */
   const getLocal = async (method: "createOffer" | "createAnswer", timeout: number) => {
-    report({ log: `Generating local SDP ${method === "createOffer" ? "offer" : "answer"} description` });
+    reportLog({
+      message: `Generating local SDP ${method === "createOffer" ? "offer" : "answer"} description`,
+    });
     const description = await peerConnection[method]();
 
-    report({ log: `Setting local description and triggering ICE candidate collection with ${timeout}ms timeout` });
+    reportLog({
+      message: `Setting local description and triggering ICE candidate collection with ${timeout}ms timeout`,
+    });
     await peerConnection.setLocalDescription(description);
 
-    report({ log: "Waiting for ICE candidate gathering to complete or timeout" });
+    reportLog({ message: "Waiting for ICE candidate gathering to complete or timeout" });
     const candidates = await Promise.race([
       candidatePromise,
       new Promise<string[]>((resolve) => setTimeout(() => resolve([...localCandidates]), timeout)),
     ]);
 
-    report({ log: `Gathered ${candidates.length} ICE candidates` });
+    reportLog({ message: `Gathered ${candidates.length} ICE candidates` });
     return { description: JSON.stringify(description), candidates };
   };
 
@@ -99,10 +104,10 @@ const createPeerConnection = () => {
    * 設置遠端描述與遠端 ICE Candidate
    */
   const setRemote = async (description: string, candidates: string[]) => {
-    report({ log: "Processing and setting remote SDP description from peer" });
+    reportLog({ message: "Processing and setting remote SDP description from peer" });
     await peerConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(description)));
 
-    report({ log: `Adding ${candidates.length} remote ICE candidates to establish connectivity paths` });
+    reportLog({ message: `Adding ${candidates.length} remote ICE candidates to establish connectivity paths` });
     const result = await Promise.all(
       candidates.map(async (candidate) => {
         try {

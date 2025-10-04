@@ -23,7 +23,7 @@ const createReporter = (module: string, win: BrowserWindow) => {
     getReportMethods(level)(module, level.toUpperCase(), message, data ?? "");
 
     store.setState((prev) => {
-      const history = [...prev.history, logEntry].slice(-100);
+      const history = [...prev.history, logEntry].slice(-250);
       win.webContents.send(IPCChannel.AdapterLogs, history);
       return { ...prev, history };
     });
