@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Header } from "@/ui/components/Header";
 import { EventsCard } from "@/ui/components/EventsCard";
 import { SessionCard } from "@/ui/components/SessionCard";
-import { MappingCard } from "@/ui/components/MappingCard";
+import { MappingCard } from "@/ui/components/RouteCard";
 import { TrafficCard } from "@/ui/components/TrafficCard";
 import { CreateSessionCard, JoinSessionCard } from "@/ui/components/LaunchCard";
 import { useTabs } from "@/ui/tabs";
