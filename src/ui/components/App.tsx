@@ -1,5 +1,5 @@
 import { Box, Typography } from "@mui/material";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 
 import { Header } from "@/ui/components/Header";
 import { EventsCard } from "@/ui/components/EventsCard";
@@ -29,7 +29,7 @@ const ClientPage = () => {
 
 const LaunchPage = () => {
   return (
-    <Box sx={{ display: "grid", placeItems: "center", gridTemplateRows: "1fr auto 1fr", flex: 1, gap: 5 }}>
+    <Box sx={{ display: "grid", placeItems: "center", gridTemplateRows: "1fr auto 1fr", flex: 1, gap: 5, py: 3 }}>
       <Box sx={{ textAlign: "center", alignSelf: "end" }}>
         <Typography variant="subtitle1" component="h1">
           Share TCP Services Over P2P
@@ -65,16 +65,31 @@ const LaunchPage = () => {
   );
 };
 
+const PageWrapperProps = {
+  sx: { flex: 1, display: "flex", flexDirection: "column" },
+  component: motion.div,
+  initial: { opacity: 0, y: -10 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: 10 },
+} as const;
+
 const Pages = () => {
   const page = useTabs((state) => state.page);
-  switch (page) {
-    case "launch":
-      return <LaunchPage />;
-    case "overview":
-      return <ClientPage />;
-    default:
-      return null;
-  }
+
+  return (
+    <AnimatePresence mode="wait">
+      {page === "launch" && (
+        <Box key="launch" {...PageWrapperProps}>
+          <LaunchPage />
+        </Box>
+      )}
+      {page === "overview" && (
+        <Box key="overview" {...PageWrapperProps}>
+          <ClientPage />
+        </Box>
+      )}
+    </AnimatePresence>
+  );
 };
 
 const FooterAccent = () => {
