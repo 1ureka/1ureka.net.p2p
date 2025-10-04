@@ -1,6 +1,7 @@
 import ListAltRoundedIcon from "@mui/icons-material/ListAltRounded";
 import InfoOutlineRoundedIcon from "@mui/icons-material/InfoOutlineRounded";
 import { Box, Typography, type BoxProps } from "@mui/material";
+import { format } from "pretty-format";
 
 import { centerTextSx, ellipsisSx } from "@/ui/theme";
 import { GithubButton } from "@/ui/components/Github";
@@ -88,32 +89,6 @@ const EventsSummary = () => {
   );
 };
 
-const formatData = (data: Record<string, unknown>) => {
-  try {
-    // 檢查是否是 Error 物件
-    if (data.error && typeof data.error === "object") {
-      const error = data.error;
-      if ("message" in error) return `Error: ${error.message}`;
-      if ("code" in error) return `Error code: ${error.code}`;
-    }
-
-    // 對於其他類型的 data，嘗試格式化為可讀的字串
-    const entries = Object.entries(data);
-    if (entries.length === 0) return null;
-
-    return entries
-      .map(([key, value]) => {
-        if (typeof value === "string" || typeof value === "number") {
-          return `${key}: ${value}`;
-        }
-        return `${key}: ${JSON.stringify(value)}`;
-      })
-      .join(", ");
-  } catch {
-    return JSON.stringify(data);
-  }
-};
-
 const formatLevel = (level: ConnectionLogLevel) => {
   if (level === "info") return "\u00A0INFO";
   if (level === "warn") return "\u00A0WARN";
@@ -158,7 +133,7 @@ const EventsLog = ({ log }: { log: ConnectionLogEntry }) => {
     "div:hover > div > &": { color: colors.hover },
   };
 
-  const dataString = log.data ? formatData(log.data) : null;
+  const dataString = log.data ? format(log.data) : null;
 
   return (
     <Box sx={{ position: "relative", "&:hover": { filter: "brightness(1.25)" }, py: 0.5, px: 1.5 }}>
@@ -181,7 +156,7 @@ const EventsLog = ({ log }: { log: ConnectionLogEntry }) => {
       {dataString && (
         <Typography
           variant="caption"
-          sx={{ fontFamily: "Ubuntu", color: "text.secondary", ml: 1, ...ellipsisSx, WebkitLineClamp: 2 }}
+          sx={{ fontFamily: "Ubuntu", color: "text.secondary", ml: 1, ...ellipsisSx, WebkitLineClamp: 5 }}
         >
           {dataString}
         </Typography>
