@@ -26,4 +26,12 @@ const useAdapter = create<AdapterState>((set) => {
   return { history: [], sockets: Array.from(socketSet) };
 });
 
-export { useAdapter };
+const handleCreateHostAdapter = () => {
+  window.electron.send(IPCChannel.AdapterStartHost);
+};
+
+const handleCreateClientAdapter = (port: number) => {
+  window.electron.send(IPCChannel.AdapterStartClient, port);
+};
+
+export { useAdapter, handleCreateHostAdapter, handleCreateClientAdapter };
