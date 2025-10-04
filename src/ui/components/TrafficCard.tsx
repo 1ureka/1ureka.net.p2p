@@ -1,9 +1,10 @@
 import FileUploadRoundedIcon from "@mui/icons-material/FileUploadRounded";
 import FileDownloadRoundedIcon from "@mui/icons-material/FileDownloadRounded";
 import QueryStatsRoundedIcon from "@mui/icons-material/QueryStatsRounded";
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { create } from "zustand";
 
+import { GithubButton } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
 import { LineChart } from "@mui/x-charts/LineChart";
 import { centerTextSx, theme } from "@/ui/theme";
@@ -109,11 +110,15 @@ const TrafficCard = () => {
             <Box sx={{ flex: 1 }} />
 
             <Box sx={{ color: "text.secondary" }}>
-              <Button color="inherit" sx={{ py: 0.5 }} startIcon={<QueryStatsRoundedIcon fontSize="small" />}>
-                <Typography variant="button" sx={{ textTransform: "none", textWrap: "nowrap", ...centerTextSx }}>
+              <GithubButton
+                color="inherit"
+                sx={{ py: 0.5, px: 1, bgcolor: "background.default" }}
+                startIcon={<QueryStatsRoundedIcon fontSize="small" />}
+              >
+                <Typography variant="body2" sx={{ textTransform: "none", textWrap: "nowrap", ...centerTextSx }}>
                   open metrics
                 </Typography>
-              </Button>
+              </GithubButton>
             </Box>
           </CardHeader>
 

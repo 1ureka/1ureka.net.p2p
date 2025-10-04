@@ -5,6 +5,7 @@ import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 
 import { Box, Button, Typography } from "@mui/material";
 import { centerTextSx, ellipsisSx } from "@/ui/theme";
+import { GithubButton } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
 
 function formatElapsed(elapsed: number) {
@@ -87,11 +88,11 @@ const MappingCard = () => {
 
         <Box sx={{ flexGrow: 1 }} />
 
-        <Button sx={{ py: 0.5, px: 1 }} startIcon={<AddBoxRoundedIcon />}>
+        <GithubButton sx={{ py: 0.5, px: 1, bgcolor: "background.default" }} startIcon={<AddBoxRoundedIcon />}>
           <Typography variant="body2" sx={{ textTransform: "none", textWrap: "nowrap", ...centerTextSx }}>
-            Add
+            add
           </Typography>
-        </Button>
+        </GithubButton>
       </CardHeader>
 
       <MappingCardList>

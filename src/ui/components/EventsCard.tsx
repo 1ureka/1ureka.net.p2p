@@ -1,6 +1,7 @@
 import ListAltRoundedIcon from "@mui/icons-material/ListAltRounded";
-import { Box, Button, Typography, type BoxProps } from "@mui/material";
+import { Box, Typography, type BoxProps } from "@mui/material";
 import { centerTextSx, ellipsisSx } from "@/ui/theme";
+import { GithubButton } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
 import type { ConnectionLogEntry, ConnectionLogLevel } from "@/utils";
 
@@ -63,11 +64,15 @@ function generateMockLogs(count: number): ConnectionLogEntry[] {
 const EventsSummary = () => {
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, color: "text.secondary" }}>
-      <Button color="inherit" sx={{ py: 0.5 }} startIcon={<ListAltRoundedIcon fontSize="small" />}>
+      <GithubButton
+        color="inherit"
+        sx={{ py: 0.5, px: 1, bgcolor: "background.default" }}
+        startIcon={<ListAltRoundedIcon fontSize="small" />}
+      >
         <Typography variant="button" sx={{ textTransform: "none", textWrap: "nowrap", ...centerTextSx }}>
           view all logs
         </Typography>
-      </Button>
+      </GithubButton>
       <Box sx={{ px: 1.5, py: 1, borderRadius: 99, position: "relative", overflow: "hidden" }}>
         <Box sx={{ position: "absolute", inset: 0, bgcolor: "error.main", opacity: 0.2 }} />
         <Typography
@@ -116,10 +121,10 @@ const formatLevel = (level: ConnectionLogLevel) => {
 };
 
 const getBgColor = (level: ConnectionLogLevel) => {
-  if (level === "info") return "background.paper";
+  if (level === "info") return "background.default";
   if (level === "warn") return "warning.main";
   if (level === "error") return "error.main";
-  return "background.paper";
+  return "background.default";
 };
 
 type TextColor = {

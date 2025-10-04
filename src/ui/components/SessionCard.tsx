@@ -1,6 +1,8 @@
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import { Box, Button, Typography } from "@mui/material";
+
+import { GithubButton } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
 import { centerTextSx, ellipsisSx } from "@/ui/theme";
 import { useTabs } from "@/ui/tabs";
@@ -79,16 +81,18 @@ const SessionCard = () => {
 
         <Box sx={{ flex: 1 }} />
 
-        <Button
-          color="error"
-          sx={{ py: 0.5 }}
-          startIcon={<LogoutRoundedIcon fontSize="small" />}
+        <GithubButton
+          sx={{ py: 0.5, px: 1, bgcolor: "background.default" }}
+          startIcon={<LogoutRoundedIcon fontSize="small" color="error" />}
           onClick={() => launch(false)}
         >
-          <Typography variant="button" sx={{ textTransform: "none", textWrap: "nowrap", ...centerTextSx }}>
+          <Typography
+            variant="button"
+            sx={{ textTransform: "none", textWrap: "nowrap", color: "error.main", ...centerTextSx }}
+          >
             leave
           </Typography>
-        </Button>
+        </GithubButton>
       </CardHeader>
 
       <Box sx={{ display: "grid", gridTemplateColumns: "0.3fr 1fr", gap: 2, p: 2.5, px: 3 }}>
