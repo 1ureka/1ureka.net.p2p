@@ -31,7 +31,7 @@ const HeaderLinks = () => {
 };
 
 const HeaderTabs = () => {
-  const { tab, pages, setTab } = useTabs();
+  const { tab, tabs, setTab } = useTabs();
 
   return (
     <Tabs
@@ -45,7 +45,7 @@ const HeaderTabs = () => {
         "& .MuiTab-root": { textTransform: "none", "&:not(.Mui-selected):hover": { color: "text.primary" } },
       }}
     >
-      {pages.map(({ label, value, disabled }) => (
+      {tabs.map(({ label, value, disabled }) => (
         <Tab key={value} label={label} value={value} disabled={disabled} />
       ))}
     </Tabs>
