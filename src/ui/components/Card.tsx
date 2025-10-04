@@ -7,7 +7,7 @@ const Card = ({ children }: { children: React.ReactNode }) => {
 const CardHeader = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
-      <Box sx={{ display: "flex", alignItems: "center", bgcolor: "background.paper", gap: 2, p: 1, px: 3 }}>
+      <Box sx={{ display: "flex", alignItems: "center", bgcolor: "background.paper", gap: 2, px: 3, height: 40 }}>
         {children}
       </Box>
       <Divider sx={{ borderWidth: 1 }} />

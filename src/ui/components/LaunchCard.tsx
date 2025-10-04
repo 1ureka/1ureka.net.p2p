@@ -1,6 +1,7 @@
 import { Box, Typography } from "@mui/material";
 import { GithubButton, GithubTextField } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
+import { centerTextSx } from "@/ui/theme";
 import { useTabs } from "@/ui/tabs";
 
 const CreateSessionCard = () => {
@@ -10,10 +11,10 @@ const CreateSessionCard = () => {
     <Card>
       <CardHeader>
         <Box sx={{ display: "flex", gap: 1, alignItems: "baseline" }}>
-          <Typography variant="subtitle1" component="h2">
+          <Typography variant="subtitle1" component="h2" sx={{ ...centerTextSx }}>
             Create Session
           </Typography>
-          <Typography variant="subtitle2" component="h3" sx={{ color: "text.secondary" }}>
+          <Typography variant="subtitle2" component="h3" sx={{ color: "text.secondary", ...centerTextSx }}>
             as host
           </Typography>
         </Box>
@@ -41,10 +42,10 @@ const JoinSessionCard = () => {
     <Card>
       <CardHeader>
         <Box sx={{ display: "flex", gap: 1, alignItems: "baseline" }}>
-          <Typography variant="subtitle1" component="h2">
+          <Typography variant="subtitle1" component="h2" sx={{ ...centerTextSx }}>
             Join Session
           </Typography>
-          <Typography variant="subtitle2" component="h3" sx={{ color: "text.secondary" }}>
+          <Typography variant="subtitle2" component="h3" sx={{ color: "text.secondary", ...centerTextSx }}>
             as client
           </Typography>
         </Box>
