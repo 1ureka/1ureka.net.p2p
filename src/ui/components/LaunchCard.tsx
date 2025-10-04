@@ -1,6 +1,7 @@
 import { styled } from "@mui/material/styles";
 import { Box, Button, Typography, TextField } from "@mui/material";
 import { Card, CardHeader } from "@/ui/components/Card";
+import { useTabs } from "@/ui/tabs";
 
 const GithubTextField = styled(TextField)(({ theme }) => ({
   "& .MuiFormLabel-root": { fontSize: "0.85rem" },
@@ -28,6 +29,8 @@ const GithubButton = styled(Button)(({ theme }) => ({
 }));
 
 const CreateSessionCard = () => {
+  const launch = useTabs((state) => state.launch);
+
   return (
     <Card>
       <CardHeader>
@@ -47,7 +50,7 @@ const CreateSessionCard = () => {
         </Typography>
 
         <Box sx={{ my: 1.5 }}>
-          <GithubButton size="small" fullWidth color="inherit">
+          <GithubButton size="small" fullWidth color="inherit" onClick={() => launch(true)}>
             Create
           </GithubButton>
         </Box>
@@ -57,6 +60,8 @@ const CreateSessionCard = () => {
 };
 
 const JoinSessionCard = () => {
+  const launch = useTabs((state) => state.launch);
+
   return (
     <Card>
       <CardHeader>
@@ -77,7 +82,7 @@ const JoinSessionCard = () => {
 
         <Box sx={{ my: 1.5, display: "flex", gap: 1, flexDirection: "column" }}>
           <GithubTextField fullWidth size="small" label="Session ID" placeholder="Enter Session ID" />
-          <GithubButton size="small" fullWidth color="inherit">
+          <GithubButton size="small" fullWidth color="inherit" onClick={() => launch(true)}>
             Join
           </GithubButton>
         </Box>

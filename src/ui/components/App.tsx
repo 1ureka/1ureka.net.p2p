@@ -7,6 +7,7 @@ import { SessionCard } from "@/ui/components/SessionCard";
 import { MappingCard } from "@/ui/components/MappingCard";
 import { TrafficCard } from "@/ui/components/TrafficCard";
 import { CreateSessionCard, JoinSessionCard } from "@/ui/components/LaunchCard";
+import { useTabs } from "@/ui/tabs";
 
 const ClientPage = () => {
   return (
@@ -64,6 +65,18 @@ const LaunchPage = () => {
   );
 };
 
+const Pages = () => {
+  const page = useTabs((state) => state.page);
+  switch (page) {
+    case "launch":
+      return <LaunchPage />;
+    case "overview":
+      return <ClientPage />;
+    default:
+      return null;
+  }
+};
+
 const FooterAccent = () => {
   return <Box sx={{ borderTop: "1px solid", borderColor: "divider", py: 2.5, bgcolor: "background.paper" }} />;
 };
@@ -78,11 +91,7 @@ const App = () => {
     >
       <Box sx={{ minWidth: "fit-content", minHeight: 1, display: "flex", flexDirection: "column" }}>
         <Header />
-
-        {/* <ClientPage /> */}
-
-        <LaunchPage />
-
+        <Pages />
         <FooterAccent />
       </Box>
     </Box>

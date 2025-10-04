@@ -1,7 +1,9 @@
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import { Box, Button, Typography } from "@mui/material";
 import { Card, CardHeader } from "@/ui/components/Card";
-import { ellipsisSx } from "@/ui/theme";
+import { centerTextSx, ellipsisSx } from "@/ui/theme";
+import { useTabs } from "@/ui/tabs";
 import type { ConnectionStatus } from "@/utils";
 
 const colorMap: Record<ConnectionStatus, string> = {
@@ -66,12 +68,27 @@ const SessionCardCopyButton = () => {
 };
 
 const SessionCard = () => {
+  const launch = useTabs((state) => state.launch);
+
   return (
     <Card>
       <CardHeader>
         <Typography variant="subtitle1" component="h2">
           Session
         </Typography>
+
+        <Box sx={{ flex: 1 }} />
+
+        <Button
+          color="error"
+          sx={{ py: 0.5 }}
+          startIcon={<LogoutRoundedIcon fontSize="small" />}
+          onClick={() => launch(false)}
+        >
+          <Typography variant="button" sx={{ textTransform: "none", textWrap: "nowrap", ...centerTextSx }}>
+            leave
+          </Typography>
+        </Button>
       </CardHeader>
 
       <Box sx={{ display: "grid", gridTemplateColumns: "0.3fr 1fr", gap: 2, p: 2.5, px: 3 }}>
