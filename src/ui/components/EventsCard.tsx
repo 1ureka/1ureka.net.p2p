@@ -4,92 +4,13 @@ import { Box, Typography, type BoxProps } from "@mui/material";
 import { format } from "pretty-format";
 
 import { handleChangeTab } from "@/ui/tabs";
+import { useAdapter } from "@/adapter/store";
+import { useSession } from "@/transport/store";
+import type { ConnectionLogEntry, ConnectionLogLevel } from "@/utils";
+
 import { centerTextSx, ellipsisSx } from "@/ui/theme";
 import { GithubButton } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
-import type { ConnectionLogEntry, ConnectionLogLevel } from "@/utils";
-
-const modules = ["auth", "network", "websocket", "database", "api", "ui"];
-const logMessages: Record<ConnectionLogLevel, string[]> = {
-  info: [
-    "Successfully established connection, <user>, <timestamp>, <sessionId>",
-    "Heartbeat signal received.",
-    "User authenticated.",
-    "Cache refreshed, there are 42 items that need to be synced.",
-    "Connection is stable.",
-  ],
-  warn: [
-    "High latency detected.",
-    "Retrying connection...",
-    "Token is near expiration.",
-    "Packet loss observed.",
-    "Slow database response.",
-  ],
-  error: [
-    "Connection failed: timeout.",
-    "Authentication error.",
-    "WebSocket disconnected unexpectedly.",
-    "Database query failed.",
-    "API request returned 500.",
-  ],
-};
-
-function getRandomItem<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-function generateMockLogs(count: number): ConnectionLogEntry[] {
-  const now = Date.now();
-  const logs: ConnectionLogEntry[] = [];
-  const data = {
-    retryCount: Math.floor(Math.random() * 5),
-    errorMessage: "Sample error message",
-    errorCode: "SAMPLE_CODE",
-    status: "active",
-  };
-
-  for (let i = 0; i < count; i++) {
-    const levels: ConnectionLogLevel[] = ["info", "info", "info", "info", "info", "warn", "error"];
-    const level = getRandomItem<ConnectionLogLevel>(levels);
-    const entry: ConnectionLogEntry = {
-      id: crypto.randomUUID(),
-      level,
-      module: getRandomItem(modules),
-      message: getRandomItem(logMessages[level]),
-      timestamp: now - Math.floor(Math.random() * 1000 * 60 * 60), // 過去一小時內
-      data: Math.random() > 0.6 ? data : undefined,
-    };
-    logs.push(entry);
-  }
-
-  return logs.sort((a, b) => a.timestamp - b.timestamp);
-}
-
-const EventsSummary = () => {
-  return (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, color: "text.secondary" }}>
-      <GithubButton
-        sx={{ py: 0.5, px: 1, bgcolor: "background.default" }}
-        startIcon={<ListAltRoundedIcon fontSize="small" />}
-        onClick={() => handleChangeTab("events")}
-      >
-        <Typography variant="button" sx={{ textTransform: "none", textWrap: "nowrap", ...centerTextSx }}>
-          view all logs
-        </Typography>
-      </GithubButton>
-      <Box sx={{ px: 1.5, py: 1, borderRadius: 99, position: "relative", overflow: "hidden" }}>
-        <Box sx={{ position: "absolute", inset: 0, bgcolor: "error.main", opacity: 0.2 }} />
-        <Typography
-          variant="body2"
-          color="error"
-          sx={{ position: "relative", fontWeight: "bold", textWrap: "nowrap", ...centerTextSx }}
-        >
-          3 errors
-        </Typography>
-      </Box>
-    </Box>
-  );
-};
 
 const formatLevel = (level: ConnectionLogLevel) => {
   if (level === "info") return "\u00A0INFO";
@@ -105,37 +26,61 @@ const getBgColor = (level: ConnectionLogLevel) => {
   return "background.default";
 };
 
-type TextColor = {
-  prefix: string;
-  context: string;
-  hover: string;
-};
-
-const getColor = (level: ConnectionLogLevel): TextColor => {
+const getColor = (level: ConnectionLogLevel): { prefix: string; context: string; hover: string } => {
   if (level === "warn") return { prefix: "warning.main", context: "warning.main", hover: "warning.main" };
   if (level === "error") return { prefix: "error.main", context: "error.main", hover: "error.main" };
   return { prefix: "text.secondary", context: "text.primary", hover: "text.primary" };
 };
 
+const useLogs = () => {
+  const adapterLogs = useAdapter((state) => state.history);
+  const sessionLogs = useSession((state) => state.history);
+  const logs = [...adapterLogs, ...sessionLogs].toSorted((a, b) => a.timestamp - b.timestamp);
+  return logs;
+};
+
+const Chip = ({ color, text }: { color: string; text: string }) => {
+  return (
+    <Box sx={{ px: 1.5, py: 1, borderRadius: 1, position: "relative", overflow: "hidden" }}>
+      <Box sx={{ position: "absolute", inset: 0, bgcolor: color, opacity: 0.2 }} />
+      <Typography variant="body2" sx={{ position: "relative", textWrap: "nowrap", color, ...centerTextSx }}>
+        {text}
+      </Typography>
+    </Box>
+  );
+};
+
+const EventsSummary = () => {
+  const logs = useLogs();
+  const warningCount = logs.filter((log) => log.level === "warn").length;
+  const errorCount = logs.filter((log) => log.level === "error").length;
+
+  return (
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, color: "text.secondary" }}>
+      <GithubButton
+        sx={{ py: 0.5, px: 1, bgcolor: "background.default" }}
+        startIcon={<ListAltRoundedIcon fontSize="small" />}
+        onClick={() => handleChangeTab("events")}
+      >
+        <Typography variant="button" sx={{ textTransform: "none", textWrap: "nowrap", ...centerTextSx }}>
+          view all logs
+        </Typography>
+      </GithubButton>
+
+      <Chip color={warningCount > 0 ? "warning.main" : "text.secondary"} text={`${warningCount} warnings`} />
+      <Chip color={errorCount > 0 ? "error.main" : "text.secondary"} text={`${errorCount} errors`} />
+    </Box>
+  );
+};
+
 const EventsLog = ({ log }: { log: ConnectionLogEntry }) => {
   const bgcolor = getBgColor(log.level);
   const colors = getColor(log.level);
+  const baseSx: BoxProps["sx"] = { fontFamily: "Ubuntu", "div:hover > div > &": { color: colors.hover } };
 
-  const prefixSx: BoxProps["sx"] = {
-    fontFamily: "Ubuntu",
-    color: colors.prefix,
-    textWrap: "nowrap",
-    "div:hover > div > &": { color: colors.hover },
-  };
-
-  const contextSx: BoxProps["sx"] = {
-    fontFamily: "Ubuntu",
-    color: colors.context,
-    ...ellipsisSx,
-    "div:hover > div > &": { color: colors.hover },
-  };
-
-  const dataString = log.data ? format(log.data) : null;
+  const prefixSx: BoxProps["sx"] = { ...baseSx, color: colors.prefix, textWrap: "nowrap" };
+  const textSx: BoxProps["sx"] = { ...baseSx, color: colors.context, ...ellipsisSx };
+  const dataSx: BoxProps["sx"] = { ...baseSx, color: "text.secondary", ...ellipsisSx, WebkitLineClamp: 5 };
 
   return (
     <Box sx={{ position: "relative", "&:hover": { filter: "brightness(1.25)" }, py: 0.5, px: 1.5 }}>
@@ -145,22 +90,17 @@ const EventsLog = ({ log }: { log: ConnectionLogEntry }) => {
         <Typography variant="body2" sx={prefixSx}>
           [{new Date(log.timestamp).toLocaleTimeString("en-US") + "\u00A0" + formatLevel(log.level)}]:
         </Typography>
-
         <Typography variant="body2" sx={prefixSx}>
           [{log.module.toUpperCase()}]
         </Typography>
-
-        <Typography variant="body2" sx={contextSx}>
+        <Typography variant="body2" sx={textSx}>
           {log.message}
         </Typography>
       </Box>
 
-      {dataString && (
-        <Typography
-          variant="caption"
-          sx={{ fontFamily: "Ubuntu", color: "text.secondary", ml: 1, ...ellipsisSx, WebkitLineClamp: 5 }}
-        >
-          {dataString}
+      {log.data && (
+        <Typography variant="caption" sx={{ ml: 1, ...dataSx }}>
+          {format(log.data)}
         </Typography>
       )}
     </Box>
@@ -188,7 +128,7 @@ const NoItemDisplay = () => {
 };
 
 const EventsLogs = () => {
-  const logs = generateMockLogs(0);
+  const logs = useLogs();
 
   return (
     <Box sx={{ height: 350, overflow: "auto" }}>
@@ -207,10 +147,12 @@ const EventsCard = () => {
         <Typography variant="subtitle1" component="h2">
           Events
         </Typography>
-        <Box sx={{ flexGrow: 1 }} />
+        <Box sx={{ flex: 1 }} />
         <EventsSummary />
       </CardHeader>
+
       <EventsLogs />
+
       <Box sx={{ p: 1 }} />
     </Card>
   );
