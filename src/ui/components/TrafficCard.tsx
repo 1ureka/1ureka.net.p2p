@@ -1,13 +1,16 @@
 import FileUploadRoundedIcon from "@mui/icons-material/FileUploadRounded";
 import FileDownloadRoundedIcon from "@mui/icons-material/FileDownloadRounded";
 import QueryStatsRoundedIcon from "@mui/icons-material/QueryStatsRounded";
+
+import type { XAxis, YAxis } from "@mui/x-charts/models";
+import { LineChart, type LineSeries } from "@mui/x-charts/LineChart";
 import { Box, Typography } from "@mui/material";
 import { create } from "zustand";
 
+import { handleChangeTab } from "@/ui/tabs";
+import { centerTextSx, theme } from "@/ui/theme";
 import { GithubButton } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
-import { LineChart } from "@mui/x-charts/LineChart";
-import { centerTextSx, theme } from "@/ui/theme";
 
 type Point = { timestamp: number; rate: number };
 
@@ -36,39 +39,52 @@ const useTraffic = create<{ points: ReadonlyArray<Point> }>((set) => {
 
 // --------------------------------------------
 
+const createFormatter = (now: number) => {
+  const formatElapsed = (timestamp: number) => {
+    return `${Math.round((now - timestamp) / 1000)} s`;
+  };
+
+  const formatBytes = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    else if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    else return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  return { formatElapsed, formatBytes };
+};
+
 const TrafficChart = () => {
   const points = useTraffic((state) => state.points);
-
   const now = Date.now();
-  const recentPoints = points.filter((p) => p.timestamp >= now - 60000);
+  const { formatElapsed, formatBytes } = createFormatter(now);
+
+  const xAxis: XAxis<"linear"> = {
+    dataKey: "timestamp",
+    min: now - 60000,
+    max: now,
+    valueFormatter: formatElapsed,
+  };
+
+  const yAxis: YAxis<"linear"> = {
+    dataKey: "rate",
+    valueFormatter: formatBytes,
+  };
+
+  const series: LineSeries = {
+    dataKey: "rate",
+    showMark: false,
+    area: true,
+    curve: "linear",
+    color: theme.palette.primary.main,
+    valueFormatter: formatBytes,
+  };
 
   return (
     <LineChart
-      dataset={recentPoints}
-      xAxis={[
-        {
-          dataKey: "timestamp",
-          scaleType: "linear",
-          min: now - 60000,
-          max: now,
-          valueFormatter: (v: number) => `${Math.round((now - v) / 1000)} s`, // 距離現在經過多久
-        },
-      ]}
-      yAxis={[
-        {
-          valueFormatter: (v: number) => `${(v / 1024).toFixed(1)} KB`, // 把 bytes 轉成 KB
-        },
-      ]}
-      series={[
-        {
-          dataKey: "rate",
-          showMark: false,
-          area: true,
-          curve: "linear",
-          color: theme.palette.primary.main,
-          valueFormatter: (v: number) => `${(v / 1024).toFixed(1)} KB`, // tooltip 顯示
-        },
-      ]}
+      dataset={points}
+      xAxis={[xAxis]}
+      yAxis={[yAxis]}
+      series={[series]}
       height={250}
       grid={{ vertical: true, horizontal: true }}
       sx={{ "& .MuiAreaElement-root": { fill: "url(#Gradient)" }, mb: -2, ml: -1.5 }}
@@ -113,6 +129,7 @@ const TrafficCard = () => {
               <GithubButton
                 sx={{ py: 0.5, px: 1, bgcolor: "background.default" }}
                 startIcon={<QueryStatsRoundedIcon fontSize="small" />}
+                onClick={() => handleChangeTab("metrics")}
               >
                 <Typography variant="body2" sx={{ textTransform: "none", textWrap: "nowrap", ...centerTextSx }}>
                   open metrics

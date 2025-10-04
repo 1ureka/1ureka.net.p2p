@@ -3,6 +3,7 @@ import InfoOutlineRoundedIcon from "@mui/icons-material/InfoOutlineRounded";
 import { Box, Typography, type BoxProps } from "@mui/material";
 import { format } from "pretty-format";
 
+import { handleChangeTab } from "@/ui/tabs";
 import { centerTextSx, ellipsisSx } from "@/ui/theme";
 import { GithubButton } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
@@ -70,6 +71,7 @@ const EventsSummary = () => {
       <GithubButton
         sx={{ py: 0.5, px: 1, bgcolor: "background.default" }}
         startIcon={<ListAltRoundedIcon fontSize="small" />}
+        onClick={() => handleChangeTab("events")}
       >
         <Typography variant="button" sx={{ textTransform: "none", textWrap: "nowrap", ...centerTextSx }}>
           view all logs
