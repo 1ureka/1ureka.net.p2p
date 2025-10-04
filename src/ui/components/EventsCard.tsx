@@ -1,5 +1,7 @@
 import ListAltRoundedIcon from "@mui/icons-material/ListAltRounded";
+import InfoOutlineRoundedIcon from "@mui/icons-material/InfoOutlineRounded";
 import { Box, Typography, type BoxProps } from "@mui/material";
+
 import { centerTextSx, ellipsisSx } from "@/ui/theme";
 import { GithubButton } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
@@ -188,11 +190,32 @@ const EventsLog = ({ log }: { log: ConnectionLogEntry }) => {
   );
 };
 
+const NoItemDisplay = () => {
+  const title = "No events yet";
+  const description =
+    "There are no connection events to display. Logs will appear here once the system starts running.";
+  return (
+    <Box sx={{ display: "grid", placeItems: "center", height: 1 }}>
+      <Box sx={{ color: "text.secondary", display: "grid", placeItems: "center" }}>
+        <InfoOutlineRoundedIcon fontSize="large" sx={{ opacity: 0.5, mb: 1 }} />
+
+        <Typography variant="subtitle2" sx={{ color: "text.primary" }}>
+          {title}
+        </Typography>
+        <Typography variant="body2" sx={{ textAlign: "center", maxWidth: 400 }}>
+          {description}
+        </Typography>
+      </Box>
+    </Box>
+  );
+};
+
 const EventsLogs = () => {
-  const logs = generateMockLogs(50);
+  const logs = generateMockLogs(0);
 
   return (
     <Box sx={{ height: 350, overflow: "auto" }}>
+      {logs.length <= 0 && <NoItemDisplay />}
       {logs.map((log) => (
         <EventsLog key={log.id} log={log} />
       ))}
