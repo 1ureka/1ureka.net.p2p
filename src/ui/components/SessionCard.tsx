@@ -1,18 +1,27 @@
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import StopRoundedIcon from "@mui/icons-material/StopRounded";
 import { Box, Button, Typography } from "@mui/material";
 
 import { GithubButton } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
 import { centerTextSx, ellipsisSx } from "@/ui/theme";
 import { handleLeaveSession } from "@/ui/tabs";
-import type { ConnectionStatus } from "@/utils";
+import { type ConnectionStatus, useSession } from "@/transport/store";
+
+const green = "#4caf50";
+const red = "#f44336";
+const orange = "#ff9800";
+const gray = "#9e9e9e";
 
 const colorMap: Record<ConnectionStatus, string> = {
-  connected: "#4caf50",
-  failed: "#f44336",
-  connecting: "#ff9800",
-  disconnected: "#9e9e9e",
+  disconnected: gray,
+  joining: orange,
+  waiting: orange,
+  signaling: orange,
+  connected: green,
+  aborting: red,
+  failed: red,
 } as const;
 
 const ConnectionIndicator = ({ status }: { status: ConnectionStatus }) => (
@@ -70,6 +79,9 @@ const SessionCardCopyButton = () => {
 };
 
 const SessionCard = () => {
+  const session = useSession((state) => state.session);
+  const status = useSession((state) => state.status);
+
   return (
     <Card>
       <CardHeader>
@@ -79,50 +91,65 @@ const SessionCard = () => {
 
         <Box sx={{ flex: 1 }} />
 
-        <GithubButton
-          sx={{ py: 0.5, px: 1, bgcolor: "background.default" }}
-          startIcon={<LogoutRoundedIcon fontSize="small" color="error" />}
-          onClick={() => handleLeaveSession()}
-        >
-          <Typography
-            variant="button"
-            sx={{ textTransform: "none", textWrap: "nowrap", color: "error.main", ...centerTextSx }}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <GithubButton
+            sx={{ py: 0.5, px: 1, bgcolor: "background.default" }}
+            startIcon={<StopRoundedIcon fontSize="small" color="warning" />}
+            onClick={() => handleLeaveSession()}
           >
-            leave
-          </Typography>
-        </GithubButton>
+            <Typography
+              variant="button"
+              sx={{ textTransform: "none", textWrap: "nowrap", color: "warning.main", ...centerTextSx }}
+            >
+              stop
+            </Typography>
+          </GithubButton>
+
+          <GithubButton
+            sx={{ py: 0.5, px: 1, bgcolor: "background.default" }}
+            startIcon={<LogoutRoundedIcon fontSize="small" color="error" />}
+            onClick={() => handleLeaveSession()}
+          >
+            <Typography
+              variant="button"
+              sx={{ textTransform: "none", textWrap: "nowrap", color: "error.main", ...centerTextSx }}
+            >
+              leave
+            </Typography>
+          </GithubButton>
+        </Box>
       </CardHeader>
 
       <Box sx={{ display: "grid", gridTemplateColumns: "0.3fr 1fr", gap: 2, p: 2.5, px: 3 }}>
         <SessionCardLabel>Status</SessionCardLabel>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-          <ConnectionIndicator status="connected" />
-          <Typography variant="body2" sx={{ color: "success.main", ...ellipsisSx }}>
-            Connected
+          <ConnectionIndicator status={status} />
+          <Typography variant="body2" sx={{ color: colorMap[status], ...ellipsisSx }}>
+            {status.charAt(0).toUpperCase() + status.slice(1)}
           </Typography>
         </Box>
 
         <SessionCardLabel>Host</SessionCardLabel>
         <Typography variant="body2" sx={ellipsisSx}>
-          Laptop-Z1FK8
+          {session.host || "--"}
         </Typography>
 
         <SessionCardLabel>Client</SessionCardLabel>
         <Typography variant="body2" sx={ellipsisSx}>
-          --
+          {session.client || "--"}
         </Typography>
 
         <SessionCardLabel>Session ID</SessionCardLabel>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Typography variant="body2" sx={ellipsisSx}>
-            123e4567-e89b-12d3-a456-426614174000
+            {session.id || "--"}
           </Typography>
           <SessionCardCopyButton />
         </Box>
 
         <SessionCardLabel>Created at</SessionCardLabel>
         <Typography variant="body2" sx={ellipsisSx}>
-          {new Date().toLocaleString()}
+          {new Date(session.createdAt).toLocaleString()}
         </Typography>
       </Box>
     </Card>
