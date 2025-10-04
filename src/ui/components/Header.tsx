@@ -2,7 +2,7 @@ import DirectionsBoatRoundedIcon from "@mui/icons-material/DirectionsBoatRounded
 import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
 import { Box, BoxProps, Button, Tab, Tabs, Typography } from "@mui/material";
 import { centerTextSx } from "@/ui/theme";
-import { useTabs } from "@/ui/tabs";
+import { useTabs, handleChangeTab } from "@/ui/tabs";
 
 const HeaderTitle = () => {
   return (
@@ -31,12 +31,12 @@ const HeaderLinks = () => {
 };
 
 const HeaderTabs = () => {
-  const { tab, tabs, setTab } = useTabs();
+  const { tab, tabs } = useTabs();
 
   return (
     <Tabs
       value={tab}
-      onChange={(_, v) => setTab(v)}
+      onChange={(_, v) => handleChangeTab(v)}
       slotProps={{ indicator: { children: <span className="MuiTabs-indicatorSpan" /> } }}
       sx={{
         mt: 2.5,

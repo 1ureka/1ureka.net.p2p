@@ -2,11 +2,9 @@ import { Box, Typography } from "@mui/material";
 import { GithubButton, GithubTextField } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
 import { centerTextSx } from "@/ui/theme";
-import { useTabs } from "@/ui/tabs";
+import { handleCreateSession, handleJoinSession } from "@/ui/tabs";
 
 const CreateSessionCard = () => {
-  const launch = useTabs((state) => state.launch);
-
   return (
     <Card>
       <CardHeader>
@@ -26,7 +24,7 @@ const CreateSessionCard = () => {
         </Typography>
 
         <Box sx={{ my: 1.5 }}>
-          <GithubButton size="small" fullWidth color="inherit" onClick={() => launch(true)}>
+          <GithubButton size="small" fullWidth color="inherit" onClick={() => handleCreateSession()}>
             Create
           </GithubButton>
         </Box>
@@ -36,8 +34,6 @@ const CreateSessionCard = () => {
 };
 
 const JoinSessionCard = () => {
-  const launch = useTabs((state) => state.launch);
-
   return (
     <Card>
       <CardHeader>
@@ -58,7 +54,7 @@ const JoinSessionCard = () => {
 
         <Box sx={{ my: 1.5, display: "flex", gap: 1, flexDirection: "column" }}>
           <GithubTextField fullWidth size="small" label="Session ID" placeholder="Enter Session ID" />
-          <GithubButton size="small" fullWidth color="inherit" onClick={() => launch(true)}>
+          <GithubButton size="small" fullWidth color="inherit" onClick={() => handleJoinSession()}>
             Join
           </GithubButton>
         </Box>

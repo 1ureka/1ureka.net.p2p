@@ -5,7 +5,7 @@ import { Box, Button, Typography } from "@mui/material";
 import { GithubButton } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
 import { centerTextSx, ellipsisSx } from "@/ui/theme";
-import { useTabs } from "@/ui/tabs";
+import { handleLeaveSession } from "@/ui/tabs";
 import type { ConnectionStatus } from "@/utils";
 
 const colorMap: Record<ConnectionStatus, string> = {
@@ -70,8 +70,6 @@ const SessionCardCopyButton = () => {
 };
 
 const SessionCard = () => {
-  const launch = useTabs((state) => state.launch);
-
   return (
     <Card>
       <CardHeader>
@@ -84,7 +82,7 @@ const SessionCard = () => {
         <GithubButton
           sx={{ py: 0.5, px: 1, bgcolor: "background.default" }}
           startIcon={<LogoutRoundedIcon fontSize="small" color="error" />}
-          onClick={() => launch(false)}
+          onClick={() => handleLeaveSession()}
         >
           <Typography
             variant="button"

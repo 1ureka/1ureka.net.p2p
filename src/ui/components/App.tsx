@@ -4,10 +4,28 @@ import { motion, AnimatePresence } from "motion/react";
 import { Header } from "@/ui/components/Header";
 import { EventsCard } from "@/ui/components/EventsCard";
 import { SessionCard } from "@/ui/components/SessionCard";
-import { MappingCard } from "@/ui/components/RouteCard";
 import { TrafficCard } from "@/ui/components/TrafficCard";
+import { MappingCard, RuleCard } from "@/ui/components/RouteCard";
 import { CreateSessionCard, JoinSessionCard } from "@/ui/components/LaunchCard";
 import { useTabs } from "@/ui/tabs";
+
+const HostPage = () => {
+  return (
+    <>
+      <Box sx={{ display: "grid", gridTemplateColumns: "0.75fr 1fr", gap: 2, px: 4, py: 3 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <SessionCard />
+          <RuleCard />
+        </Box>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <TrafficCard />
+          <EventsCard />
+        </Box>
+      </Box>
+      <Box sx={{ flexGrow: 1 }} />
+    </>
+  );
+};
 
 const ClientPage = () => {
   return (
@@ -74,17 +92,23 @@ const PageWrapperProps = {
 } as const;
 
 const Pages = () => {
-  const page = useTabs((state) => state.page);
+  const tab = useTabs((state) => state.tab);
+  const role = useTabs((state) => state.role);
 
   return (
     <AnimatePresence mode="wait">
-      {page === "launch" && (
-        <Box key="launch" {...PageWrapperProps}>
+      {tab === "overview" && role === null && (
+        <Box key="overview-null" {...PageWrapperProps}>
           <LaunchPage />
         </Box>
       )}
-      {page === "overview" && (
-        <Box key="overview" {...PageWrapperProps}>
+      {tab === "overview" && role === "host" && (
+        <Box key="overview-host" {...PageWrapperProps}>
+          <HostPage />
+        </Box>
+      )}
+      {tab === "overview" && role === "client" && (
+        <Box key="overview-client" {...PageWrapperProps}>
           <ClientPage />
         </Box>
       )}

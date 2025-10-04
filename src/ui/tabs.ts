@@ -1,33 +1,46 @@
 import { create } from "zustand";
 
-type Page = "launch" | "overview" | "events" | "metrics";
-type Tab = { label: string; value: string; disabled: boolean };
+type Role = "host" | "client";
+type Tab = "overview" | "events" | "metrics";
+type TabEntry = { label: string; value: Tab; disabled: boolean };
 
-const defaultTabs: Tab[] = [
+const defaultTabs: TabEntry[] = [
   { label: "Overview", value: "overview", disabled: false },
   { label: "Events", value: "events", disabled: true },
   { label: "Metrics", value: "metrics", disabled: true },
 ];
 
 interface TabsState {
-  tab: Tab["value"];
-  tabs: Tab[];
-  setTab: (tab: Tab["value"]) => void;
-
-  page: Page;
-  launch: (launch: boolean) => void;
+  role: Role | null;
+  tab: Tab;
+  tabs: TabEntry[];
 }
 
-export const useTabs = create<TabsState>((set) => ({
+const useTabs = create<TabsState>((set) => ({
+  role: null,
   tab: "overview",
   tabs: [...defaultTabs],
-  setTab: (tab) => set({ tab }),
-
-  page: "launch",
-  launch: (launch) => {
-    const page = launch ? "overview" : "launch";
-    const tab = "overview";
-    const tabs = launch ? [...defaultTabs.map((tab) => ({ ...tab, disabled: false }))] : [...defaultTabs];
-    set(() => ({ page, tab, tabs }));
-  },
 }));
+
+const handleCreateSession = () => {
+  // TODO: 在這裡呼叫後端
+  useTabs.setState({ role: "host", tab: "overview", tabs: defaultTabs.map((t) => ({ ...t, disabled: false })) });
+};
+
+const handleJoinSession = () => {
+  // TODO: 在這裡呼叫後端
+  useTabs.setState({ role: "client", tab: "overview", tabs: defaultTabs.map((t) => ({ ...t, disabled: false })) });
+};
+
+const handleLeaveSession = () => {
+  // TODO: 在這裡呼叫後端
+  useTabs.setState({ role: null, tab: "overview", tabs: [...defaultTabs] });
+};
+
+const handleChangeTab = (tab: Tab) => {
+  const role = useTabs.getState().role;
+  if (!role && tab !== "overview") return;
+  useTabs.setState({ tab });
+};
+
+export { useTabs, handleCreateSession, handleJoinSession, handleLeaveSession, handleChangeTab };
