@@ -20,7 +20,7 @@ const createWindow = () => {
     width: 1250,
     height: 800,
     webPreferences: { preload: path.join(__dirname, "preload.js") },
-    backgroundColor: "#3C3C3C",
+    backgroundColor: "#212830",
   });
 
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
