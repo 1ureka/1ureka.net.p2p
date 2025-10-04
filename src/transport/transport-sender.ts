@@ -1,10 +1,12 @@
-import { reportError } from "@/transport/store";
+import { controller } from "@/transport/store";
 
 /**
  * 為 RTCDataChannel 創建一個發送器，確保在緩衝區滿時不會丟失資料。
  * 當緩衝區超過指定閾值時，會暫停發送，直到緩衝區降到閾值以下。
  */
 function createDataChannelSender(dataChannel: RTCDataChannel, threshold = 64 * 1024) {
+  const { reportError } = controller;
+
   const queue: (ArrayBuffer | ArrayBufferView<ArrayBuffer>)[] = [];
   let closed = false;
   let draining = false;

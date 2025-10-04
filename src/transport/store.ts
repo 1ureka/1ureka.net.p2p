@@ -1,55 +1,55 @@
 import { create } from "zustand";
-import type { ConnectionStatus, ConnectionLogEntry } from "@/utils";
+import type { ConnectionLogEntry } from "@/utils";
 import type { Session } from "@/transport/session-utils";
 import { startSession } from "@/transport/session";
 
-// 給 UI 使用 (read only + handler)
+/**
+ * Connection Status FSM 狀態機
+ */
+type ConnectionStatus = "disconnected" | "joining" | "waiting" | "signaling" | "connected" | "aborting" | "failed";
+const validTransitions: Record<ConnectionStatus, ConnectionStatus[]> = {
+  disconnected: ["joining"],
+  joining: ["waiting", "failed", "aborting"],
+  waiting: ["signaling", "failed", "aborting"],
+  signaling: ["connected", "failed", "aborting"],
+  connected: ["failed", "aborting"],
+  aborting: ["failed"],
+  failed: ["disconnected"],
+};
 
+/**
+ * 全域狀態管理 (Zustand)
+ */
 type SessionState = {
   status: ConnectionStatus;
   history: ConnectionLogEntry[];
   session: Session;
 };
-
 const useSession = create<SessionState>(() => ({
   status: "disconnected",
   history: [],
-  session: { id: "", host: "", client: "", status: "waiting", createdAt: "", signal: {} },
+  session: { id: "", host: "", client: "", createdAt: "", signal: {} },
 }));
 
-const preHandle = () => {
-  const { status } = useSession.getState();
+/**
+ * 狀態轉換函式 (有驗證轉換合法性) --- 回傳是否成功轉換
+ */
+const setStatus = (status: ConnectionStatus): boolean => {
+  const { status: current } = useSession.getState();
 
-  if (status === "connecting" || status === "connected") {
-    useSession.setState((prev) => ({ ...prev, status: "failed" }));
-    reportError({ message: "Connection has already been established or is in progress" });
+  const validNextStatuses = validTransitions[current];
+  if (!validNextStatuses.includes(status)) {
+    reportError({ message: `Invalid status transition from ${current} to ${status}` });
     return false;
   }
 
-  useSession.setState((prev) => ({ ...prev, status: "connecting", history: [] }));
+  useSession.setState({ status });
   return true;
 };
 
-const handleCreateSession = async () => {
-  if (!preHandle()) return;
-  const result = await startSession();
-  if (!result) useSession.setState((prev) => ({ ...prev, status: "failed" }));
-};
-
-const handleJoinSession = async (sessionId: string) => {
-  if (!preHandle()) return;
-  const result = await startSession(sessionId);
-  if (!result) useSession.setState((prev) => ({ ...prev, status: "failed" }));
-};
-
-export { useSession, handleCreateSession, handleJoinSession };
-
-// 給邏輯使用 (set only)
-
-const setSessionState = (session: Session) => {
-  useSession.setState((prev) => ({ ...prev, session }));
-};
-
+/**
+ * 日誌紀錄基礎函式
+ */
 const report = (entry: Omit<ConnectionLogEntry, "id" | "timestamp" | "module">) => {
   const logEntry: ConnectionLogEntry = {
     ...entry,
@@ -69,4 +69,56 @@ const reportLog: ReportMethod = (entry) => report({ ...entry, level: "info" });
 const reportError: ReportMethod = (entry) => report({ ...entry, level: "error" });
 const reportWarn: ReportMethod = (entry) => report({ ...entry, level: "warn" });
 
-export { reportLog, reportError, reportWarn, setSessionState };
+/**
+ * UI 事件處理函式
+ */
+const handlers = {
+  handleCreateSession() {
+    if (!setStatus("joining")) return;
+    startSession();
+  },
+  handleJoinSession(sessionId: string) {
+    if (!setStatus("joining")) return;
+    startSession(sessionId);
+  },
+  handleStop() {
+    if (!setStatus("aborting")) return;
+    reportWarn({ message: "Stop requested by user" });
+  },
+  handleLeave() {
+    if (!setStatus("disconnected")) return;
+    useSession.setState({ session: { id: "", host: "", client: "", createdAt: "", signal: {} }, history: [] });
+  },
+};
+
+/**
+ * 流程邏輯使用
+ */
+const controller = {
+  /** 狀態轉換函式 (有驗證轉換合法性) --- 回傳是否成功轉換 */
+  setStatus,
+  /** 設定會話資訊 */
+  setSession(session: Session) {
+    useSession.setState({ session });
+  },
+  /** 取得是否為 aborted 狀態，用於流程中判斷是否中斷 */
+  get aborted() {
+    return useSession.getState().status === "aborting";
+  },
+  /** 訂閱一次 aborted 狀態，用於連線後中斷處理 */
+  onceAborted(callback: () => void) {
+    const unsub = useSession.subscribe((state) => {
+      if (state.status !== "aborting") return;
+      callback();
+      unsub();
+    });
+  },
+
+  // 日誌紀錄函式
+  reportLog,
+  reportError,
+  reportWarn,
+};
+
+export { useSession, handlers, controller };
+export type { ConnectionStatus };
