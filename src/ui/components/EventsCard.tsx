@@ -65,7 +65,6 @@ const EventsSummary = () => {
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, color: "text.secondary" }}>
       <GithubButton
-        color="inherit"
         sx={{ py: 0.5, px: 1, bgcolor: "background.default" }}
         startIcon={<ListAltRoundedIcon fontSize="small" />}
       >

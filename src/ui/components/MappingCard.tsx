@@ -3,7 +3,7 @@ import SignpostRoundedIcon from "@mui/icons-material/SignpostRounded";
 import StopRoundedIcon from "@mui/icons-material/StopRounded";
 import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Typography, Tooltip, Zoom } from "@mui/material";
 import { centerTextSx, ellipsisSx } from "@/ui/theme";
 import { GithubButton } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
@@ -26,8 +26,7 @@ const MappingCardListItem = ({ index, content, elapsed }: { index: number; conte
         gridAutoRows: "auto",
         gap: 0.5,
         "& div:nth-of-type(2n)": { justifySelf: "end" },
-        py: 1.5,
-        px: 3,
+        p: 1.5,
       }}
     >
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "text.secondary" }}>
@@ -36,12 +35,16 @@ const MappingCardListItem = ({ index, content, elapsed }: { index: number; conte
       </Box>
 
       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-        <Button sx={{ minWidth: 0, p: 0.5 }} color="inherit">
-          <StopRoundedIcon fontSize="small" />
-        </Button>
-        <Button sx={{ minWidth: 0, p: 0.5 }} color="inherit">
-          <DeleteForeverRoundedIcon fontSize="small" />
-        </Button>
+        <Tooltip title="Stop mapping" arrow placement="left" slots={{ transition: Zoom }}>
+          <GithubButton sx={{ minWidth: 0, p: 0.2 }} color="inherit">
+            <StopRoundedIcon fontSize="small" />
+          </GithubButton>
+        </Tooltip>
+        <Tooltip title="Delete mapping" arrow placement="right" slots={{ transition: Zoom }}>
+          <GithubButton sx={{ minWidth: 0, p: 0.2 }} color="inherit">
+            <DeleteForeverRoundedIcon fontSize="small" />
+          </GithubButton>
+        </Tooltip>
       </Box>
 
       <Box>
@@ -70,6 +73,7 @@ const MappingCardList = ({ children }: { children: React.ReactNode }) => {
           borderTop: "1px solid",
           borderBottom: "1px solid",
           borderColor: "divider",
+          "& button": { bgcolor: "background.default" },
         },
       }}
     >

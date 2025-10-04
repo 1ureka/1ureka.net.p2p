@@ -111,7 +111,6 @@ const TrafficCard = () => {
 
             <Box sx={{ color: "text.secondary" }}>
               <GithubButton
-                color="inherit"
                 sx={{ py: 0.5, px: 1, bgcolor: "background.default" }}
                 startIcon={<QueryStatsRoundedIcon fontSize="small" />}
               >
