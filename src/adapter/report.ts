@@ -1,7 +1,7 @@
+import { getWindow } from "@/main";
 import { IPCChannel } from "@/ipc";
 import { createStore } from "zustand/vanilla";
 import { randomUUID } from "crypto";
-import type { BrowserWindow } from "electron";
 import type { ConnectionLogEntry } from "@/utils";
 import type { SocketPair } from "@/adapter/ip";
 
@@ -15,7 +15,9 @@ const getReportMethods = (level: "info" | "warn" | "error") => {
   return console.error;
 };
 
-const createReporter = (module: string, win: BrowserWindow) => {
+const createReporter = (module: string) => {
+  const win = getWindow();
+
   const report = (entry: Omit<ConnectionLogEntry, "id" | "timestamp" | "module">) => {
     const logEntry: ConnectionLogEntry = { ...entry, module, timestamp: Date.now(), id: randomUUID() };
 
