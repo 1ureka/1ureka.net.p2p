@@ -84,6 +84,7 @@ const SessionCard = () => {
   const stopLoading = status === "aborting";
   const stopDisabled = ["disconnected", "joining", "aborting", "failed"].includes(status);
   const leaveDisabled = status !== "failed";
+  const statusString = status === "failed" ? "Stopped" : status.charAt(0).toUpperCase() + status.slice(1);
 
   return (
     <Card>
@@ -121,7 +122,7 @@ const SessionCard = () => {
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
           <ConnectionIndicator status={status} />
           <Typography variant="body2" sx={{ color: colorMap[status], ...ellipsisSx }}>
-            {status.charAt(0).toUpperCase() + status.slice(1)}
+            {statusString}
           </Typography>
         </Box>
 
