@@ -110,6 +110,11 @@ const controller = {
   },
   /** 訂閱一次 aborted 狀態，用於連線後中斷處理 */
   onceAborted(callback: () => void) {
+    if (useSession.getState().status === "aborting") {
+      callback();
+      return;
+    }
+
     const unsub = useSession.subscribe((state) => {
       if (state.status !== "aborting") return;
       callback();
