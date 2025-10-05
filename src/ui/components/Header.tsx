@@ -2,7 +2,8 @@ import DirectionsBoatRoundedIcon from "@mui/icons-material/DirectionsBoatRounded
 import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
 import { Box, BoxProps, Button, Tab, Tabs, Typography } from "@mui/material";
 import { centerTextSx } from "@/ui/theme";
-import { useTabs, handleChangeTab } from "@/ui/tabs";
+import { useTab, type TabEntry } from "@/ui/tabs";
+import { useSession } from "@/transport/store";
 
 const HeaderTitle = () => {
   return (
@@ -31,12 +32,19 @@ const HeaderLinks = () => {
 };
 
 const HeaderTabs = () => {
-  const { tab, tabs } = useTabs();
+  const status = useSession((state) => state.status);
+  const { tab, setTab } = useTab();
+
+  const tabs: TabEntry[] = [
+    { label: "Overview", value: "overview", disabled: false },
+    { label: "Events", value: "events", disabled: ["disconnected", "joining"].includes(status) },
+    { label: "Metrics", value: "metrics", disabled: ["disconnected", "joining"].includes(status) },
+  ];
 
   return (
     <Tabs
       value={tab}
-      onChange={(_, v) => handleChangeTab(v)}
+      onChange={(_, v) => setTab(v)}
       slotProps={{ indicator: { children: <span className="MuiTabs-indicatorSpan" /> } }}
       sx={{
         mt: 2.5,

@@ -7,7 +7,8 @@ import { SessionCard } from "@/ui/components/SessionCard";
 import { TrafficCard } from "@/ui/components/TrafficCard";
 import { MappingCard, RuleCard } from "@/ui/components/RouteCard";
 import { CreateSessionCard, JoinSessionCard } from "@/ui/components/LaunchCard";
-import { useTabs } from "@/ui/tabs";
+import { useTab } from "@/ui/tabs";
+import { useSession } from "@/transport/store";
 
 const HostPage = () => {
   return (
@@ -92,22 +93,25 @@ const PageWrapperProps = {
 } as const;
 
 const Pages = () => {
-  const tab = useTabs((state) => state.tab);
-  const role = useTabs((state) => state.role);
+  const status = useSession((state) => state.status);
+  const role = useSession((state) => state.role);
+  const tab = useTab((state) => state.tab);
+
+  const overviewType = ["disconnected", "joining"].includes(status) ? null : role;
 
   return (
     <AnimatePresence mode="wait">
-      {tab === "overview" && role === null && (
+      {tab === "overview" && overviewType === null && (
         <Box key="overview-null" {...PageWrapperProps}>
           <LaunchPage />
         </Box>
       )}
-      {tab === "overview" && role === "host" && (
+      {tab === "overview" && overviewType === "host" && (
         <Box key="overview-host" {...PageWrapperProps}>
           <HostPage />
         </Box>
       )}
-      {tab === "overview" && role === "client" && (
+      {tab === "overview" && overviewType === "client" && (
         <Box key="overview-client" {...PageWrapperProps}>
           <ClientPage />
         </Box>
