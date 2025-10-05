@@ -1,6 +1,6 @@
 import { styled } from "@mui/material/styles";
 import { Button, type ButtonProps, TextField, Typography } from "@mui/material";
-import { centerTextSx } from "@/ui/theme";
+import { centerTextSx, generateColorMix, theme } from "@/ui/theme";
 import type { SvgIconComponent } from "@mui/icons-material";
 
 const GithubTextField = styled(TextField)(({ theme }) => ({
@@ -28,22 +28,40 @@ const GithubButton = styled(Button)(({ theme }) => ({
   fontWeight: "bold",
 }));
 
-type GithubHeaderButtonProps = Omit<ButtonProps, "children" | "startIcon" | "endIcon"> & {
+type GithubHeaderButtonProps = Omit<ButtonProps, "children" | "startIcon" | "endIcon" | "color"> & {
+  color?: "primary" | "secondary" | "success" | "error" | "info" | "warning";
   children: string;
   StartIcon?: SvgIconComponent;
   EndIcon?: SvgIconComponent;
 };
 
 const GithubHeaderButton = ({ sx, color, children, StartIcon, EndIcon, ...props }: GithubHeaderButtonProps) => {
+  const buttonSx: ButtonProps["sx"] = {
+    py: 0.5,
+    px: 1,
+    bgcolor: "background.default",
+    color: color ? `${color}.main` : undefined,
+    borderColor: color ? generateColorMix(theme.palette[color].main, "#0000", 50) : undefined,
+    ...sx,
+  };
+
+  const textSx: ButtonProps["sx"] = {
+    textTransform: "none",
+    textWrap: "nowrap",
+    color: "inherit",
+    ...centerTextSx,
+  };
+
   return (
     <GithubButton
-      sx={{ py: 0.5, px: 1, bgcolor: "background.default", color: color ? `${color}.main` : undefined, ...sx }}
+      sx={buttonSx}
       startIcon={StartIcon ? <StartIcon fontSize="small" /> : null}
       endIcon={EndIcon ? <EndIcon fontSize="small" /> : null}
       color={color}
+      variant="outlined"
       {...props}
     >
-      <Typography variant="body2" sx={{ textTransform: "none", textWrap: "nowrap", color: "inherit", ...centerTextSx }}>
+      <Typography variant="body2" sx={textSx}>
         {children}
       </Typography>
     </GithubButton>
