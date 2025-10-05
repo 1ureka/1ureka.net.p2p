@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import type { ConnectionLogEntry } from "@/utils";
 import type { Session } from "@/transport/session-utils";
-import { startSession } from "@/transport/session";
+import { createHostSession } from "@/transport/session-host";
+import { createClientSession } from "@/transport/session-client";
 
 /**
  * Connection Status FSM 狀態機
@@ -21,11 +22,13 @@ const validTransitions: Record<ConnectionStatus, ConnectionStatus[]> = {
  * 全域狀態管理 (Zustand)
  */
 type SessionState = {
+  role: "host" | "client";
   status: ConnectionStatus;
   history: ConnectionLogEntry[];
   session: Session;
 };
 const useSession = create<SessionState>(() => ({
+  role: "host",
   status: "disconnected",
   history: [],
   session: { id: "", host: "", client: "", createdAt: "", signal: {} },
@@ -74,12 +77,12 @@ const reportWarn: ReportMethod = (entry) => report({ ...entry, level: "warn" });
  */
 const handlers = {
   handleCreateSession() {
-    if (!setStatus("joining")) return;
-    startSession();
+    useSession.setState({ role: "host" });
+    createHostSession();
   },
   handleJoinSession(sessionId: string) {
-    if (!setStatus("joining")) return;
-    startSession(sessionId);
+    useSession.setState({ role: "client" });
+    createClientSession(sessionId);
   },
   handleStop() {
     if (!setStatus("aborting")) return;
