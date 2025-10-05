@@ -10,8 +10,8 @@ import { SocketPairMap, stringifySocketPair, type SocketPair } from "@/adapter/i
 /**
  * 建立 Host 端的 Adapter (連接到本地的 TCP 伺服器)
  */
-function createHostAdapter(win: BrowserWindow, reporter: ReturnType<typeof createReporter>) {
-  const { reportLog, reportWarn, reportError, reportConnection } = reporter;
+function createHostAdapter(win: BrowserWindow) {
+  const { reportLog, reportWarn, reportError, reportConnection } = createReporter("Host");
 
   const chunker = createChunker();
   const reassembler = createReassembler();

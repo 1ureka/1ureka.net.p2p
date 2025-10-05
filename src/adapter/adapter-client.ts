@@ -12,8 +12,8 @@ import { defer, tryCatchSync } from "@/utils";
 /**
  * 建立 Client 端的 Adapter (建立虛擬 TCP 伺服器讓本地的 TCP 客戶端連接)
  */
-function createClientAdapter(win: BrowserWindow, reporter: ReturnType<typeof createReporter>) {
-  const { reportLog, reportError, reportConnection } = reporter;
+function createClientAdapter(win: BrowserWindow) {
+  const { reportLog, reportError, reportConnection } = createReporter("Client");
 
   const chunker = createChunker();
   const reassembler = createReassembler();

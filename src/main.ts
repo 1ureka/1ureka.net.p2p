@@ -4,8 +4,7 @@ import started from "electron-squirrel-startup";
 
 import { app, BrowserWindow, Menu, ipcMain } from "electron";
 import { createReporter } from "@/adapter/report";
-import { startClientAdapterService } from "@/adapter/adapter-client";
-import { startHostAdapterService } from "@/adapter/adapter-host";
+import { createAdapterService } from "@/adapter/adapter-service";
 import { IPCChannel } from "@/ipc";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -49,9 +48,10 @@ export const getWindow = () => {
 
 const handleReady = () => {
   createWindow();
+  createAdapterService();
+  const { reportLog } = createReporter("main");
 
   ipcMain.handle(IPCChannel.OSInfo, () => {
-    const { reportLog } = createReporter("main", getWindow());
     reportLog({ message: "Getting OS hostname" });
     return os.hostname();
   });
