@@ -33,3 +33,7 @@ export const ellipsisSx = {
 export const centerTextSx = {
   textBox: "trim-both cap alphabetic",
 };
+
+export const generateColorMix = (color1: string, color2: string, percentage: number) => {
+  return `color-mix(in srgb, ${color1} ${percentage}%, ${color2} ${100 - percentage}%)`;
+};
