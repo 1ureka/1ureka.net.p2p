@@ -13,6 +13,15 @@ export async function tryCatch<T>(promise: Promise<T>): Promise<Result<T>> {
   }
 }
 
+export function tryCatchSync<T>(fn: () => T): Result<T> {
+  try {
+    const data = fn();
+    return { data, error: null };
+  } catch (err: unknown) {
+    return { data: null, error: err instanceof Error ? err : new Error(String(err)) };
+  }
+}
+
 export function defer<T>() {
   let resolve!: (value: T | PromiseLike<T>) => void;
   let reject!: (reason: Error) => void;
