@@ -108,6 +108,10 @@ class SocketPairMap<V> extends AbstractSocketPairCollection {
   get size(): number {
     return this.map.size;
   }
+
+  values(): MapIterator<V> {
+    return this.map.values();
+  }
 }
 
 /**
