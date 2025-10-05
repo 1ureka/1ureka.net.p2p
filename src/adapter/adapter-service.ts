@@ -29,7 +29,7 @@ const createAdapterService = () => {
     ipcMain.handle(IPCChannel.AdapterCreateRule, handleCreateRule);
     ipcMain.handle(IPCChannel.AdapterRemoveRule, handleRemoveRule);
 
-    ipcMain.once(IPCChannel.AdapterStop, () => {
+    ipcMain.handleOnce(IPCChannel.AdapterStop, () => {
       ipcMain.off(IPCChannel.FromRTC, handlePacketFromRTC);
       ipcMain.removeHandler(IPCChannel.AdapterCreateRule);
       ipcMain.removeHandler(IPCChannel.AdapterRemoveRule);
@@ -58,7 +58,7 @@ const createAdapterService = () => {
     ipcMain.handle(IPCChannel.AdapterCreateMapping, handleCreateMapping);
     ipcMain.handle(IPCChannel.AdapterRemoveMapping, handleRemoveMapping);
 
-    ipcMain.once(IPCChannel.AdapterStop, () => {
+    ipcMain.handleOnce(IPCChannel.AdapterStop, () => {
       ipcMain.off(IPCChannel.FromRTC, handlePacketFromRTC);
       ipcMain.removeHandler(IPCChannel.AdapterCreateMapping);
       ipcMain.removeHandler(IPCChannel.AdapterRemoveMapping);
