@@ -9,7 +9,7 @@ import { useSession } from "@/transport/store";
 import type { ConnectionLogEntry, ConnectionLogLevel } from "@/utils";
 
 import { centerTextSx, ellipsisSx } from "@/ui/theme";
-import { GithubButton } from "@/ui/components/Github";
+import { GithubHeaderButton } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
 
 const formatLevel = (level: ConnectionLogLevel) => {
@@ -58,15 +58,9 @@ const EventsSummary = () => {
 
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, color: "text.secondary" }}>
-      <GithubButton
-        sx={{ py: 0.5, px: 1, bgcolor: "background.default" }}
-        startIcon={<ListAltRoundedIcon fontSize="small" />}
-        onClick={() => setTab("events")}
-      >
-        <Typography variant="button" sx={{ textTransform: "none", textWrap: "nowrap", ...centerTextSx }}>
-          view all logs
-        </Typography>
-      </GithubButton>
+      <GithubHeaderButton StartIcon={ListAltRoundedIcon} onClick={() => setTab("events")}>
+        view all logs
+      </GithubHeaderButton>
 
       <Chip color={warningCount > 0 ? "warning.main" : "text.secondary"} text={`${warningCount} warnings`} />
       <Chip color={errorCount > 0 ? "error.main" : "text.secondary"} text={`${errorCount} errors`} />

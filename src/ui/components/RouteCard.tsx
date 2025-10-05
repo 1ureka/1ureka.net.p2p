@@ -6,7 +6,7 @@ import InfoOutlineRoundedIcon from "@mui/icons-material/InfoOutlineRounded";
 
 import { Box, Typography, Tooltip, Zoom } from "@mui/material";
 import { centerTextSx, ellipsisSx } from "@/ui/theme";
-import { GithubButton } from "@/ui/components/Github";
+import { GithubButton, GithubHeaderButton } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
 
 function formatElapsed(elapsed: number) {
@@ -141,14 +141,7 @@ const MappingCard = () => {
 
         <Box sx={{ flexGrow: 1 }} />
 
-        <GithubButton
-          sx={{ py: 0.5, px: 1, bgcolor: "background.default" }}
-          startIcon={<AddBoxRoundedIcon fontSize="small" />}
-        >
-          <Typography variant="body2" sx={{ textTransform: "none", textWrap: "nowrap", ...centerTextSx }}>
-            add
-          </Typography>
-        </GithubButton>
+        <GithubHeaderButton StartIcon={AddBoxRoundedIcon}>add</GithubHeaderButton>
       </CardHeader>
 
       {fakeData.length <= 0 && <NoItemDisplay type="mapping" />}
@@ -183,11 +176,7 @@ const RuleCard = () => {
 
         <Box sx={{ flexGrow: 1 }} />
 
-        <GithubButton sx={{ py: 0.5, px: 1, bgcolor: "background.default" }} startIcon={<AddBoxRoundedIcon />}>
-          <Typography variant="body2" sx={{ textTransform: "none", textWrap: "nowrap", ...centerTextSx }}>
-            add
-          </Typography>
-        </GithubButton>
+        <GithubHeaderButton StartIcon={AddBoxRoundedIcon}>add</GithubHeaderButton>
       </CardHeader>
 
       {fakeData.length <= 0 && <NoItemDisplay type="rule" />}

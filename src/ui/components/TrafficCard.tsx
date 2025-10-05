@@ -8,8 +8,8 @@ import { Box, Typography } from "@mui/material";
 import { create } from "zustand";
 
 import { useTab } from "@/ui/tabs";
-import { centerTextSx, theme } from "@/ui/theme";
-import { GithubButton } from "@/ui/components/Github";
+import { theme } from "@/ui/theme";
+import { GithubHeaderButton } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
 
 type Point = { timestamp: number; rate: number };
@@ -128,15 +128,9 @@ const TrafficCard = () => {
             <Box sx={{ flex: 1 }} />
 
             <Box sx={{ color: "text.secondary" }}>
-              <GithubButton
-                sx={{ py: 0.5, px: 1, bgcolor: "background.default" }}
-                startIcon={<QueryStatsRoundedIcon fontSize="small" />}
-                onClick={() => setTab("metrics")}
-              >
-                <Typography variant="body2" sx={{ textTransform: "none", textWrap: "nowrap", ...centerTextSx }}>
-                  open metrics
-                </Typography>
-              </GithubButton>
+              <GithubHeaderButton StartIcon={QueryStatsRoundedIcon} onClick={() => setTab("metrics")}>
+                open metrics
+              </GithubHeaderButton>
             </Box>
           </CardHeader>
 

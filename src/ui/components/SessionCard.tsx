@@ -3,9 +3,9 @@ import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import StopRoundedIcon from "@mui/icons-material/StopRounded";
 import { Box, Button, Typography } from "@mui/material";
 
-import { GithubButton } from "@/ui/components/Github";
+import { GithubHeaderButton } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
-import { centerTextSx, ellipsisSx } from "@/ui/theme";
+import { ellipsisSx } from "@/ui/theme";
 import { type ConnectionStatus, useSession, handlers } from "@/transport/store";
 
 const green = "#4caf50";
@@ -95,34 +95,24 @@ const SessionCard = () => {
         <Box sx={{ flex: 1 }} />
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <GithubButton
-            sx={{ py: 0.5, px: 1, bgcolor: "background.default" }}
-            startIcon={<StopRoundedIcon fontSize="small" color="warning" />}
+          <GithubHeaderButton
+            color="warning"
+            StartIcon={StopRoundedIcon}
             disabled={stopDisabled}
             loading={stopLoading}
             onClick={() => handlers.handleStop()}
           >
-            <Typography
-              variant="button"
-              sx={{ textTransform: "none", textWrap: "nowrap", color: "warning.main", ...centerTextSx }}
-            >
-              stop
-            </Typography>
-          </GithubButton>
+            stop
+          </GithubHeaderButton>
 
-          <GithubButton
-            sx={{ py: 0.5, px: 1, bgcolor: "background.default" }}
-            startIcon={<LogoutRoundedIcon fontSize="small" color="error" />}
+          <GithubHeaderButton
+            color="error"
+            StartIcon={LogoutRoundedIcon}
             disabled={leaveDisabled}
             onClick={() => handlers.handleLeave()}
           >
-            <Typography
-              variant="button"
-              sx={{ textTransform: "none", textWrap: "nowrap", color: "error.main", ...centerTextSx }}
-            >
-              leave
-            </Typography>
-          </GithubButton>
+            leave
+          </GithubHeaderButton>
         </Box>
       </CardHeader>
 
