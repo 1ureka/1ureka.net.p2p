@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { useState, useEffect } from "react";
 import { Popover, Box, Typography, Alert } from "@mui/material";
 import AddBoxRoundedIcon from "@mui/icons-material/AddBoxRounded";
@@ -6,6 +7,22 @@ import { GithubTextField, GithubHeaderButton } from "@/ui/components/Github";
 import { centerTextSx } from "@/ui/theme";
 import { handleCreateMapping, handleCreateRule } from "@/adapter/store";
 import type { SocketPair } from "@/adapter/ip";
+
+const addressSchema = z.string().min(1, "Address is required").trim();
+const portSchema = z
+  .string()
+  .min(1, "Port is required")
+  .refine((val) => !isNaN(Number(val)), "Port must be a number")
+  .transform((val) => Number(val))
+  .refine((val) => val >= 1 && val <= 65535, "Port must be between 1 and 65535");
+
+const patternSchema = z.string().min(1, "Pattern is required").trim();
+const mappingSchema = z.object({
+  srcAddr: addressSchema,
+  srcPort: portSchema,
+  dstAddr: addressSchema,
+  dstPort: portSchema,
+});
 
 type RouteCardDialogProps = {
   anchorEl: null | HTMLElement;
@@ -57,28 +74,14 @@ const RouteCardDialog = ({ anchorEl, type, onClose }: RouteCardDialogProps) => {
 
     try {
       if (type === "mapping") {
-        // 驗證 mapping 輸入
-        const srcPortNum = parseInt(srcPort, 10);
-        const dstPortNum = parseInt(dstPort, 10);
-
-        if (!srcAddr.trim()) {
-          throw new Error("Source address is required");
-        }
-        if (!srcPort.trim() || isNaN(srcPortNum) || srcPortNum < 1 || srcPortNum > 65535) {
-          throw new Error("Source port must be a number between 1 and 65535");
-        }
-        if (!dstAddr.trim()) {
-          throw new Error("Destination address is required");
-        }
-        if (!dstPort.trim() || isNaN(dstPortNum) || dstPortNum < 1 || dstPortNum > 65535) {
-          throw new Error("Destination port must be a number between 1 and 65535");
-        }
+        // 使用 zod 驗證 mapping 輸入
+        const validatedMapping = mappingSchema.parse({ srcAddr, srcPort, dstAddr, dstPort });
 
         const mapping: SocketPair = {
-          srcAddr: srcAddr.trim(),
-          srcPort: srcPortNum,
-          dstAddr: dstAddr.trim(),
-          dstPort: dstPortNum,
+          srcAddr: validatedMapping.srcAddr,
+          srcPort: validatedMapping.srcPort,
+          dstAddr: validatedMapping.dstAddr,
+          dstPort: validatedMapping.dstPort,
         };
 
         const result = await handleCreateMapping(mapping);
@@ -86,12 +89,10 @@ const RouteCardDialog = ({ anchorEl, type, onClose }: RouteCardDialogProps) => {
           throw new Error("Failed to create mapping");
         }
       } else {
-        // 驗證 rule 輸入
-        if (!pattern.trim()) {
-          throw new Error("Pattern is required");
-        }
+        // 使用 zod 驗證 rule 輸入
+        const validatedPattern = patternSchema.parse(pattern);
 
-        const result = await handleCreateRule(pattern.trim());
+        const result = await handleCreateRule(validatedPattern);
         if (!result) {
           throw new Error("Failed to create rule");
         }
@@ -100,7 +101,13 @@ const RouteCardDialog = ({ anchorEl, type, onClose }: RouteCardDialogProps) => {
       // 成功後關閉 dialog
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred");
+      if (err instanceof z.ZodError) {
+        // 處理 zod 驗證錯誤
+        const firstError = err.issues[0];
+        setError(firstError.message);
+      } else {
+        setError(err instanceof Error ? err.message : "An unknown error occurred");
+      }
     } finally {
       setLoading(false);
     }
