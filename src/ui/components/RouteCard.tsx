@@ -37,10 +37,17 @@ const NoItemDisplay = ({ type, action }: { type: "mapping" | "rule"; action: Rea
 };
 
 const MappingCard = () => {
-  const [open, setOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const mappings = useAdapter((state) => state.mappings);
   const status = useSession((state) => state.status);
   const disabled = status !== "connected";
+
+  const handleOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
 
   return (
     <Card>
@@ -51,10 +58,10 @@ const MappingCard = () => {
 
         <Box sx={{ flexGrow: 1 }} />
 
-        <GithubHeaderButton StartIcon={AddBoxRoundedIcon} disabled={disabled} onClick={() => setOpen(true)}>
+        <GithubHeaderButton StartIcon={AddBoxRoundedIcon} disabled={disabled} onClick={handleOpen}>
           add
         </GithubHeaderButton>
-        <RouteCardDialog open={open} type="mapping" onClose={() => setOpen(false)} />
+        <RouteCardDialog anchorEl={anchorEl} type="mapping" onClose={handleClose} />
       </CardHeader>
 
       {mappings.size <= 0 && (
@@ -65,7 +72,7 @@ const MappingCard = () => {
               sx={{ mt: 2.5, py: 0.5, px: 1.5, bgcolor: "background.paper", textTransform: "none", ...centerTextSx }}
               startIcon={<AddBoxRoundedIcon />}
               disabled={disabled}
-              onClick={() => setOpen(true)}
+              onClick={handleOpen}
             >
               <Typography variant="body2">Add mapping</Typography>
             </GithubButton>
@@ -93,10 +100,17 @@ const MappingCard = () => {
 };
 
 const RuleCard = () => {
-  const [open, setOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const rules = useAdapter((state) => state.rules);
   const status = useSession((state) => state.status);
   const disabled = status !== "connected";
+
+  const handleOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
 
   return (
     <Card>
@@ -107,10 +121,10 @@ const RuleCard = () => {
 
         <Box sx={{ flexGrow: 1 }} />
 
-        <GithubHeaderButton StartIcon={AddBoxRoundedIcon} disabled={disabled} onClick={() => setOpen(true)}>
+        <GithubHeaderButton StartIcon={AddBoxRoundedIcon} disabled={disabled} onClick={handleOpen}>
           add
         </GithubHeaderButton>
-        <RouteCardDialog open={open} type="rule" onClose={() => setOpen(false)} />
+        <RouteCardDialog anchorEl={anchorEl} type="rule" onClose={handleClose} />
       </CardHeader>
 
       {rules.size <= 0 && (
@@ -121,7 +135,7 @@ const RuleCard = () => {
               sx={{ mt: 2.5, py: 0.5, px: 1.5, bgcolor: "background.paper", textTransform: "none", ...centerTextSx }}
               startIcon={<AddBoxRoundedIcon />}
               disabled={disabled}
-              onClick={() => setOpen(true)}
+              onClick={handleOpen}
             >
               <Typography variant="body2">Add rule</Typography>
             </GithubButton>
