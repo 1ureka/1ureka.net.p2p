@@ -81,7 +81,7 @@ const EventsLog = ({ log }: { log: ConnectionLogEntry }) => {
 
   const prefixSx: BoxProps["sx"] = { ...baseSx, color: colors.prefix, textWrap: "nowrap" };
   const textSx: BoxProps["sx"] = { ...baseSx, color: colors.context, ...ellipsisSx };
-  const dataSx: BoxProps["sx"] = { ...baseSx, color: "text.secondary", ...ellipsisSx, WebkitLineClamp: 5 };
+  const dataSx: BoxProps["sx"] = { fontFamily: "Ubuntu", color: "text.secondary", ...ellipsisSx, WebkitLineClamp: 5 };
 
   return (
     <Box sx={{ position: "relative", "&:hover": { filter: "brightness(1.25)" }, py: 0.5, px: 1.5 }}>
