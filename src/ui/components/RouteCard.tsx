@@ -9,6 +9,11 @@ import { centerTextSx, ellipsisSx } from "@/ui/theme";
 import { GithubButton, GithubHeaderButton } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
 
+import { useSession } from "@/transport/store";
+import { useAdapter } from "@/adapter/store";
+import { stringifySocketPair } from "@/adapter/ip";
+import { useEffect, useState } from "react";
+
 function formatElapsed(elapsed: number) {
   const hours = Math.floor(elapsed / 3600);
   const minutes = Math.floor((elapsed % 3600) / 60);
@@ -18,14 +23,25 @@ function formatElapsed(elapsed: number) {
   return [String(hours).padStart(2, "0"), String(minutes).padStart(2, "0"), String(seconds).padStart(2, "0")].join(":");
 }
 
-type RouteCardListItemProps = {
-  type: "mapping" | "rule";
-  index: number;
-  content: string;
-  elapsed: number;
+const ElapsedDisplay = ({ createdAt }: { createdAt: number }) => {
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return <>{formatElapsed(Math.floor((now - createdAt) / 1000))}</>;
 };
 
-const RouteCardListItem = ({ type, index, content, elapsed }: RouteCardListItemProps) => {
+type RouteCardListItemProps = {
+  id: string;
+  type: "mapping" | "rule";
+  content: string;
+  createdAt: number;
+};
+
+const RouteCardListItem = ({ id, type, content, createdAt }: RouteCardListItemProps) => {
   const stopTooltip = type === "mapping" ? "Disable mapping" : "Disable rule";
   const deleteTooltip = type === "mapping" ? "Remove mapping" : "Remove rule";
 
@@ -43,7 +59,7 @@ const RouteCardListItem = ({ type, index, content, elapsed }: RouteCardListItemP
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "text.secondary" }}>
         <SignpostRoundedIcon color="inherit" fontSize="small" />
         <Typography variant="body2">
-          {type} #{index}
+          {type} #{id}
         </Typography>
       </Box>
 
@@ -68,7 +84,7 @@ const RouteCardListItem = ({ type, index, content, elapsed }: RouteCardListItemP
 
       <Box>
         <Typography variant="body2" sx={{ color: "text.secondary", pr: 1, ...ellipsisSx }}>
-          {formatElapsed(elapsed)}
+          <ElapsedDisplay createdAt={createdAt} />
         </Typography>
       </Box>
     </Box>
@@ -96,11 +112,15 @@ const RouteCardList = ({ children }: { children: React.ReactNode }) => {
 };
 
 const NoItemDisplay = ({ type }: { type: "mapping" | "rule" }) => {
+  const status = useSession((state) => state.status);
+  const disabled = status !== "connected";
+
   const title = type === "mapping" ? "No mappings yet" : "No rules defined";
   const description =
     type === "mapping"
       ? "You haven’t added any port mappings yet. Create one to connect local and remote ports."
       : "You haven’t defined any access rules yet. Add one to allow incoming connections.";
+
   return (
     <Box sx={{ py: 6, px: 2, color: "text.secondary", display: "grid", placeItems: "center" }}>
       <InfoOutlineRoundedIcon fontSize="large" sx={{ opacity: 0.5, mb: 1 }} />
@@ -115,6 +135,7 @@ const NoItemDisplay = ({ type }: { type: "mapping" | "rule" }) => {
       <GithubButton
         sx={{ mt: 2.5, py: 0.5, px: 1.5, bgcolor: "background.paper", textTransform: "none", ...centerTextSx }}
         startIcon={<AddBoxRoundedIcon />}
+        disabled={disabled}
       >
         <Typography variant="body2">{type === "mapping" ? "Add mapping" : "Add rule"}</Typography>
       </GithubButton>
@@ -123,14 +144,9 @@ const NoItemDisplay = ({ type }: { type: "mapping" | "rule" }) => {
 };
 
 const MappingCard = () => {
-  //   const fakeData = [
-  //     { index: 1, content: "0.0.0.0.0.0:52234 <=> 0.0.0.0.0.0:52235", elapsed: 12345 },
-  //     { index: 2, content: "0.0.0.0.0.0:3000 <=> 0.0.0.0.0.0:3000", elapsed: 1255 },
-  //     { index: 3, content: "0.0.0.0.0.0:4000 <=> 0.0.0.0.0.0:4000", elapsed: 6789 },
-  //     { index: 4, content: "0.0.0.0.0.0:5000 <=> 192.168.1.1:5000", elapsed: 9876 },
-  //   ];
-
-  const fakeData: { index: number; content: string; elapsed: number }[] = [];
+  const mappings = useAdapter((state) => state.mappings);
+  const status = useSession((state) => state.status);
+  const disabled = status !== "connected";
 
   return (
     <Card>
@@ -141,15 +157,23 @@ const MappingCard = () => {
 
         <Box sx={{ flexGrow: 1 }} />
 
-        <GithubHeaderButton StartIcon={AddBoxRoundedIcon}>add</GithubHeaderButton>
+        <GithubHeaderButton StartIcon={AddBoxRoundedIcon} disabled={disabled}>
+          add
+        </GithubHeaderButton>
       </CardHeader>
 
-      {fakeData.length <= 0 && <NoItemDisplay type="mapping" />}
+      {mappings.size <= 0 && <NoItemDisplay type="mapping" />}
 
-      {fakeData.length > 0 && (
+      {mappings.size > 0 && (
         <RouteCardList>
-          {fakeData.map(({ index, content, elapsed }) => (
-            <RouteCardListItem key={index} type="mapping" index={index} content={content} elapsed={elapsed} />
+          {Array.from(mappings.entries()).map(([id, { map, createdAt }]) => (
+            <RouteCardListItem
+              key={id}
+              id={id}
+              type="mapping"
+              content={stringifySocketPair(map)}
+              createdAt={createdAt}
+            />
           ))}
         </RouteCardList>
       )}
@@ -160,12 +184,9 @@ const MappingCard = () => {
 };
 
 const RuleCard = () => {
-  //   const fakeData = [
-  //     { index: 1, content: "192.168.102.100:3000", elapsed: 12345 },
-  //     { index: 2, content: "127.0.*.*:*", elapsed: 1255 },
-  //   ];
-
-  const fakeData: { index: number; content: string; elapsed: number }[] = [];
+  const rules = useAdapter((state) => state.rules);
+  const status = useSession((state) => state.status);
+  const disabled = status !== "connected";
 
   return (
     <Card>
@@ -176,15 +197,17 @@ const RuleCard = () => {
 
         <Box sx={{ flexGrow: 1 }} />
 
-        <GithubHeaderButton StartIcon={AddBoxRoundedIcon}>add</GithubHeaderButton>
+        <GithubHeaderButton StartIcon={AddBoxRoundedIcon} disabled={disabled}>
+          add
+        </GithubHeaderButton>
       </CardHeader>
 
-      {fakeData.length <= 0 && <NoItemDisplay type="rule" />}
+      {rules.size <= 0 && <NoItemDisplay type="rule" />}
 
-      {fakeData.length > 0 && (
+      {rules.size > 0 && (
         <RouteCardList>
-          {fakeData.map(({ index, content, elapsed }) => (
-            <RouteCardListItem key={index} type="rule" index={index} content={content} elapsed={elapsed} />
+          {Array.from(rules.entries()).map(([id, { pattern, createdAt }]) => (
+            <RouteCardListItem key={id} id={id} type="rule" content={pattern} createdAt={createdAt} />
           ))}
         </RouteCardList>
       )}
