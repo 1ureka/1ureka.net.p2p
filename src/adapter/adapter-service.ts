@@ -7,6 +7,7 @@ import { IPCChannel } from "@/ipc";
 
 const createAdapterService = () => {
   const win = getWindow();
+  ipcMain.removeAllListeners();
 
   // ------------------------------------------------------------------------------
 
@@ -21,7 +22,7 @@ const createAdapterService = () => {
     win.adapter = "host";
     clearHistory();
 
-    const handlers = createHostAdapter(win);
+    const handlers = createHostAdapter((packet) => win.webContents.send(IPCChannel.FromTCP, packet));
     const { handlePacketFromRTC, handleClose, handleCreateRule, handleRemoveRule } = handlers;
 
     ipcMain.on(IPCChannel.FromRTC, handlePacketFromRTC);
@@ -50,7 +51,7 @@ const createAdapterService = () => {
     win.adapter = "client";
     clearHistory();
 
-    const handlers = createClientAdapter(win);
+    const handlers = createClientAdapter((packet) => win.webContents.send(IPCChannel.FromTCP, packet));
     const { handlePacketFromRTC, handleClose, handleCreateMapping, handleRemoveMapping } = handlers;
 
     ipcMain.on(IPCChannel.FromRTC, handlePacketFromRTC);

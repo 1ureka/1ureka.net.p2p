@@ -1,8 +1,5 @@
 import net from "net";
 import crypto from "node:crypto";
-import { IPCChannel } from "@/ipc";
-import type { BrowserWindow } from "electron";
-
 import { createReporter } from "@/adapter/report";
 import { PacketEvent } from "@/adapter/packet";
 import { createChunker, createReassembler } from "@/adapter/framing";
@@ -12,7 +9,7 @@ import { defer, tryCatchSync } from "@/utils";
 /**
  * 建立 Client 端的 Adapter (建立虛擬 TCP 伺服器讓本地的 TCP 客戶端連接)
  */
-function createClientAdapter(win: BrowserWindow) {
+function createClientAdapter(send: (packet: Buffer) => void) {
   const { reportLog, reportError, reportConnection } = createReporter("Client");
 
   const chunker = createChunker();
@@ -42,7 +39,7 @@ function createClientAdapter(win: BrowserWindow) {
 
     try {
       for (const packet of chunker.generate(socketPair, PacketEvent.CONNECT, Buffer.alloc(0))) {
-        win.webContents.send(IPCChannel.FromTCP, packet);
+        send(packet);
       }
     } catch (error) {
       reportError({
@@ -64,7 +61,7 @@ function createClientAdapter(win: BrowserWindow) {
     const handleDataFromLocal = (chunk: Buffer) => {
       try {
         for (const packet of chunker.generate(socketPair, PacketEvent.DATA, chunk)) {
-          win.webContents.send(IPCChannel.FromTCP, packet);
+          send(packet);
         }
       } catch (error) {
         reportError({
@@ -77,7 +74,7 @@ function createClientAdapter(win: BrowserWindow) {
     const handleCloseFromLocal = () => {
       try {
         for (const packet of chunker.generate(socketPair, PacketEvent.CLOSE, Buffer.alloc(0))) {
-          win.webContents.send(IPCChannel.FromTCP, packet);
+          send(packet);
         }
       } catch (error) {
         reportError({

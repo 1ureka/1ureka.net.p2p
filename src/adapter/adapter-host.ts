@@ -1,7 +1,4 @@
 import net from "net";
-import { IPCChannel } from "@/ipc";
-import type { BrowserWindow } from "electron";
-
 import { createReporter } from "@/adapter/report";
 import { PacketEvent } from "@/adapter/packet";
 import { createChunker, createReassembler } from "@/adapter/framing";
@@ -10,7 +7,7 @@ import { SocketPairMap, stringifySocketPair, type SocketPair } from "@/adapter/i
 /**
  * 建立 Host 端的 Adapter (連接到本地的 TCP 伺服器)
  */
-function createHostAdapter(win: BrowserWindow) {
+function createHostAdapter(send: (packet: Buffer) => void) {
   const { reportLog, reportWarn, reportError, reportConnection } = createReporter("Host");
 
   const chunker = createChunker();
@@ -54,7 +51,7 @@ function createHostAdapter(win: BrowserWindow) {
     const handleDataFromLocal = (chunk: Buffer) => {
       try {
         for (const packet of chunker.generate(socketPair, PacketEvent.DATA, chunk)) {
-          win.webContents.send(IPCChannel.FromTCP, packet);
+          send(packet);
         }
       } catch (error) {
         reportError({
@@ -67,7 +64,7 @@ function createHostAdapter(win: BrowserWindow) {
     const handleCloseFromLocal = () => {
       try {
         for (const packet of chunker.generate(socketPair, PacketEvent.CLOSE, Buffer.alloc(0))) {
-          win.webContents.send(IPCChannel.FromTCP, packet);
+          send(packet);
         }
       } catch (error) {
         reportError({
