@@ -7,7 +7,7 @@ import { LineChart, type LineSeries } from "@mui/x-charts/LineChart";
 import { Box, Typography } from "@mui/material";
 import { create } from "zustand";
 
-import { handleChangeTab } from "@/ui/tabs";
+import { useTab } from "@/ui/tabs";
 import { centerTextSx, theme } from "@/ui/theme";
 import { GithubButton } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
@@ -98,6 +98,8 @@ const TrafficChart = () => {
 };
 
 const TrafficCard = () => {
+  const setTab = useTab((state) => state.setTab);
+
   return (
     <Card>
       <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
@@ -129,7 +131,7 @@ const TrafficCard = () => {
               <GithubButton
                 sx={{ py: 0.5, px: 1, bgcolor: "background.default" }}
                 startIcon={<QueryStatsRoundedIcon fontSize="small" />}
-                onClick={() => handleChangeTab("metrics")}
+                onClick={() => setTab("metrics")}
               >
                 <Typography variant="body2" sx={{ textTransform: "none", textWrap: "nowrap", ...centerTextSx }}>
                   open metrics

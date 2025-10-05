@@ -3,7 +3,7 @@ import InfoOutlineRoundedIcon from "@mui/icons-material/InfoOutlineRounded";
 import { Box, Typography, type BoxProps } from "@mui/material";
 import { format } from "pretty-format";
 
-import { handleChangeTab } from "@/ui/tabs";
+import { useTab } from "@/ui/tabs";
 import { useAdapter } from "@/adapter/store";
 import { useSession } from "@/transport/store";
 import type { ConnectionLogEntry, ConnectionLogLevel } from "@/utils";
@@ -51,6 +51,7 @@ const Chip = ({ color, text }: { color: string; text: string }) => {
 };
 
 const EventsSummary = () => {
+  const setTab = useTab((state) => state.setTab);
   const logs = useLogs();
   const warningCount = logs.filter((log) => log.level === "warn").length;
   const errorCount = logs.filter((log) => log.level === "error").length;
@@ -60,7 +61,7 @@ const EventsSummary = () => {
       <GithubButton
         sx={{ py: 0.5, px: 1, bgcolor: "background.default" }}
         startIcon={<ListAltRoundedIcon fontSize="small" />}
-        onClick={() => handleChangeTab("events")}
+        onClick={() => setTab("events")}
       >
         <Typography variant="button" sx={{ textTransform: "none", textWrap: "nowrap", ...centerTextSx }}>
           view all logs
