@@ -1,5 +1,7 @@
 import { Box, Typography } from "@mui/material";
 import { motion, AnimatePresence } from "motion/react";
+import { useSession } from "@/transport/store";
+import { useTab } from "@/ui/tabs";
 
 import { Header } from "@/ui/components/Header";
 import { EventsCard } from "@/ui/components/EventsCard";
@@ -7,34 +9,14 @@ import { SessionCard } from "@/ui/components/SessionCard";
 import { TrafficCard } from "@/ui/components/TrafficCard";
 import { MappingCard, RuleCard } from "@/ui/components/RouteCard";
 import { CreateSessionCard, JoinSessionCard } from "@/ui/components/LaunchCard";
-import { useTab } from "@/ui/tabs";
-import { useSession } from "@/transport/store";
 
-const HostPage = () => {
+const OverviewPage = ({ type }: { type: "rule" | "mapping" }) => {
   return (
     <>
       <Box sx={{ display: "grid", gridTemplateColumns: "0.75fr 1fr", gap: 2, px: 4, py: 3 }}>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <SessionCard />
-          <RuleCard />
-        </Box>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <TrafficCard />
-          <EventsCard />
-        </Box>
-      </Box>
-      <Box sx={{ flexGrow: 1 }} />
-    </>
-  );
-};
-
-const ClientPage = () => {
-  return (
-    <>
-      <Box sx={{ display: "grid", gridTemplateColumns: "0.75fr 1fr", gap: 2, px: 4, py: 3 }}>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <SessionCard />
-          <MappingCard />
+          {type === "rule" ? <RuleCard /> : <MappingCard />}
         </Box>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <TrafficCard />
@@ -108,12 +90,12 @@ const Pages = () => {
       )}
       {tab === "overview" && overviewType === "host" && (
         <Box key="overview-host" {...PageWrapperProps}>
-          <HostPage />
+          <OverviewPage type="rule" />
         </Box>
       )}
       {tab === "overview" && overviewType === "client" && (
         <Box key="overview-client" {...PageWrapperProps}>
-          <ClientPage />
+          <OverviewPage type="mapping" />
         </Box>
       )}
     </AnimatePresence>
