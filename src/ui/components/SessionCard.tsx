@@ -6,8 +6,7 @@ import { Box, Button, Typography } from "@mui/material";
 import { GithubButton } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
 import { centerTextSx, ellipsisSx } from "@/ui/theme";
-import { handleLeaveSession } from "@/ui/tabs";
-import { type ConnectionStatus, useSession } from "@/transport/store";
+import { type ConnectionStatus, useSession, handlers } from "@/transport/store";
 
 const green = "#4caf50";
 const red = "#f44336";
@@ -82,6 +81,10 @@ const SessionCard = () => {
   const session = useSession((state) => state.session);
   const status = useSession((state) => state.status);
 
+  const stopLoading = status === "aborting";
+  const stopDisabled = ["disconnected", "joining", "aborting", "failed"].includes(status);
+  const leaveDisabled = status !== "failed";
+
   return (
     <Card>
       <CardHeader>
@@ -95,7 +98,9 @@ const SessionCard = () => {
           <GithubButton
             sx={{ py: 0.5, px: 1, bgcolor: "background.default" }}
             startIcon={<StopRoundedIcon fontSize="small" color="warning" />}
-            onClick={() => handleLeaveSession()}
+            disabled={stopDisabled}
+            loading={stopLoading}
+            onClick={() => handlers.handleStop()}
           >
             <Typography
               variant="button"
@@ -108,7 +113,8 @@ const SessionCard = () => {
           <GithubButton
             sx={{ py: 0.5, px: 1, bgcolor: "background.default" }}
             startIcon={<LogoutRoundedIcon fontSize="small" color="error" />}
-            onClick={() => handleLeaveSession()}
+            disabled={leaveDisabled}
+            onClick={() => handlers.handleLeave()}
           >
             <Typography
               variant="button"

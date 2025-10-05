@@ -1,10 +1,15 @@
 import { Box, Typography } from "@mui/material";
 import { GithubButton, GithubTextField } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
+
 import { centerTextSx } from "@/ui/theme";
-import { handleCreateSession, handleJoinSession } from "@/ui/tabs";
+import { useSession, handlers } from "@/transport/store";
 
 const CreateSessionCard = () => {
+  const status = useSession((state) => state.status);
+  const disabled = status !== "disconnected";
+  const loading = status === "joining";
+
   return (
     <Card>
       <CardHeader>
@@ -24,7 +29,14 @@ const CreateSessionCard = () => {
         </Typography>
 
         <Box sx={{ my: 1.5 }}>
-          <GithubButton size="small" fullWidth color="inherit" onClick={() => handleCreateSession()}>
+          <GithubButton
+            size="small"
+            fullWidth
+            color="inherit"
+            disabled={disabled}
+            loading={loading}
+            onClick={() => handlers.handleCreateSession()}
+          >
             Create
           </GithubButton>
         </Box>
@@ -34,6 +46,10 @@ const CreateSessionCard = () => {
 };
 
 const JoinSessionCard = () => {
+  const status = useSession((state) => state.status);
+  const disabled = status !== "disconnected";
+  const loading = status === "joining";
+
   return (
     <Card>
       <CardHeader>
@@ -54,7 +70,14 @@ const JoinSessionCard = () => {
 
         <Box sx={{ my: 1.5, display: "flex", gap: 1, flexDirection: "column" }}>
           <GithubTextField fullWidth size="small" label="Session ID" placeholder="Enter Session ID" />
-          <GithubButton size="small" fullWidth color="inherit" onClick={() => handleJoinSession()}>
+          <GithubButton
+            size="small"
+            fullWidth
+            color="inherit"
+            disabled={disabled}
+            loading={loading}
+            onClick={() => handlers.handleJoinSession("test-session-id")}
+          >
             Join
           </GithubButton>
         </Box>
