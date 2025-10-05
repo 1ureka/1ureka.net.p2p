@@ -2,13 +2,21 @@
 
 enum IPCChannel {
   AdapterStartHost = "adapter.start.host",
+  AdapterCreateRule = "adapter.create.rule",
+  AdapterRemoveRule = "adapter.remove.rule",
+
   AdapterStartClient = "adapter.start.client",
+  AdapterCreateMapping = "adapter.create.mapping",
+  AdapterRemoveMapping = "adapter.remove.mapping",
+
   AdapterStop = "adapter.stop",
   AdapterLogs = "adapter.logs",
   AdapterSocket = "adapter.socket",
+
   FromTCP = "data.from.tcp",
   FromRTC = "data.from.rtc",
   OSInfo = "os.info",
+  DeveloperTools = "developer.tools",
 }
 
 export { IPCChannel };
