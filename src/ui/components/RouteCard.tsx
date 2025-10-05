@@ -6,7 +6,7 @@ import { centerTextSx } from "@/ui/theme";
 import { Card, CardHeader } from "@/ui/components/Card";
 import { GithubButton, GithubHeaderButton } from "@/ui/components/Github";
 import { RouteCardList, RouteCardListItem } from "@/ui/components/RouteCardList";
-import { RouteCardDialog } from "@/ui/components/RouteCardDialog";
+import { CreateMappingPopover, CreateRulePopover } from "@/ui/components/RouteCardDialog";
 
 import { useSession } from "@/transport/store";
 import { useAdapter } from "@/adapter/store";
@@ -61,7 +61,7 @@ const MappingCard = () => {
         <GithubHeaderButton StartIcon={AddBoxRoundedIcon} disabled={disabled} onClick={handleOpen}>
           add
         </GithubHeaderButton>
-        <RouteCardDialog anchorEl={anchorEl} type="mapping" onClose={handleClose} />
+        <CreateMappingPopover anchorEl={anchorEl} onClose={handleClose} />
       </CardHeader>
 
       {mappings.size <= 0 && (
@@ -124,7 +124,7 @@ const RuleCard = () => {
         <GithubHeaderButton StartIcon={AddBoxRoundedIcon} disabled={disabled} onClick={handleOpen}>
           add
         </GithubHeaderButton>
-        <RouteCardDialog anchorEl={anchorEl} type="rule" onClose={handleClose} />
+        <CreateRulePopover anchorEl={anchorEl} onClose={handleClose} />
       </CardHeader>
 
       {rules.size <= 0 && (
