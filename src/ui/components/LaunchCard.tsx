@@ -35,6 +35,7 @@ const CreateSessionCard = () => {
             color="inherit"
             disabled={disabled}
             loading={loading}
+            loadingPosition="start"
             onClick={() => handlers.handleCreateSession()}
           >
             Create
@@ -76,6 +77,7 @@ const JoinSessionCard = () => {
             color="inherit"
             disabled={disabled}
             loading={loading}
+            loadingPosition="start"
             onClick={() => handlers.handleJoinSession("test-session-id")}
           >
             Join
