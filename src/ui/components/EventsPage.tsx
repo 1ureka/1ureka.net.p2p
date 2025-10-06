@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, memo } from "react";
 import ListAltRoundedIcon from "@mui/icons-material/ListAltRounded";
 import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
 import { Box, Typography } from "@mui/material";
@@ -49,7 +49,7 @@ const LevelFilter = ({ selectedLevels, onChange }: LevelFilterProps) => {
   );
 };
 
-const EventsPage = () => {
+const EventsPage = memo(() => {
   const allLogs = useLogs();
   const [selectedLevels, setSelectedLevels] = useState<ConnectionLogLevel[]>(levels);
 
@@ -104,6 +104,6 @@ const EventsPage = () => {
       </Card>
     </Box>
   );
-};
+});
 
 export { EventsPage };
