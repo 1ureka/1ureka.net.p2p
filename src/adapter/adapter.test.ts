@@ -21,6 +21,8 @@ const createEnvironment = async () => {
     }),
     clearHistory: vi.fn(),
     reportSockets: vi.fn(),
+    reportMappings: vi.fn(),
+    reportRules: vi.fn(),
   }));
 
   const { createHostAdapter } = await import("./adapter-host");

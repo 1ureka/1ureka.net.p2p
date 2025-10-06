@@ -1,6 +1,6 @@
 import net from "net";
 import crypto from "node:crypto";
-import { createReporter, reportSockets } from "@/adapter-state/report";
+import { createReporter, reportSockets, reportMappings } from "@/adapter-state/report";
 import { PacketEvent } from "@/adapter/packet";
 import { createChunker, createReassembler } from "@/adapter/framing";
 import { SocketPairMap, stringifySocketPair, type SocketPair } from "@/adapter/ip";
@@ -35,7 +35,7 @@ function createClientAdapter(send: (packet: Buffer) => void) {
 
     sockets.set(socketPair, socket);
     reportLog({ message: `New socket ${stringifySocketPair(socketPair)} connected.` });
-    reportSockets(socketPair, "add");
+    reportSockets({ type: "add", pair: socketPair });
 
     try {
       for (const packet of chunker.generate(socketPair, PacketEvent.CONNECT, Buffer.alloc(0))) {
@@ -89,7 +89,7 @@ function createClientAdapter(send: (packet: Buffer) => void) {
       sockets.delete(socketPair);
 
       reportLog({ message: `TCP socket closed for socket ${stringifySocketPair(socketPair)}` });
-      reportSockets(socketPair, "del");
+      reportSockets({ type: "del", pair: socketPair });
     };
 
     socket.on("close", handleCloseFromLocal);
@@ -184,6 +184,7 @@ function createClientAdapter(send: (packet: Buffer) => void) {
       const id = crypto.randomUUID();
       const server = await createMapping(map);
       servers.set(id, server);
+      reportMappings({ type: "add", id, map });
       return id;
     } catch (error) {
       reportError({ message: "Error creating mapping", data: { error, map } });
@@ -205,6 +206,7 @@ function createClientAdapter(send: (packet: Buffer) => void) {
       resolve();
       servers.delete(id);
       reportLog({ message: `Mapping with ID ${id} closed.` });
+      reportMappings({ type: "del", id });
     });
 
     return promise;

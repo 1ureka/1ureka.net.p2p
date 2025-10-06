@@ -71,11 +71,7 @@ const CreateMappingPopover = ({ anchorEl, onClose }: RouteCardPopoverProps) => {
     setLoading(true);
 
     try {
-      const validatedMapping = mappingSchema.parse(map);
-
-      const result = await handleCreateMapping(validatedMapping);
-      if (!result) throw new Error("Failed to create mapping");
-
+      await handleCreateMapping(mappingSchema.parse(map));
       onClose();
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -217,11 +213,7 @@ const CreateRulePopover = ({ anchorEl, onClose }: RouteCardPopoverProps) => {
     setLoading(true);
 
     try {
-      const validatedPattern = patternSchema.parse(pattern);
-
-      const result = await handleCreateRule(validatedPattern);
-      if (!result) throw new Error("Failed to create rule");
-
+      await handleCreateRule(patternSchema.parse(pattern));
       onClose();
     } catch (err) {
       if (err instanceof z.ZodError) {

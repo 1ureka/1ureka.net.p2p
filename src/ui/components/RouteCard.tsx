@@ -11,7 +11,6 @@ import { CreateMappingPopover, CreateRulePopover } from "@/ui/components/RouteCa
 import { useSession } from "@/transport-state/store";
 import { useAdapter } from "@/adapter-state/store";
 import { useState } from "react";
-import { stringifySocketPair } from "@/adapter/ip";
 
 type NoItemDisplayProps = {
   type: "mapping" | "rule";
@@ -64,12 +63,6 @@ const MappingCard = () => {
     setAnchorEl(null);
   };
 
-  const items = Array.from(mappings.entries()).map(([id, { map, createdAt }]) => ({
-    id,
-    content: stringifySocketPair(map),
-    createdAt,
-  }));
-
   return (
     <Card sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
       <CardHeader>
@@ -86,11 +79,11 @@ const MappingCard = () => {
       </CardHeader>
 
       <Box sx={{ flex: 1, overflow: "auto", minHeight: 0 }}>
-        {mappings.size <= 0 && <NoItemDisplay type="mapping" actionDisabled={disabled} onAction={handleOpen} />}
-        {mappings.size > 0 && (
+        {mappings.length <= 0 && <NoItemDisplay type="mapping" actionDisabled={disabled} onAction={handleOpen} />}
+        {mappings.length > 0 && (
           <RouteCardList>
-            {items.map(({ id, content, createdAt }) => (
-              <RouteCardListItem key={id} id={id} type="mapping" content={content} createdAt={createdAt} />
+            {mappings.map(({ id, mapping, createdAt }) => (
+              <RouteCardListItem key={id} id={id} type="mapping" content={mapping} createdAt={createdAt} />
             ))}
           </RouteCardList>
         )}
@@ -114,12 +107,6 @@ const RuleCard = () => {
     setAnchorEl(null);
   };
 
-  const items = Array.from(rules.entries()).map(([id, { pattern, createdAt }]) => ({
-    id,
-    content: pattern,
-    createdAt,
-  }));
-
   return (
     <Card sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
       <CardHeader>
@@ -136,11 +123,11 @@ const RuleCard = () => {
       </CardHeader>
 
       <Box sx={{ flex: 1, overflow: "auto", minHeight: 0 }}>
-        {rules.size <= 0 && <NoItemDisplay type="rule" actionDisabled={disabled} onAction={handleOpen} />}
-        {rules.size > 0 && (
+        {rules.length <= 0 && <NoItemDisplay type="rule" actionDisabled={disabled} onAction={handleOpen} />}
+        {rules.length > 0 && (
           <RouteCardList>
-            {items.map(({ id, content, createdAt }) => (
-              <RouteCardListItem key={id} id={id} type="rule" content={content} createdAt={createdAt} />
+            {rules.map(({ id, pattern, createdAt }) => (
+              <RouteCardListItem key={id} id={id} type="rule" content={pattern} createdAt={createdAt} />
             ))}
           </RouteCardList>
         )}

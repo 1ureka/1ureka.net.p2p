@@ -1,13 +1,9 @@
 import { getWindow } from "@/main";
 import { IPCChannel } from "@/ipc";
-import { createStore } from "zustand/vanilla";
 import { randomUUID } from "crypto";
 import type { ConnectionLogEntry } from "@/utils";
-import type { SocketPair } from "@/adapter/ip";
-
-const store = createStore<{ history: ConnectionLogEntry[] }>(() => ({
-  history: [],
-}));
+import type { SocketChangePayload, LogsChangePayload } from "@/adapter-state/store";
+import type { MappingChangePayload, RuleChangePayload } from "@/adapter-state/store";
 
 const getReportMethods = (level: "info" | "warn" | "error") => {
   if (level === "info") return console.log;
@@ -15,17 +11,19 @@ const getReportMethods = (level: "info" | "warn" | "error") => {
   return console.error;
 };
 
-const clearHistory = () => {
+const reportSockets = (props: SocketChangePayload) => {
   const win = getWindow();
-
-  store.setState((prev) => ({ ...prev, history: [] }));
-  win.webContents.send(IPCChannel.AdapterLogs, []);
+  win.webContents.send(IPCChannel.AdapterSocketChange, props);
 };
 
-const reportSockets = (pair: SocketPair, type: "add" | "del") => {
+const reportMappings = (props: MappingChangePayload) => {
   const win = getWindow();
+  win.webContents.send(IPCChannel.AdapterMappingChange, props);
+};
 
-  win.webContents.send(IPCChannel.AdapterSocket, { pair, type });
+const reportRules = (props: RuleChangePayload) => {
+  const win = getWindow();
+  win.webContents.send(IPCChannel.AdapterRuleChange, props);
 };
 
 const createReporter = (module: string) => {
@@ -37,11 +35,8 @@ const createReporter = (module: string) => {
     const { level, message, data } = logEntry;
     getReportMethods(level)(module, level.toUpperCase(), message, data ?? "");
 
-    store.setState((prev) => {
-      const history = [...prev.history, logEntry].slice(-250);
-      win.webContents.send(IPCChannel.AdapterLogs, history);
-      return { ...prev, history };
-    });
+    const props: LogsChangePayload = { type: "add", entry: logEntry };
+    win.webContents.send(IPCChannel.AdapterLogsChange, props);
   };
 
   type ReportMethod = (entry: Omit<ConnectionLogEntry, "id" | "level" | "timestamp" | "module">) => void;
@@ -52,4 +47,13 @@ const createReporter = (module: string) => {
   return { reportLog, reportError, reportWarn };
 };
 
-export { createReporter, clearHistory, reportSockets };
+const clearHistory = () => {
+  const win = getWindow();
+
+  win.webContents.send(IPCChannel.AdapterLogsChange, { type: "clear" });
+  win.webContents.send(IPCChannel.AdapterSocketChange, { type: "clear" });
+  win.webContents.send(IPCChannel.AdapterMappingChange, { type: "clear" });
+  win.webContents.send(IPCChannel.AdapterRuleChange, { type: "clear" });
+};
+
+export { createReporter, clearHistory, reportSockets, reportMappings, reportRules };

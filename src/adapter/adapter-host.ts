@@ -1,5 +1,6 @@
 import net from "net";
-import { createReporter, reportSockets } from "@/adapter-state/report";
+import crypto from "node:crypto";
+import { createReporter, reportSockets, reportRules } from "@/adapter-state/report";
 import { PacketEvent } from "@/adapter/packet";
 import { createChunker, createReassembler } from "@/adapter/framing";
 import { SocketPairMap, stringifySocketPair, type SocketPair } from "@/adapter/ip";
@@ -33,7 +34,7 @@ function createHostAdapter(send: (packet: Buffer) => void) {
         socket.on("connect", () => {
           res();
           reportLog({ message: `TCP socket connected for socket ${stringifySocketPair(socketPair)}` });
-          reportSockets(socketPair, "add");
+          reportSockets({ type: "add", pair: socketPair });
         });
       })
     );
@@ -80,7 +81,7 @@ function createHostAdapter(send: (packet: Buffer) => void) {
       socketPromises.delete(socketPair);
 
       reportLog({ message: `TCP socket closed for socket ${stringifySocketPair(socketPair)}` });
-      reportSockets(socketPair, "del");
+      reportSockets({ type: "del", pair: socketPair });
     };
 
     socket.on("close", handleCloseFromLocal);
@@ -135,12 +136,16 @@ function createHostAdapter(send: (packet: Buffer) => void) {
   // ------------------------------------------------------------------------------
 
   // TODO: 管理動態 rules
-  const handleCreateRule = (_: unknown, _rule: unknown) => {
+  const handleCreateRule = (_: unknown, pattern: string) => {
+    const id = crypto.randomUUID();
+
     reportLog({ message: "Create rule - Not implemented yet" });
+    reportRules({ type: "add", id, pattern });
   };
 
-  const handleRemoveRule = (_: unknown, _ruleId: unknown) => {
+  const handleRemoveRule = (_: unknown, id: string) => {
     reportLog({ message: "Remove rule - Not implemented yet" });
+    reportRules({ type: "del", id });
   };
 
   // ------------------------------------------------------------------------------
