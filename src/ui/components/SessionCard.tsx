@@ -1,12 +1,13 @@
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import StopRoundedIcon from "@mui/icons-material/StopRounded";
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, Typography, Tooltip, Zoom } from "@mui/material";
 
 import { ellipsisSx } from "@/ui/theme";
 import { GithubHeaderButton } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
 import { type ConnectionStatus, useSession } from "@/transport-state/store";
+import { useAdapter } from "@/adapter-state/store";
 import { handleLeave, handleStop } from "@/transport-state/handlers";
 
 const green = "#4caf50";
@@ -81,11 +82,26 @@ const SessionCardCopyButton = () => {
 const SessionCard = () => {
   const session = useSession((state) => state.session);
   const status = useSession((state) => state.status);
+  const instance = useAdapter((state) => state.instance);
 
   const stopLoading = status === "aborting";
   const stopDisabled = ["disconnected", "joining", "aborting", "failed"].includes(status);
-  const leaveDisabled = status !== "failed";
+  const leaveDisabled = status !== "failed" || instance !== null;
   const statusString = status === "failed" ? "Stopped" : status.charAt(0).toUpperCase() + status.slice(1);
+
+  const getStopTooltip = () => {
+    if (status === "disconnected") return "Not connected to session";
+    if (status === "joining") return "Joining session";
+    if (status === "aborting") return "Stopping connection";
+    if (status === "failed") return "Connection stopped";
+    return "";
+  };
+
+  const getLeaveTooltip = () => {
+    if (status !== "failed") return "Stop connection first";
+    if (instance !== null) return "Close adapter first";
+    return "";
+  };
 
   return (
     <Card>
@@ -97,24 +113,32 @@ const SessionCard = () => {
         <Box sx={{ flex: 1 }} />
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <GithubHeaderButton
-            color="warning"
-            StartIcon={StopRoundedIcon}
-            disabled={stopDisabled}
-            loading={stopLoading}
-            onClick={() => handleStop()}
-          >
-            stop
-          </GithubHeaderButton>
+          <Tooltip title={getStopTooltip()} arrow placement="top" slots={{ transition: Zoom }}>
+            <Box>
+              <GithubHeaderButton
+                color="warning"
+                StartIcon={StopRoundedIcon}
+                disabled={stopDisabled}
+                loading={stopLoading}
+                onClick={() => handleStop()}
+              >
+                stop
+              </GithubHeaderButton>
+            </Box>
+          </Tooltip>
 
-          <GithubHeaderButton
-            color="error"
-            StartIcon={LogoutRoundedIcon}
-            disabled={leaveDisabled}
-            onClick={() => handleLeave()}
-          >
-            leave
-          </GithubHeaderButton>
+          <Tooltip title={getLeaveTooltip()} arrow placement="top" slots={{ transition: Zoom }}>
+            <Box>
+              <GithubHeaderButton
+                color="error"
+                StartIcon={LogoutRoundedIcon}
+                disabled={leaveDisabled}
+                onClick={() => handleLeave()}
+              >
+                leave
+              </GithubHeaderButton>
+            </Box>
+          </Tooltip>
         </Box>
       </CardHeader>
 
