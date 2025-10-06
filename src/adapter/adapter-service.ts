@@ -1,6 +1,6 @@
 import { ipcMain } from "electron";
 import { getWindow } from "@/main";
-import { createReporter, clearHistory } from "@/adapter/report";
+import { createReporter, clearHistory } from "@/adapter-state/report";
 import { createHostAdapter } from "@/adapter/adapter-host";
 import { createClientAdapter } from "@/adapter/adapter-client";
 import { IPCChannel } from "@/ipc";

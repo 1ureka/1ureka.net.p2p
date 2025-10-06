@@ -13,14 +13,14 @@ const createEnvironment = async () => {
 
   vi.resetModules();
   vi.clearAllMocks();
-  vi.doMock("@/adapter/report", () => ({
+  vi.doMock("@/adapter-state/report", () => ({
     createReporter: (module: string) => ({
       reportLog: vi.fn(),
       reportWarn: vi.fn(),
       reportError: vi.fn(),
-      reportConnection: vi.fn(),
     }),
     clearHistory: vi.fn(),
+    reportSockets: vi.fn(),
   }));
 
   const { createHostAdapter } = await import("./adapter-host");

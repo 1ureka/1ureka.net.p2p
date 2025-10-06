@@ -5,7 +5,7 @@ import AddBoxRoundedIcon from "@mui/icons-material/AddBoxRounded";
 
 import { GithubTextField, GithubHeaderButton } from "@/ui/components/Github";
 import { centerTextSx, ellipsisSx } from "@/ui/theme";
-import { handleCreateMapping, handleCreateRule } from "@/adapter/store";
+import { handleCreateMapping, handleCreateRule } from "@/adapter-state/handlers";
 import type { SocketPair } from "@/adapter/ip";
 
 const addressSchema = z.string().min(1, "Address is required").trim();

@@ -22,6 +22,12 @@ const clearHistory = () => {
   win.webContents.send(IPCChannel.AdapterLogs, []);
 };
 
+const reportSockets = (pair: SocketPair, type: "add" | "del") => {
+  const win = getWindow();
+
+  win.webContents.send(IPCChannel.AdapterSocket, { pair, type });
+};
+
 const createReporter = (module: string) => {
   const win = getWindow();
 
@@ -43,11 +49,7 @@ const createReporter = (module: string) => {
   const reportError: ReportMethod = (entry) => report({ ...entry, level: "error" });
   const reportWarn: ReportMethod = (entry) => report({ ...entry, level: "warn" });
 
-  const reportConnection = (pair: SocketPair, type: "add" | "del") => {
-    win.webContents.send(IPCChannel.AdapterSocket, { pair, type });
-  };
-
-  return { reportLog, reportError, reportWarn, reportConnection };
+  return { reportLog, reportError, reportWarn };
 };
 
-export { createReporter, clearHistory };
+export { createReporter, clearHistory, reportSockets };

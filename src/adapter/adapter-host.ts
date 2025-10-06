@@ -1,5 +1,5 @@
 import net from "net";
-import { createReporter } from "@/adapter/report";
+import { createReporter, reportSockets } from "@/adapter-state/report";
 import { PacketEvent } from "@/adapter/packet";
 import { createChunker, createReassembler } from "@/adapter/framing";
 import { SocketPairMap, stringifySocketPair, type SocketPair } from "@/adapter/ip";
@@ -8,7 +8,7 @@ import { SocketPairMap, stringifySocketPair, type SocketPair } from "@/adapter/i
  * 建立 Host 端的 Adapter (連接到本地的 TCP 伺服器)
  */
 function createHostAdapter(send: (packet: Buffer) => void) {
-  const { reportLog, reportWarn, reportError, reportConnection } = createReporter("Host");
+  const { reportLog, reportWarn, reportError } = createReporter("Host");
 
   const chunker = createChunker();
   const reassembler = createReassembler();
@@ -33,7 +33,7 @@ function createHostAdapter(send: (packet: Buffer) => void) {
         socket.on("connect", () => {
           res();
           reportLog({ message: `TCP socket connected for socket ${stringifySocketPair(socketPair)}` });
-          reportConnection(socketPair, "add");
+          reportSockets(socketPair, "add");
         });
       })
     );
@@ -80,7 +80,7 @@ function createHostAdapter(send: (packet: Buffer) => void) {
       socketPromises.delete(socketPair);
 
       reportLog({ message: `TCP socket closed for socket ${stringifySocketPair(socketPair)}` });
-      reportConnection(socketPair, "del");
+      reportSockets(socketPair, "del");
     };
 
     socket.on("close", handleCloseFromLocal);

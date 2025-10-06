@@ -1,6 +1,6 @@
 import net from "net";
 import crypto from "node:crypto";
-import { createReporter } from "@/adapter/report";
+import { createReporter, reportSockets } from "@/adapter-state/report";
 import { PacketEvent } from "@/adapter/packet";
 import { createChunker, createReassembler } from "@/adapter/framing";
 import { SocketPairMap, stringifySocketPair, type SocketPair } from "@/adapter/ip";
@@ -10,7 +10,7 @@ import { defer, tryCatchSync } from "@/utils";
  * 建立 Client 端的 Adapter (建立虛擬 TCP 伺服器讓本地的 TCP 客戶端連接)
  */
 function createClientAdapter(send: (packet: Buffer) => void) {
-  const { reportLog, reportError, reportConnection } = createReporter("Client");
+  const { reportLog, reportError } = createReporter("Client");
 
   const chunker = createChunker();
   const reassembler = createReassembler();
@@ -35,7 +35,7 @@ function createClientAdapter(send: (packet: Buffer) => void) {
 
     sockets.set(socketPair, socket);
     reportLog({ message: `New socket ${stringifySocketPair(socketPair)} connected.` });
-    reportConnection(socketPair, "add");
+    reportSockets(socketPair, "add");
 
     try {
       for (const packet of chunker.generate(socketPair, PacketEvent.CONNECT, Buffer.alloc(0))) {
@@ -89,7 +89,7 @@ function createClientAdapter(send: (packet: Buffer) => void) {
       sockets.delete(socketPair);
 
       reportLog({ message: `TCP socket closed for socket ${stringifySocketPair(socketPair)}` });
-      reportConnection(socketPair, "del");
+      reportSockets(socketPair, "del");
     };
 
     socket.on("close", handleCloseFromLocal);
