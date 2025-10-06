@@ -37,6 +37,7 @@ const createAdapterService = () => {
       handleClose();
       win.adapter = undefined;
       reportClose();
+      reporter.reportLog({ message: "Adapter stopped successfully." });
     });
 
     return true;
@@ -70,6 +71,7 @@ const createAdapterService = () => {
       handleClose();
       win.adapter = undefined;
       reportClose();
+      reporter.reportLog({ message: "Adapter stopped successfully." });
     });
 
     return true;
