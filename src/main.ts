@@ -3,7 +3,6 @@ import path from "node:path";
 import started from "electron-squirrel-startup";
 
 import { app, BrowserWindow, Menu, ipcMain } from "electron";
-import { createReporter } from "@/adapter/report";
 import { createAdapterService } from "@/adapter/adapter-service";
 import { IPCChannel } from "@/ipc";
 
@@ -50,10 +49,8 @@ export const getWindow = () => {
 const handleReady = () => {
   createWindow();
   createAdapterService();
-  const { reportLog } = createReporter("main");
 
   ipcMain.handle(IPCChannel.OSInfo, () => {
-    reportLog({ message: "Getting OS hostname" });
     return os.hostname();
   });
 
