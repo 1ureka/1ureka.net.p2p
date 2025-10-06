@@ -1,7 +1,8 @@
-import { useState, useMemo, memo } from "react";
+import { useMemo, memo } from "react";
 import ListAltRoundedIcon from "@mui/icons-material/ListAltRounded";
 import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
 import { Box, Typography } from "@mui/material";
+import { create } from "zustand";
 
 import type { ConnectionLogLevel } from "@/utils";
 import { centerTextSx } from "@/ui/theme";
@@ -10,12 +11,20 @@ import { Card, CardHeader } from "@/ui/components/Card";
 import { EventsList, useLogs } from "@/ui/components/EventsList";
 import { EventsSummary } from "@/ui/components/EventsSummary";
 
+const levels: ConnectionLogLevel[] = ["info", "warn", "error"];
+
+const useLevelStore = create<{
+  selectedLevels: ConnectionLogLevel[];
+  setSelectedLevels: (levels: ConnectionLogLevel[]) => void;
+}>((set) => ({
+  selectedLevels: levels,
+  setSelectedLevels: (levels) => set({ selectedLevels: levels }),
+}));
+
 type LevelFilterProps = {
   selectedLevels: ConnectionLogLevel[];
   onChange: (levels: ConnectionLogLevel[]) => void;
 };
-
-const levels: ConnectionLogLevel[] = ["info", "warn", "error"];
 
 const LevelFilter = ({ selectedLevels, onChange }: LevelFilterProps) => {
   const handleToggle = (level: ConnectionLogLevel) => {
@@ -49,9 +58,24 @@ const LevelFilter = ({ selectedLevels, onChange }: LevelFilterProps) => {
   );
 };
 
-const EventsPage = memo(() => {
+const EventsPageHeader = () => (
+  <CardHeader>
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+      <ListAltRoundedIcon />
+      <Typography variant="subtitle1" component="h2">
+        Events
+      </Typography>
+    </Box>
+
+    <Box sx={{ flex: 1 }} />
+
+    <EventsSummary display={{ total: true, info: true, warn: true, error: true }} />
+  </CardHeader>
+);
+
+const EventsPageBody = () => {
   const allLogs = useLogs();
-  const [selectedLevels, setSelectedLevels] = useState<ConnectionLogLevel[]>(levels);
+  const { selectedLevels } = useLevelStore();
 
   const filteredLogs = useMemo(() => {
     return allLogs.filter((log) => selectedLevels.includes(log.level));
@@ -59,21 +83,17 @@ const EventsPage = memo(() => {
 
   const hasFilters = selectedLevels.length < 3;
 
+  return <EventsList logs={filteredLogs} hasFilters={hasFilters} />;
+};
+
+const EventsPage = memo(() => {
+  const { selectedLevels, setSelectedLevels } = useLevelStore();
+  const hasFilters = selectedLevels.length < 3;
+
   return (
     <Box sx={{ px: 4, py: 3, flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
       <Card sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
-        <CardHeader>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <ListAltRoundedIcon />
-            <Typography variant="subtitle1" component="h2">
-              Events
-            </Typography>
-          </Box>
-
-          <Box sx={{ flex: 1 }} />
-
-          <EventsSummary display={{ total: true, info: true, warn: true, error: true }} />
-        </CardHeader>
+        <EventsPageHeader />
 
         <Box sx={{ px: 2, py: 1, borderBottom: "1px solid", borderColor: "divider" }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
@@ -98,7 +118,7 @@ const EventsPage = memo(() => {
           </Box>
         </Box>
 
-        <EventsList logs={filteredLogs} hasFilters={hasFilters} />
+        <EventsPageBody />
 
         <Box sx={{ p: 1 }} />
       </Card>
