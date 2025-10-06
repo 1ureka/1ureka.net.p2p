@@ -1,3 +1,4 @@
+import InfoOutlineRoundedIcon from "@mui/icons-material/InfoOutlineRounded";
 import { Box, Typography, type BoxProps } from "@mui/material";
 import { format } from "pretty-format";
 
@@ -86,4 +87,26 @@ const EventEntry = ({ log }: { log: ConnectionLogEntry }) => {
   );
 };
 
-export { EventEntry, useLogs };
+const NoItemDisplay = ({ hasFilters }: { hasFilters: boolean }) => {
+  const title = hasFilters ? "No matching events" : "No events yet";
+  const description = hasFilters
+    ? "No events match your current filters. Try adjusting your filter settings."
+    : "There are no connection events to display. Logs will appear here once the system starts running.";
+
+  return (
+    <Box sx={{ display: "grid", placeItems: "center", height: 1 }}>
+      <Box sx={{ color: "text.secondary", display: "grid", placeItems: "center" }}>
+        <InfoOutlineRoundedIcon fontSize="large" sx={{ opacity: 0.5, mb: 1 }} />
+
+        <Typography variant="subtitle2" sx={{ color: "text.primary" }}>
+          {title}
+        </Typography>
+        <Typography variant="body2" sx={{ textAlign: "center", maxWidth: 400 }}>
+          {description}
+        </Typography>
+      </Box>
+    </Box>
+  );
+};
+
+export { EventEntry, useLogs, NoItemDisplay };

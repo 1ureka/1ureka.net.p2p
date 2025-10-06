@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import ListAltRoundedIcon from "@mui/icons-material/ListAltRounded";
-import InfoOutlineRoundedIcon from "@mui/icons-material/InfoOutlineRounded";
 import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
 import { Box, Typography } from "@mui/material";
 
@@ -8,30 +7,8 @@ import type { ConnectionLogEntry, ConnectionLogLevel } from "@/utils";
 import { centerTextSx } from "@/ui/theme";
 import { GithubButton } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
-import { EventEntry, useLogs } from "@/ui/components/EventsList";
+import { EventEntry, useLogs, NoItemDisplay } from "@/ui/components/EventsList";
 import { EventsSummary } from "@/ui/components/EventsSummary";
-
-const NoItemDisplay = ({ hasFilters }: { hasFilters: boolean }) => {
-  const title = hasFilters ? "No matching events" : "No events yet";
-  const description = hasFilters
-    ? "No events match your current filters. Try adjusting your filter settings."
-    : "There are no connection events to display. Logs will appear here once the system starts running.";
-
-  return (
-    <Box sx={{ display: "grid", placeItems: "center", height: "100%", minHeight: 300 }}>
-      <Box sx={{ color: "text.secondary", display: "grid", placeItems: "center" }}>
-        <InfoOutlineRoundedIcon fontSize="large" sx={{ opacity: 0.5, mb: 1 }} />
-
-        <Typography variant="subtitle2" sx={{ color: "text.primary" }}>
-          {title}
-        </Typography>
-        <Typography variant="body2" sx={{ textAlign: "center", maxWidth: 400 }}>
-          {description}
-        </Typography>
-      </Box>
-    </Box>
-  );
-};
 
 type LevelFilterProps = {
   selectedLevels: ConnectionLogLevel[];
