@@ -6,7 +6,7 @@ import { format } from "pretty-format";
 import { useTab } from "@/ui/tabs";
 import { useAdapter } from "@/adapter/store";
 import { useSession } from "@/transport/store";
-import type { ConnectionLogEntry, ConnectionLogLevel } from "@/utils";
+import { mergeRepeatedLogs, type ConnectionLogEntry, type ConnectionLogLevel } from "@/utils";
 
 import { centerTextSx, ellipsisSx } from "@/ui/theme";
 import { GithubHeaderButton } from "@/ui/components/Github";
@@ -36,7 +36,7 @@ const useLogs = () => {
   const adapterLogs = useAdapter((state) => state.history);
   const sessionLogs = useSession((state) => state.history);
   const logs = [...adapterLogs, ...sessionLogs].toSorted((a, b) => a.timestamp - b.timestamp);
-  return logs;
+  return mergeRepeatedLogs(logs);
 };
 
 const Chip = ({ color, text }: { color: string; text: string }) => {
