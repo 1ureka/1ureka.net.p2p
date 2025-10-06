@@ -1,6 +1,6 @@
 import { ipcMain } from "electron";
 import { getWindow } from "@/main";
-import { createReporter, clearHistory } from "@/adapter-state/report";
+import { createReporter, clearHistory, reportInstance } from "@/adapter-state/report";
 import { createHostAdapter } from "@/adapter/adapter-host";
 import { createClientAdapter } from "@/adapter/adapter-client";
 import { IPCChannel } from "@/ipc";
@@ -20,6 +20,7 @@ const createAdapterService = () => {
     }
 
     win.adapter = "host";
+    reportInstance({ instance: "host" });
     clearHistory();
     reporter.reportLog({ message: "Starting host adapter..." });
 
@@ -36,6 +37,7 @@ const createAdapterService = () => {
       ipcMain.removeHandler(IPCChannel.AdapterRemoveRule);
       handleClose();
       win.adapter = undefined;
+      reportInstance({ instance: null });
     });
 
     return true;
@@ -52,6 +54,7 @@ const createAdapterService = () => {
     }
 
     win.adapter = "client";
+    reportInstance({ instance: "client" });
     clearHistory();
     reporter.reportLog({ message: "Starting client adapter..." });
 
@@ -68,6 +71,7 @@ const createAdapterService = () => {
       ipcMain.removeHandler(IPCChannel.AdapterRemoveMapping);
       handleClose();
       win.adapter = undefined;
+      reportInstance({ instance: null });
     });
 
     return true;

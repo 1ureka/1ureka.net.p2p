@@ -2,13 +2,18 @@ import { getWindow } from "@/main";
 import { IPCChannel } from "@/ipc";
 import { randomUUID } from "crypto";
 import type { ConnectionLogEntry } from "@/utils";
-import type { SocketChangePayload, LogsChangePayload } from "@/adapter-state/store";
+import type { SocketChangePayload, LogsChangePayload, InstanceChangePayload } from "@/adapter-state/store";
 import type { MappingChangePayload, RuleChangePayload } from "@/adapter-state/store";
 
 const getReportMethods = (level: "info" | "warn" | "error") => {
   if (level === "info") return console.log;
   if (level === "warn") return console.warn;
   return console.error;
+};
+
+const reportInstance = (props: InstanceChangePayload) => {
+  const win = getWindow();
+  win.webContents.send(IPCChannel.AdapterInstanceChange, props);
 };
 
 const reportSockets = (props: SocketChangePayload) => {
@@ -56,4 +61,4 @@ const clearHistory = () => {
   win.webContents.send(IPCChannel.AdapterRuleChange, { type: "clear" });
 };
 
-export { createReporter, clearHistory, reportSockets, reportMappings, reportRules };
+export { createReporter, clearHistory, reportInstance, reportSockets, reportMappings, reportRules };

@@ -4,12 +4,14 @@ import { create } from "zustand";
 import { type SocketPair, SocketPairSet, stringifySocketPair } from "@/adapter/ip";
 
 type Action = "add" | "del" | "clear";
+type InstanceChangePayload = { instance: "host" | "client" | null };
 type LogsChangePayload = { type: Action; entry?: ConnectionLogEntry };
 type SocketChangePayload = { type: Action; pair?: SocketPair };
 type MappingChangePayload = { type: Action; id: string; map?: SocketPair };
 type RuleChangePayload = { type: Action; id: string; pattern?: string };
 
 type AdapterState = {
+  instance: "host" | "client" | null;
   history: ConnectionLogEntry[];
   sockets: SocketPair[];
   mappings: { id: string; mapping: string; createdAt: number }[];
@@ -20,6 +22,10 @@ const useAdapter = create<AdapterState>((set) => {
   const socketSet = new SocketPairSet();
   const mappingSet: Map<string, { map: SocketPair; createdAt: number }> = new Map();
   const ruleSet: Map<string, { pattern: string; createdAt: number }> = new Map();
+
+  window.electron.on(IPCChannel.AdapterInstanceChange, ({ instance }: InstanceChangePayload) => {
+    set({ instance });
+  });
 
   window.electron.on(IPCChannel.AdapterLogsChange, ({ type, entry }: LogsChangePayload) => {
     set((state) => {
@@ -87,8 +93,9 @@ const useAdapter = create<AdapterState>((set) => {
     set({ rules });
   });
 
-  return { history: [], sockets: [], mappings: [], rules: [] };
+  return { instance: null, history: [], sockets: [], mappings: [], rules: [] };
 });
 
 export { useAdapter };
-export type { SocketChangePayload, MappingChangePayload, RuleChangePayload, LogsChangePayload };
+export type { MappingChangePayload, RuleChangePayload };
+export type { SocketChangePayload, LogsChangePayload, InstanceChangePayload };
