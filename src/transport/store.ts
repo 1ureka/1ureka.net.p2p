@@ -56,7 +56,7 @@ const setStatus = (status: ConnectionStatus): boolean => {
 const report = (entry: Omit<ConnectionLogEntry, "id" | "timestamp" | "module">) => {
   const logEntry: ConnectionLogEntry = {
     ...entry,
-    module: "webrtc",
+    module: "session",
     timestamp: Date.now(),
     id: crypto.randomUUID(),
   };
