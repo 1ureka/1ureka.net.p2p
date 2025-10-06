@@ -1,7 +1,7 @@
-import { Box, Divider } from "@mui/material";
+import { Box, Divider, type BoxProps } from "@mui/material";
 
-const Card = ({ children }: { children: React.ReactNode }) => {
-  return <Box sx={{ borderRadius: 1.5, border: "2px solid", borderColor: "divider" }}>{children}</Box>;
+const Card = ({ children, sx }: { children: React.ReactNode; sx?: BoxProps["sx"] }) => {
+  return <Box sx={{ borderRadius: 1.5, border: "2px solid", borderColor: "divider", ...sx }}>{children}</Box>;
 };
 
 const CardHeader = ({ children }: { children: React.ReactNode }) => {
