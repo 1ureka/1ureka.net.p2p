@@ -128,4 +128,6 @@ const EventsPage = memo(() => (
   </Box>
 ));
 
+EventsPage.displayName = "EventsPage";
+
 export { EventsPage };

@@ -1,3 +1,5 @@
+/* eslint-disable import/no-duplicates */
+
 import { getWindow } from "@/main";
 import { IPCChannel } from "@/ipc";
 import { randomUUID } from "crypto";

@@ -26,6 +26,8 @@ const OverviewPage = memo(({ type }: { type: "rule" | "mapping" }) => (
   </Box>
 ));
 
+OverviewPage.displayName = "OverviewPage";
+
 const LaunchPage = memo(() => (
   <Box sx={{ display: "grid", placeItems: "center", gridTemplateRows: "1fr auto 1fr", flex: 1, gap: 5, py: 3 }}>
     <Box sx={{ textAlign: "center", alignSelf: "end" }}>
@@ -61,6 +63,8 @@ const LaunchPage = memo(() => (
     </Box>
   </Box>
 ));
+
+LaunchPage.displayName = "LaunchPage";
 
 const PageWrapperProps = {
   sx: { flex: 1, minHeight: 0, overflow: "auto" },
