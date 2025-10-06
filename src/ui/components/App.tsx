@@ -1,6 +1,6 @@
 import { Box, Stack, Typography } from "@mui/material";
 import { motion, AnimatePresence } from "motion/react";
-import { useSession } from "@/transport/store";
+import { useSession } from "@/transport-state/store";
 import { useTab } from "@/ui/tabs";
 import { memo } from "react";
 

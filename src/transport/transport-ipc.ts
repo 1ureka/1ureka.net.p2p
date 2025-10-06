@@ -1,12 +1,11 @@
 import { IPCChannel } from "@/ipc";
-import { controller } from "@/transport/store";
+import { reportError } from "@/transport-state/report";
 import { createDataChannelSender } from "@/transport/transport-sender";
 
 /**
  * 綁定 DataChannel 與 IPC 的雙向資料橋接
  */
 const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
-  const { reportError } = controller;
   const sender = createDataChannelSender(dataChannel);
 
   // DataChannel → IPC: 當 DataChannel 收到資料時，轉發到主程序的橋接邏輯

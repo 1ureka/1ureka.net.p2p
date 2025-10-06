@@ -3,7 +3,7 @@ import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
 import { Box, BoxProps, Button, Tab, Tabs, Typography } from "@mui/material";
 import { centerTextSx } from "@/ui/theme";
 import { useTab, type TabEntry } from "@/ui/tabs";
-import { useSession } from "@/transport/store";
+import { useSession } from "@/transport-state/store";
 
 const HeaderTitle = () => {
   return (

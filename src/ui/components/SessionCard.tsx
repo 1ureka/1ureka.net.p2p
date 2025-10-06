@@ -3,10 +3,11 @@ import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import StopRoundedIcon from "@mui/icons-material/StopRounded";
 import { Box, Button, Typography } from "@mui/material";
 
+import { ellipsisSx } from "@/ui/theme";
 import { GithubHeaderButton } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
-import { ellipsisSx } from "@/ui/theme";
-import { type ConnectionStatus, useSession, handlers } from "@/transport/store";
+import { type ConnectionStatus, useSession } from "@/transport-state/store";
+import { handleLeave, handleStop } from "@/transport-state/handlers";
 
 const green = "#4caf50";
 const red = "#f44336";
@@ -101,7 +102,7 @@ const SessionCard = () => {
             StartIcon={StopRoundedIcon}
             disabled={stopDisabled}
             loading={stopLoading}
-            onClick={() => handlers.handleStop()}
+            onClick={() => handleStop()}
           >
             stop
           </GithubHeaderButton>
@@ -110,7 +111,7 @@ const SessionCard = () => {
             color="error"
             StartIcon={LogoutRoundedIcon}
             disabled={leaveDisabled}
-            onClick={() => handlers.handleLeave()}
+            onClick={() => handleLeave()}
           >
             leave
           </GithubHeaderButton>

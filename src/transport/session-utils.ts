@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { IPCChannel } from "@/ipc";
-import { controller } from "@/transport/store";
+import { reportSession } from "@/transport-state/report";
 
 /**
  * Session-based WebRTC API 相關的 schema 與型別
@@ -49,7 +49,7 @@ const createSession = async (): Promise<Session> => {
   }
 
   const session = SessionSchema.parse(await response.json());
-  controller.setSession(session);
+  reportSession(session);
   return session;
 };
 
@@ -73,7 +73,7 @@ const joinSession = async (id: string): Promise<Session> => {
   }
 
   const session = SessionSchema.parse(await response.json());
-  controller.setSession(session);
+  reportSession(session);
   return session;
 };
 
@@ -90,7 +90,7 @@ async function* pollingSession(id: string, event: "join" | "offer" | "answer") {
     }
 
     const session = SessionSchema.parse(await response.json());
-    controller.setSession(session);
+    reportSession(session);
     yield session;
   }
 }

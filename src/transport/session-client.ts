@@ -1,4 +1,5 @@
-import { controller } from "@/transport/store";
+import { setStatus } from "@/transport-state/store";
+import { reportLog, reportError, onceAborted, getAborted } from "@/transport-state/report";
 import { createPeerConnection } from "@/transport/transport-pc";
 import { bindDataChannelIPC } from "@/transport/transport-ipc";
 import { joinSession, pollingSession, sendSignal } from "@/transport/session-utils";
@@ -10,15 +11,13 @@ const WAIT_DATA_CHANNEL_TIMEOUT = 5000; // 等待 DataChannel 開啟的最大時
  * 啟動 P2P 會話連線，加入既有會話
  */
 const createClientSession = async (sessionId: string) => {
-  const { reportLog, reportError, setStatus, onceAborted } = controller;
-
   // 1. 加入既有會話
   try {
     if (!setStatus("joining")) return;
 
-    if (controller.aborted) throw new Error("Session creation aborted before starting");
+    if (getAborted()) throw new Error("Session creation aborted before starting");
     await joinSession(sessionId);
-    if (controller.aborted) throw new Error("Session aborted after joining session");
+    if (getAborted()) throw new Error("Session aborted after joining session");
   } catch (error) {
     reportError({ message: "Failed to join session", data: error });
     setStatus("failed");
@@ -35,7 +34,7 @@ const createClientSession = async (sessionId: string) => {
     setStatus("signaling");
 
     for await (const { signal } of pollingSession(sessionId, "offer")) {
-      if (controller.aborted) throw new Error("Session aborted while waiting for offer");
+      if (getAborted()) throw new Error("Session aborted while waiting for offer");
       reportLog({ message: "Waiting for host's offer..." });
       if (signal.offer) {
         await setRemote(signal.offer.sdp, signal.offer.candidate);
@@ -43,10 +42,10 @@ const createClientSession = async (sessionId: string) => {
       }
     }
 
-    if (controller.aborted) throw new Error("Session aborted after setting remote offer");
+    if (getAborted()) throw new Error("Session aborted after setting remote offer");
     const { description, candidates } = await getLocal("createAnswer", GETHER_CANDIDATE_TIMEOUT);
     await sendSignal(sessionId, { type: "answer", sdp: description, candidate: candidates });
-    if (controller.aborted) throw new Error("Session aborted after sending answer");
+    if (getAborted()) throw new Error("Session aborted after sending answer");
   } catch (error) {
     reportError({ message: "Error occurred during signaling exchange", data: error });
     setStatus("failed");
@@ -56,10 +55,10 @@ const createClientSession = async (sessionId: string) => {
 
   // 4. 等待 DataChannel 開啟
   try {
-    if (controller.aborted) throw new Error("Session aborted before DataChannel establishment");
+    if (getAborted()) throw new Error("Session aborted before DataChannel establishment");
     const dataChannel = await getDataChannel(WAIT_DATA_CHANNEL_TIMEOUT);
     bindDataChannelIPC(dataChannel);
-    if (controller.aborted) throw new Error("Session aborted after DataChannel established");
+    if (getAborted()) throw new Error("Session aborted after DataChannel established");
 
     setStatus("connected");
     reportLog({ message: "DataChannel established successfully" });

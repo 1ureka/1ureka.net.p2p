@@ -8,7 +8,7 @@ import { GithubButton, GithubHeaderButton } from "@/ui/components/Github";
 import { RouteCardList, RouteCardListItem } from "@/ui/components/RouteCardList";
 import { CreateMappingPopover, CreateRulePopover } from "@/ui/components/RouteCardDialog";
 
-import { useSession } from "@/transport/store";
+import { useSession } from "@/transport-state/store";
 import { useAdapter } from "@/adapter/store";
 import { useState } from "react";
 import { stringifySocketPair } from "@/adapter/ip";

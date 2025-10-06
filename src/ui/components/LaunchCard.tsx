@@ -1,11 +1,12 @@
 import { Box, Typography } from "@mui/material";
 import { GithubButton, GithubTextField } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
-
 import { centerTextSx } from "@/ui/theme";
-import { useSession, handlers } from "@/transport/store";
-import { useState } from "react";
+
 import { z } from "zod";
+import { useState } from "react";
+import { useSession } from "@/transport-state/store";
+import { handleCreateSession, handleJoinSession } from "@/transport-state/handlers";
 
 const CreateSessionCard = () => {
   const status = useSession((state) => state.status);
@@ -38,7 +39,7 @@ const CreateSessionCard = () => {
             disabled={disabled}
             loading={loading}
             loadingPosition="start"
-            onClick={() => handlers.handleCreateSession()}
+            onClick={() => handleCreateSession()}
           >
             Create
           </GithubButton>
@@ -70,7 +71,7 @@ const JoinSessionCard = () => {
       setError(result.error.issues[0].message);
       return;
     }
-    handlers.handleJoinSession(id.trim());
+    handleJoinSession(id.trim());
   };
 
   return (
