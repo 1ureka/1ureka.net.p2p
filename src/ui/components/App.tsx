@@ -3,9 +3,9 @@ import { motion, AnimatePresence } from "motion/react";
 import { useSession } from "@/transport/store";
 import { useTab } from "@/ui/tabs";
 import { memo } from "react";
-import { centerTextSx } from "@/ui/theme";
 
 import { Header } from "@/ui/components/Header";
+import { Footer } from "@/ui/components/Footer";
 import { EventsCard } from "@/ui/components/EventsCard";
 import { EventsPage } from "@/ui/components/EventsPage";
 import { SessionCard } from "@/ui/components/SessionCard";
@@ -100,17 +100,6 @@ const Pages = () => {
         </Stack>
       )}
     </AnimatePresence>
-  );
-};
-
-const Footer = () => {
-  return (
-    <Box sx={{ borderTop: "2px solid", borderColor: "divider", p: 2, bgcolor: "background.paper" }}>
-      {/* 左側新增 link 樣式的按紐，可以開啟F12 */}
-      <Typography variant="body2" sx={{ color: "text.secondary", textAlign: "right", ...centerTextSx }}>
-        v1.0.0-alpha.5
-      </Typography>
-    </Box>
   );
 };
 
