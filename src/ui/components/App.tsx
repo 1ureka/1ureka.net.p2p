@@ -5,6 +5,7 @@ import { useTab } from "@/ui/tabs";
 
 import { Header } from "@/ui/components/Header";
 import { EventsCard } from "@/ui/components/EventsCard";
+import { EventsPage } from "@/ui/components/EventsPage";
 import { SessionCard } from "@/ui/components/SessionCard";
 import { TrafficCard } from "@/ui/components/TrafficCard";
 import { MappingCard, RuleCard } from "@/ui/components/RouteCard";
@@ -96,6 +97,11 @@ const Pages = () => {
       {tab === "overview" && overviewType === "client" && (
         <Box key="overview-client" {...PageWrapperProps}>
           <OverviewPage type="mapping" />
+        </Box>
+      )}
+      {tab === "events" && (
+        <Box key="events" {...PageWrapperProps}>
+          <EventsPage />
         </Box>
       )}
     </AnimatePresence>
