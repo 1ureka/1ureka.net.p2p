@@ -13,17 +13,22 @@ const formatLevel = (level: ConnectionLogLevel) => {
   return "\u00A0UNKN";
 };
 
-const getBgColor = (level: ConnectionLogLevel) => {
-  if (level === "info") return "background.default";
-  if (level === "warn") return "warning.main";
-  if (level === "error") return "error.main";
-  return "background.default";
-};
-
-const getColor = (level: ConnectionLogLevel): { prefix: string; context: string; hover: string } => {
-  if (level === "warn") return { prefix: "warning.main", context: "warning.main", hover: "warning.main" };
-  if (level === "error") return { prefix: "error.main", context: "error.main", hover: "error.main" };
-  return { prefix: "text.secondary", context: "text.primary", hover: "text.primary" };
+const colorMap: Record<
+  ConnectionLogLevel,
+  { background: string; text: { prefix: string; context: string; hover: string } }
+> = {
+  info: {
+    background: "background.default",
+    text: { prefix: "text.secondary", context: "text.primary", hover: "text.primary" },
+  },
+  warn: {
+    background: "warning.main",
+    text: { prefix: "warning.main", context: "warning.main", hover: "warning.main" },
+  },
+  error: {
+    background: "error.main",
+    text: { prefix: "error.main", context: "error.main", hover: "error.main" },
+  },
 };
 
 const useLogs = () => {
@@ -34,13 +39,27 @@ const useLogs = () => {
 };
 
 const EventEntry = ({ log }: { log: ConnectionLogEntry }) => {
-  const bgcolor = getBgColor(log.level);
-  const colors = getColor(log.level);
-  const baseSx: BoxProps["sx"] = { fontFamily: "Ubuntu", "div:hover > div > &": { color: colors.hover } };
+  const { level, module, message, data, timestamp } = log;
+  const bgcolor = colorMap[level].background;
 
-  const prefixSx: BoxProps["sx"] = { ...baseSx, color: colors.prefix, textWrap: "nowrap" };
-  const textSx: BoxProps["sx"] = { ...baseSx, color: colors.context, ...ellipsisSx };
-  const dataSx: BoxProps["sx"] = { fontFamily: "Ubuntu", color: "text.secondary", ...ellipsisSx, WebkitLineClamp: 5 };
+  const prefixSx: BoxProps["sx"] = {
+    fontFamily: "Ubuntu",
+    "div:hover > div > &": { color: colorMap[level].text.hover },
+    color: colorMap[level].text.prefix,
+    textWrap: "nowrap",
+  };
+  const textSx: BoxProps["sx"] = {
+    fontFamily: "Ubuntu",
+    "div:hover > div > &": { color: colorMap[level].text.hover },
+    color: colorMap[level].text.context,
+    ...ellipsisSx,
+  };
+  const dataSx: BoxProps["sx"] = {
+    fontFamily: "Ubuntu",
+    color: "text.secondary",
+    ...ellipsisSx,
+    WebkitLineClamp: 5,
+  };
 
   return (
     <Box sx={{ position: "relative", "&:hover": { filter: "brightness(1.25)" }, py: 0.5, px: 1.5 }}>
@@ -48,19 +67,19 @@ const EventEntry = ({ log }: { log: ConnectionLogEntry }) => {
 
       <Box sx={{ display: "flex", alignItems: "flex-end", gap: 1 }}>
         <Typography variant="body2" sx={prefixSx}>
-          [{new Date(log.timestamp).toLocaleTimeString("en-US") + "\u00A0" + formatLevel(log.level)}]:
+          [{new Date(timestamp).toLocaleTimeString("en-US") + "\u00A0" + formatLevel(level)}]:
         </Typography>
         <Typography variant="body2" sx={prefixSx}>
-          [{log.module.toUpperCase()}]
+          [{module.toUpperCase()}]
         </Typography>
         <Typography variant="body2" sx={textSx}>
-          {log.message}
+          {message}
         </Typography>
       </Box>
 
-      {log.data && (
+      {data && (
         <Typography variant="caption" sx={{ ml: 1, ...dataSx }}>
-          {format(log.data)}
+          {format(data)}
         </Typography>
       )}
     </Box>
