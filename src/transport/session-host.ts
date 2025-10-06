@@ -1,4 +1,3 @@
-import { IPCChannel } from "@/ipc";
 import { controller } from "@/transport/store";
 import { createPeerConnection } from "@/transport/transport-pc";
 import { bindDataChannelIPC } from "@/transport/transport-ipc";
@@ -78,13 +77,11 @@ const createHostSession = async () => {
 
     setStatus("connected");
     reportLog({ message: "DataChannel established successfully" });
-    window.electron.send(IPCChannel.AdapterStartHost);
 
     onceAborted(() => {
       reportLog({ message: "Session aborted and connection closed" });
       setStatus("failed");
       close();
-      window.electron.send(IPCChannel.AdapterStop);
     });
   } catch (error) {
     reportError({ message: "Failed to open DataChannel", data: error });
