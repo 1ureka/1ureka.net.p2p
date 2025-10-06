@@ -21,17 +21,19 @@ const NoItemDisplay = ({ type, action }: { type: "mapping" | "rule"; action: Rea
       : "You haven’t defined any access rules yet. Add one to allow incoming connections.";
 
   return (
-    <Box sx={{ py: 6, px: 2, color: "text.secondary", display: "grid", placeItems: "center" }}>
-      <InfoOutlineRoundedIcon fontSize="large" sx={{ opacity: 0.5, mb: 1 }} />
+    <Box sx={{ height: 1, display: "grid", placeItems: "center" }}>
+      <Box sx={{ p: 2, color: "text.secondary", display: "grid", placeItems: "center" }}>
+        <InfoOutlineRoundedIcon fontSize="large" sx={{ opacity: 0.5, mb: 1 }} />
 
-      <Typography variant="subtitle2" sx={{ color: "text.primary" }}>
-        {title}
-      </Typography>
-      <Typography variant="body2" sx={{ textAlign: "center", maxWidth: 400 }}>
-        {description}
-      </Typography>
+        <Typography variant="subtitle2" sx={{ color: "text.primary" }}>
+          {title}
+        </Typography>
+        <Typography variant="body2" sx={{ textAlign: "center", maxWidth: 400 }}>
+          {description}
+        </Typography>
 
-      {action}
+        {action}
+      </Box>
     </Box>
   );
 };
@@ -50,7 +52,7 @@ const MappingCard = () => {
   };
 
   return (
-    <Card>
+    <Card sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
       <CardHeader>
         <Typography variant="subtitle1" component="h2">
           Mappings
@@ -64,35 +66,37 @@ const MappingCard = () => {
         <CreateMappingPopover anchorEl={anchorEl} onClose={handleClose} />
       </CardHeader>
 
-      {mappings.size <= 0 && (
-        <NoItemDisplay
-          type="mapping"
-          action={
-            <GithubButton
-              sx={{ mt: 2.5, py: 0.5, px: 1.5, bgcolor: "background.paper", textTransform: "none", ...centerTextSx }}
-              startIcon={<AddBoxRoundedIcon />}
-              disabled={disabled}
-              onClick={handleOpen}
-            >
-              <Typography variant="body2">Add mapping</Typography>
-            </GithubButton>
-          }
-        />
-      )}
+      <Box sx={{ flex: 1, overflow: "auto", minHeight: 0 }}>
+        {mappings.size <= 0 && (
+          <NoItemDisplay
+            type="mapping"
+            action={
+              <GithubButton
+                sx={{ mt: 2.5, py: 0.5, px: 1.5, bgcolor: "background.paper", textTransform: "none", ...centerTextSx }}
+                startIcon={<AddBoxRoundedIcon />}
+                disabled={disabled}
+                onClick={handleOpen}
+              >
+                <Typography variant="body2">Add mapping</Typography>
+              </GithubButton>
+            }
+          />
+        )}
 
-      {mappings.size > 0 && (
-        <RouteCardList>
-          {Array.from(mappings.entries()).map(([id, { map, createdAt }]) => (
-            <RouteCardListItem
-              key={id}
-              id={id}
-              type="mapping"
-              content={stringifySocketPair(map)}
-              createdAt={createdAt}
-            />
-          ))}
-        </RouteCardList>
-      )}
+        {mappings.size > 0 && (
+          <RouteCardList>
+            {Array.from(mappings.entries()).map(([id, { map, createdAt }]) => (
+              <RouteCardListItem
+                key={id}
+                id={id}
+                type="mapping"
+                content={stringifySocketPair(map)}
+                createdAt={createdAt}
+              />
+            ))}
+          </RouteCardList>
+        )}
+      </Box>
 
       <Box sx={{ p: 1 }} />
     </Card>
@@ -113,7 +117,7 @@ const RuleCard = () => {
   };
 
   return (
-    <Card>
+    <Card sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
       <CardHeader>
         <Typography variant="subtitle1" component="h2">
           Rules
@@ -127,29 +131,31 @@ const RuleCard = () => {
         <CreateRulePopover anchorEl={anchorEl} onClose={handleClose} />
       </CardHeader>
 
-      {rules.size <= 0 && (
-        <NoItemDisplay
-          type="rule"
-          action={
-            <GithubButton
-              sx={{ mt: 2.5, py: 0.5, px: 1.5, bgcolor: "background.paper", textTransform: "none", ...centerTextSx }}
-              startIcon={<AddBoxRoundedIcon />}
-              disabled={disabled}
-              onClick={handleOpen}
-            >
-              <Typography variant="body2">Add rule</Typography>
-            </GithubButton>
-          }
-        />
-      )}
+      <Box sx={{ flex: 1, overflow: "auto", minHeight: 0 }}>
+        {rules.size <= 0 && (
+          <NoItemDisplay
+            type="rule"
+            action={
+              <GithubButton
+                sx={{ mt: 2.5, py: 0.5, px: 1.5, bgcolor: "background.paper", textTransform: "none", ...centerTextSx }}
+                startIcon={<AddBoxRoundedIcon />}
+                disabled={disabled}
+                onClick={handleOpen}
+              >
+                <Typography variant="body2">Add rule</Typography>
+              </GithubButton>
+            }
+          />
+        )}
 
-      {rules.size > 0 && (
-        <RouteCardList>
-          {Array.from(rules.entries()).map(([id, { pattern, createdAt }]) => (
-            <RouteCardListItem key={id} id={id} type="rule" content={pattern} createdAt={createdAt} />
-          ))}
-        </RouteCardList>
-      )}
+        {rules.size > 0 && (
+          <RouteCardList>
+            {Array.from(rules.entries()).map(([id, { pattern, createdAt }]) => (
+              <RouteCardListItem key={id} id={id} type="rule" content={pattern} createdAt={createdAt} />
+            ))}
+          </RouteCardList>
+        )}
+      </Box>
 
       <Box sx={{ p: 1 }} />
     </Card>

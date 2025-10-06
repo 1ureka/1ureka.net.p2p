@@ -1,7 +1,8 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Stack, Typography } from "@mui/material";
 import { motion, AnimatePresence } from "motion/react";
 import { useSession } from "@/transport/store";
 import { useTab } from "@/ui/tabs";
+import { centerTextSx } from "@/ui/theme";
 
 import { Header } from "@/ui/components/Header";
 import { EventsCard } from "@/ui/components/EventsCard";
@@ -13,19 +14,16 @@ import { CreateSessionCard, JoinSessionCard } from "@/ui/components/LaunchCard";
 
 const OverviewPage = ({ type }: { type: "rule" | "mapping" }) => {
   return (
-    <>
-      <Box sx={{ display: "grid", gridTemplateColumns: "0.75fr 1fr", gap: 2, px: 4, py: 3 }}>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <SessionCard />
-          {type === "rule" ? <RuleCard /> : <MappingCard />}
-        </Box>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <TrafficCard />
-          <EventsCard />
-        </Box>
+    <Box sx={{ display: "grid", gridTemplateColumns: "0.75fr 1fr", gap: 2, px: 4, py: 3, minHeight: 0, flex: 1 }}>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minHeight: 0 }}>
+        <SessionCard />
+        {type === "rule" ? <RuleCard /> : <MappingCard />}
       </Box>
-      <Box sx={{ flexGrow: 1 }} />
-    </>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minHeight: 0 }}>
+        <TrafficCard />
+        <EventsCard />
+      </Box>
+    </Box>
   );
 };
 
@@ -68,7 +66,7 @@ const LaunchPage = () => {
 };
 
 const PageWrapperProps = {
-  sx: { flex: 1, display: "flex", flexDirection: "column" },
+  sx: { flex: 1, minHeight: 0, overflow: "auto" },
   component: motion.div,
   initial: { opacity: 0, y: -10 },
   animate: { opacity: 1, y: 0 },
@@ -85,47 +83,47 @@ const Pages = () => {
   return (
     <AnimatePresence mode="wait">
       {tab === "overview" && overviewType === null && (
-        <Box key="overview-null" {...PageWrapperProps}>
+        <Stack key="overview-null" {...PageWrapperProps}>
           <LaunchPage />
-        </Box>
+        </Stack>
       )}
       {tab === "overview" && overviewType === "host" && (
-        <Box key="overview-host" {...PageWrapperProps}>
+        <Stack key="overview-host" {...PageWrapperProps}>
           <OverviewPage type="rule" />
-        </Box>
+        </Stack>
       )}
       {tab === "overview" && overviewType === "client" && (
-        <Box key="overview-client" {...PageWrapperProps}>
+        <Stack key="overview-client" {...PageWrapperProps}>
           <OverviewPage type="mapping" />
-        </Box>
+        </Stack>
       )}
       {tab === "events" && (
-        <Box key="events" {...PageWrapperProps}>
+        <Stack key="events" {...PageWrapperProps}>
           <EventsPage />
-        </Box>
+        </Stack>
       )}
     </AnimatePresence>
   );
 };
 
-const FooterAccent = () => {
-  return <Box sx={{ borderTop: "1px solid", borderColor: "divider", py: 2.5, bgcolor: "background.paper" }} />;
+const Footer = () => {
+  return (
+    <Box sx={{ borderTop: "2px solid", borderColor: "divider", p: 2, bgcolor: "background.paper" }}>
+      {/* 左側新增 link 樣式的按紐，可以開啟F12 */}
+      <Typography variant="body2" sx={{ color: "text.secondary", textAlign: "right", ...centerTextSx }}>
+        v1.0.0-alpha.5
+      </Typography>
+    </Box>
+  );
 };
 
 const App = () => {
   return (
-    <Box
-      sx={{ height: "100dvh", overflow: "auto" }}
-      component={motion.div}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-    >
-      <Box sx={{ minWidth: "fit-content", minHeight: 1, display: "flex", flexDirection: "column" }}>
-        <Header />
-        <Pages />
-        <FooterAccent />
-      </Box>
-    </Box>
+    <Stack sx={{ height: "100dvh" }}>
+      <Header />
+      <Pages />
+      <Footer />
+    </Stack>
   );
 };
 

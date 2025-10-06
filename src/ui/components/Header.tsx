@@ -9,14 +9,9 @@ const HeaderTitle = () => {
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
       <DirectionsBoatRoundedIcon fontSize="large" color="primary" />
-      <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-        <Typography variant="h5" component="h1" sx={{ ...centerTextSx }}>
-          1ureka.net.p2p
-        </Typography>
-        <Typography variant="body1" sx={{ color: "text.secondary", textWrap: "nowrap", ...centerTextSx }}>
-          v1.0.0-alpha.5
-        </Typography>
-      </Box>
+      <Typography variant="h5" component="h1" sx={centerTextSx}>
+        1ureka.net.p2p
+      </Typography>
     </Box>
   );
 };
@@ -60,16 +55,6 @@ const HeaderTabs = () => {
   );
 };
 
-const headerSx: BoxProps["sx"] = {
-  px: 4,
-  bgcolor: "background.header",
-  position: "sticky",
-  top: 0,
-  zIndex: 1,
-  minWidth: "fit-content",
-  borderBottom: (theme) => `2px solid ${theme.palette.divider}`,
-};
-
 const headerInnerSx: BoxProps["sx"] = {
   display: "grid",
   alignItems: "center",
@@ -82,7 +67,7 @@ const headerInnerSx: BoxProps["sx"] = {
 
 const Header = () => {
   return (
-    <Box sx={headerSx}>
+    <Box sx={{ px: 4, bgcolor: "background.header", borderBottom: "2px solid", borderColor: "divider" }}>
       <Box sx={headerInnerSx}>
         <HeaderTitle />
         <HeaderTabs />

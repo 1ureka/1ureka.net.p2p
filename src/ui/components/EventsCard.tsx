@@ -61,7 +61,7 @@ const EventsLogs = () => {
   const logs = useLogs();
 
   return (
-    <Box sx={{ height: 350, overflow: "auto" }}>
+    <Box sx={{ flex: 1, overflow: "auto", minHeight: 0 }}>
       {logs.length <= 0 && <NoItemDisplay />}
       {logs.map((log) => (
         <EventEntry key={log.id} log={log} />
@@ -72,7 +72,7 @@ const EventsLogs = () => {
 
 const EventsCard = () => {
   return (
-    <Card>
+    <Card sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
       <CardHeader>
         <Typography variant="subtitle1" component="h2">
           Events
