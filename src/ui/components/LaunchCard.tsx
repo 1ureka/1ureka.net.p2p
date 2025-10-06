@@ -4,6 +4,8 @@ import { Card, CardHeader } from "@/ui/components/Card";
 
 import { centerTextSx } from "@/ui/theme";
 import { useSession, handlers } from "@/transport/store";
+import { useState } from "react";
+import { z } from "zod";
 
 const CreateSessionCard = () => {
   const status = useSession((state) => state.status);
@@ -46,10 +48,30 @@ const CreateSessionCard = () => {
   );
 };
 
+const nanoidSchema = z.string().regex(/^[A-Za-z0-9_-]{21}$/, {
+  message: "Invalid Session ID format",
+});
+
 const JoinSessionCard = () => {
   const status = useSession((state) => state.status);
   const disabled = status !== "disconnected";
   const loading = status === "joining";
+
+  const [id, setId] = useState("");
+  const [error, setError] = useState("");
+
+  const handleFocus = () => {
+    setError("");
+  };
+
+  const handleJoin = () => {
+    const result = nanoidSchema.safeParse(id.trim());
+    if (!result.success) {
+      setError(result.error.issues[0].message);
+      return;
+    }
+    handlers.handleJoinSession(id.trim());
+  };
 
   return (
     <Card>
@@ -70,7 +92,17 @@ const JoinSessionCard = () => {
         </Typography>
 
         <Box sx={{ my: 1.5, display: "flex", gap: 1, flexDirection: "column" }}>
-          <GithubTextField fullWidth size="small" label="Session ID" placeholder="Enter Session ID" />
+          <GithubTextField
+            fullWidth
+            size="small"
+            label="Session ID"
+            placeholder="Enter Session ID"
+            onFocus={handleFocus}
+            value={id}
+            onChange={(e) => setId(e.target.value)}
+            error={Boolean(error)}
+            helperText={error}
+          />
           <GithubButton
             size="small"
             fullWidth
@@ -78,7 +110,7 @@ const JoinSessionCard = () => {
             disabled={disabled}
             loading={loading}
             loadingPosition="start"
-            onClick={() => handlers.handleJoinSession("test-session-id")}
+            onClick={handleJoin}
           >
             Join
           </GithubButton>
