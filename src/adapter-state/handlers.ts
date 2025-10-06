@@ -19,4 +19,19 @@ const handleRemoveRule = async (id: string) => {
   await window.electron.request(IPCChannel.AdapterRemoveRule, id);
 };
 
+const handleStartHostAdapter = async () => {
+  const success = await window.electron.request(IPCChannel.AdapterStartHost);
+  if (!success) throw new Error("Failed to start host adapter");
+};
+
+const handleStartClientAdapter = async () => {
+  const success = await window.electron.request(IPCChannel.AdapterStartClient);
+  if (!success) throw new Error("Failed to start client adapter");
+};
+
+const handleStopAdapter = async () => {
+  await window.electron.request(IPCChannel.AdapterStop);
+};
+
 export { handleCreateMapping, handleRemoveMapping, handleCreateRule, handleRemoveRule };
+export { handleStartHostAdapter, handleStartClientAdapter, handleStopAdapter };

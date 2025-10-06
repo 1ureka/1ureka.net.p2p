@@ -11,12 +11,12 @@ const createAdapterService = () => {
 
   // ------------------------------------------------------------------------------
 
-  ipcMain.on(IPCChannel.AdapterStartHost, () => {
+  ipcMain.handle(IPCChannel.AdapterStartHost, () => {
     const reporter = createReporter("Host");
 
     if (win.adapter) {
       reporter.reportWarn({ message: "Adapter is already running, ignoring start request." });
-      return;
+      return false;
     }
 
     win.adapter = "host";
@@ -36,18 +36,19 @@ const createAdapterService = () => {
       ipcMain.removeHandler(IPCChannel.AdapterRemoveRule);
       handleClose();
       win.adapter = undefined;
-      reporter.reportLog({ message: "Host adapter stopped." });
     });
+
+    return true;
   });
 
   // ------------------------------------------------------------------------------
 
-  ipcMain.on(IPCChannel.AdapterStartClient, () => {
+  ipcMain.handle(IPCChannel.AdapterStartClient, () => {
     const reporter = createReporter("Client");
 
     if (win.adapter) {
       reporter.reportWarn({ message: "Adapter is already running, ignoring start request." });
-      return;
+      return false;
     }
 
     win.adapter = "client";
@@ -67,8 +68,9 @@ const createAdapterService = () => {
       ipcMain.removeHandler(IPCChannel.AdapterRemoveMapping);
       handleClose();
       win.adapter = undefined;
-      reporter.reportLog({ message: "Client adapter closed." });
     });
+
+    return true;
   });
 };
 
