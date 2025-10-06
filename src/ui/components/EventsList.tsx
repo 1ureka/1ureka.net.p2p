@@ -2,7 +2,7 @@ import InfoOutlineRoundedIcon from "@mui/icons-material/InfoOutlineRounded";
 import { Box, Typography, type BoxProps } from "@mui/material";
 import { format } from "pretty-format";
 
-import { useAdapter } from "@/adapter/store";
+import { useAdapter } from "@/adapter-state/store";
 import { useSession } from "@/transport-state/store";
 import { mergeRepeatedLogs, type ConnectionLogEntry, type ConnectionLogLevel } from "@/utils";
 import { ellipsisSx } from "@/ui/theme";

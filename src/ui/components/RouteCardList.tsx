@@ -6,7 +6,7 @@ import { Box, Typography, Tooltip, Zoom } from "@mui/material";
 import { ellipsisSx } from "@/ui/theme";
 import { GithubButton } from "@/ui/components/Github";
 
-import { handleRemoveMapping, handleRemoveRule } from "@/adapter/store";
+import { handleRemoveMapping, handleRemoveRule } from "@/adapter-state/handlers";
 import { useEffect, useState } from "react";
 
 function formatElapsed(elapsed: number) {

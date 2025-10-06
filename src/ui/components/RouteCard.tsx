@@ -9,7 +9,7 @@ import { RouteCardList, RouteCardListItem } from "@/ui/components/RouteCardList"
 import { CreateMappingPopover, CreateRulePopover } from "@/ui/components/RouteCardDialog";
 
 import { useSession } from "@/transport-state/store";
-import { useAdapter } from "@/adapter/store";
+import { useAdapter } from "@/adapter-state/store";
 import { useState } from "react";
 import { stringifySocketPair } from "@/adapter/ip";
 
