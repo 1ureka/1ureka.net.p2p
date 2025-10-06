@@ -72,7 +72,7 @@ const EventsPage = () => {
 
           <Box sx={{ flex: 1 }} />
 
-          <EventsSummary logs={filteredLogs} display={{ total: true, info: true, warn: true, error: true }} />
+          <EventsSummary display={{ total: true, info: true, warn: true, error: true }} />
         </CardHeader>
 
         <Box sx={{ px: 2, py: 1, borderBottom: "1px solid", borderColor: "divider" }}>

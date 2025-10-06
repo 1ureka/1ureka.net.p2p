@@ -1,6 +1,7 @@
 import { Box, Typography } from "@mui/material";
 import { centerTextSx } from "@/ui/theme";
-import type { ConnectionLogEntry, ConnectionLogLevel } from "@/utils";
+import { useLogs } from "@/ui/components/EventsList";
+import type { ConnectionLogLevel } from "@/utils";
 
 const chipColors: Record<ConnectionLogLevel | "total", string> = {
   info: "text.secondary",
@@ -20,12 +21,9 @@ const StatChip = ({ color, text }: { color: string; text: string }) => {
   );
 };
 
-type EventsSummaryProps = {
-  logs: ConnectionLogEntry[];
-  display: Record<ConnectionLogLevel | "total", boolean>;
-};
+const EventsSummary = ({ display }: { display: Record<ConnectionLogLevel | "total", boolean> }) => {
+  const logs = useLogs();
 
-const EventsSummary = ({ logs, display }: EventsSummaryProps) => {
   const counts = logs.reduce(
     (acc, log) => {
       acc.total += 1;
