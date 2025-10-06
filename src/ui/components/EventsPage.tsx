@@ -9,33 +9,7 @@ import { centerTextSx } from "@/ui/theme";
 import { GithubButton } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
 import { EventEntry, useLogs } from "@/ui/components/EventsList";
-
-const StatChip = ({ color, text }: { color: string; text: string }) => {
-  return (
-    <Box sx={{ px: 1.5, py: 1, borderRadius: 1, position: "relative", overflow: "hidden" }}>
-      <Box sx={{ position: "absolute", inset: 0, bgcolor: color, opacity: 0.2 }} />
-      <Typography variant="body2" sx={{ position: "relative", textWrap: "nowrap", color, ...centerTextSx }}>
-        {text}
-      </Typography>
-    </Box>
-  );
-};
-
-const EventsSummary = ({ logs }: { logs: ConnectionLogEntry[] }) => {
-  const totalCount = logs.length;
-  const infoCount = logs.filter((log) => log.level === "info").length;
-  const warningCount = logs.filter((log) => log.level === "warn").length;
-  const errorCount = logs.filter((log) => log.level === "error").length;
-
-  return (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, color: "text.secondary" }}>
-      <StatChip color="text.secondary" text={`${totalCount} total`} />
-      <StatChip color="text.secondary" text={`${infoCount} info`} />
-      <StatChip color={warningCount > 0 ? "warning.main" : "text.secondary"} text={`${warningCount} warnings`} />
-      <StatChip color={errorCount > 0 ? "error.main" : "text.secondary"} text={`${errorCount} errors`} />
-    </Box>
-  );
-};
+import { EventsSummary } from "@/ui/components/EventsSummary";
 
 const NoItemDisplay = ({ hasFilters }: { hasFilters: boolean }) => {
   const title = hasFilters ? "No matching events" : "No events yet";
@@ -132,7 +106,7 @@ const EventsPage = () => {
 
           <Box sx={{ flex: 1 }} />
 
-          <EventsSummary logs={filteredLogs} />
+          <EventsSummary logs={filteredLogs} display={{ total: true, info: true, warn: true, error: true }} />
         </CardHeader>
 
         <Box sx={{ px: 2, py: 1, borderBottom: "1px solid", borderColor: "divider" }}>
