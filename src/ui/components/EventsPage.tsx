@@ -21,15 +21,29 @@ const useLevelStore = create<{
   setSelectedLevels: (levels) => set({ selectedLevels: levels }),
 }));
 
-type LevelFilterProps = {
-  selectedLevels: ConnectionLogLevel[];
-  onChange: (levels: ConnectionLogLevel[]) => void;
+const ClearFiltersButton = () => {
+  const { selectedLevels, setSelectedLevels } = useLevelStore();
+  const hasFilters = selectedLevels.length < 3;
+
+  return (
+    <GithubButton
+      sx={{ py: 0.5, px: 1.5, bgcolor: "background.paper" }}
+      disabled={!hasFilters}
+      onClick={() => setSelectedLevels(levels)}
+    >
+      <Typography variant="body2" sx={centerTextSx}>
+        Clear filters
+      </Typography>
+    </GithubButton>
+  );
 };
 
-const LevelFilter = ({ selectedLevels, onChange }: LevelFilterProps) => {
+const LevelFilter = () => {
+  const { selectedLevels, setSelectedLevels } = useLevelStore();
+
   const handleToggle = (level: ConnectionLogLevel) => {
     const newLevels = isSelected(level) ? selectedLevels.filter((l) => l !== level) : [...selectedLevels, level];
-    if (newLevels.length > 0) onChange(newLevels);
+    if (newLevels.length > 0) setSelectedLevels(newLevels);
   };
 
   const isSelected = (level: ConnectionLogLevel) => selectedLevels.includes(level);
@@ -58,6 +72,8 @@ const LevelFilter = ({ selectedLevels, onChange }: LevelFilterProps) => {
   );
 };
 
+// ---------------------------------------------------------------------
+
 const EventsPageHeader = () => (
   <CardHeader>
     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -73,6 +89,21 @@ const EventsPageHeader = () => (
   </CardHeader>
 );
 
+const EventsPageActions = () => (
+  <Box sx={{ px: 2, py: 1, borderBottom: "1px solid", borderColor: "divider" }}>
+    <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <FilterListRoundedIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+        <Typography variant="body2" sx={{ color: "text.secondary", ...centerTextSx }}>
+          Filters:
+        </Typography>
+      </Box>
+      <LevelFilter />
+      <ClearFiltersButton />
+    </Box>
+  </Box>
+);
+
 const EventsPageBody = () => {
   const allLogs = useLogs();
   const { selectedLevels } = useLevelStore();
@@ -86,44 +117,15 @@ const EventsPageBody = () => {
   return <EventsList logs={filteredLogs} hasFilters={hasFilters} />;
 };
 
-const EventsPage = memo(() => {
-  const { selectedLevels, setSelectedLevels } = useLevelStore();
-  const hasFilters = selectedLevels.length < 3;
-
-  return (
-    <Box sx={{ px: 4, py: 3, flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
-      <Card sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
-        <EventsPageHeader />
-
-        <Box sx={{ px: 2, py: 1, borderBottom: "1px solid", borderColor: "divider" }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <FilterListRoundedIcon sx={{ color: "text.secondary", fontSize: 20 }} />
-              <Typography variant="body2" sx={{ color: "text.secondary", ...centerTextSx }}>
-                Filters:
-              </Typography>
-            </Box>
-
-            <LevelFilter selectedLevels={selectedLevels} onChange={setSelectedLevels} />
-
-            <GithubButton
-              sx={{ py: 0.5, px: 1.5, bgcolor: "background.paper" }}
-              disabled={!hasFilters}
-              onClick={() => setSelectedLevels(levels)}
-            >
-              <Typography variant="body2" sx={centerTextSx}>
-                Clear filters
-              </Typography>
-            </GithubButton>
-          </Box>
-        </Box>
-
-        <EventsPageBody />
-
-        <Box sx={{ p: 1 }} />
-      </Card>
-    </Box>
-  );
-});
+const EventsPage = memo(() => (
+  <Box sx={{ px: 4, py: 3, flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+    <Card sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+      <EventsPageHeader />
+      <EventsPageActions />
+      <EventsPageBody />
+      <Box sx={{ p: 1 }} />
+    </Card>
+  </Box>
+));
 
 export { EventsPage };
