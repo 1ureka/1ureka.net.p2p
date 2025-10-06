@@ -3,12 +3,24 @@ import { IPCChannel } from "@/ipc";
 import { create } from "zustand";
 import { type SocketPair, SocketPairSet, stringifySocketPair } from "@/adapter/ip";
 
-type Action = "add" | "del" | "clear";
 type InstanceChangePayload = { instance: "host" | "client" | null };
-type LogsChangePayload = { type: Action; entry?: ConnectionLogEntry };
-type SocketChangePayload = { type: Action; pair?: SocketPair };
-type MappingChangePayload = { type: Action; id: string; map?: SocketPair };
-type RuleChangePayload = { type: Action; id: string; pattern?: string };
+
+type LogsChangePayload = { type: "add"; entry: ConnectionLogEntry } | { type: "clear"; entry?: never };
+
+type SocketChangePayload =
+  | { type: "add"; pair: SocketPair }
+  | { type: "del"; pair: SocketPair }
+  | { type: "clear"; pair?: never };
+
+type MappingChangePayload =
+  | { type: "add"; id: string; map: SocketPair }
+  | { type: "del"; id: string; map?: never }
+  | { type: "clear"; id?: never; map?: never };
+
+type RuleChangePayload =
+  | { type: "add"; id: string; pattern: string }
+  | { type: "del"; id: string; pattern?: never }
+  | { type: "clear"; id?: never; pattern?: never };
 
 type AdapterState = {
   instance: "host" | "client" | null;
@@ -54,10 +66,10 @@ const useAdapter = create<AdapterState>((set) => {
   });
 
   window.electron.on(IPCChannel.AdapterMappingChange, ({ id, map, type }: MappingChangePayload) => {
-    if (type === "add" && map) {
+    if (type === "add" && map && id) {
       mappingSet.set(id, { map, createdAt: Date.now() });
     }
-    if (type === "del") {
+    if (type === "del" && id) {
       mappingSet.delete(id);
     }
     if (type === "clear") {
@@ -74,10 +86,10 @@ const useAdapter = create<AdapterState>((set) => {
   });
 
   window.electron.on(IPCChannel.AdapterRuleChange, ({ id, pattern, type }: RuleChangePayload) => {
-    if (type === "add" && pattern) {
+    if (type === "add" && pattern && id) {
       ruleSet.set(id, { pattern, createdAt: Date.now() });
     }
-    if (type === "del") {
+    if (type === "del" && id) {
       ruleSet.delete(id);
     }
     if (type === "clear") {
