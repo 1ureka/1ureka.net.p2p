@@ -21,6 +21,7 @@ const createAdapterService = () => {
 
     win.adapter = "host";
     clearHistory();
+    reporter.reportLog({ message: "Starting host adapter..." });
 
     const handlers = createHostAdapter((packet) => win.webContents.send(IPCChannel.FromTCP, packet));
     const { handlePacketFromRTC, handleClose, handleCreateRule, handleRemoveRule } = handlers;
@@ -35,6 +36,7 @@ const createAdapterService = () => {
       ipcMain.removeHandler(IPCChannel.AdapterRemoveRule);
       handleClose();
       win.adapter = undefined;
+      reporter.reportLog({ message: "Host adapter stopped." });
     });
   });
 
@@ -50,6 +52,7 @@ const createAdapterService = () => {
 
     win.adapter = "client";
     clearHistory();
+    reporter.reportLog({ message: "Starting client adapter..." });
 
     const handlers = createClientAdapter((packet) => win.webContents.send(IPCChannel.FromTCP, packet));
     const { handlePacketFromRTC, handleClose, handleCreateMapping, handleRemoveMapping } = handlers;
@@ -64,6 +67,7 @@ const createAdapterService = () => {
       ipcMain.removeHandler(IPCChannel.AdapterRemoveMapping);
       handleClose();
       win.adapter = undefined;
+      reporter.reportLog({ message: "Client adapter closed." });
     });
   });
 };
