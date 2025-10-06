@@ -4,7 +4,7 @@ import { format } from "pretty-format";
 import { useAdapter } from "@/adapter/store";
 import { useSession } from "@/transport/store";
 import { mergeRepeatedLogs, type ConnectionLogEntry, type ConnectionLogLevel } from "@/utils";
-import { centerTextSx, ellipsisSx } from "@/ui/theme";
+import { ellipsisSx } from "@/ui/theme";
 
 const formatLevel = (level: ConnectionLogLevel) => {
   if (level === "info") return "\u00A0INFO";
@@ -31,17 +31,6 @@ const useLogs = () => {
   const sessionLogs = useSession((state) => state.history);
   const logs = [...adapterLogs, ...sessionLogs].toSorted((a, b) => a.timestamp - b.timestamp);
   return mergeRepeatedLogs(logs);
-};
-
-const StatChip = ({ color, text }: { color: string; text: string }) => {
-  return (
-    <Box sx={{ px: 1.5, py: 1, borderRadius: 1, position: "relative", overflow: "hidden" }}>
-      <Box sx={{ position: "absolute", inset: 0, bgcolor: color, opacity: 0.2 }} />
-      <Typography variant="body2" sx={{ position: "relative", textWrap: "nowrap", color, ...centerTextSx }}>
-        {text}
-      </Typography>
-    </Box>
-  );
 };
 
 const EventEntry = ({ log }: { log: ConnectionLogEntry }) => {
