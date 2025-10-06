@@ -10,8 +10,11 @@ enum IPCChannel {
   AdapterRemoveMapping = "adapter.remove.mapping",
 
   AdapterStop = "adapter.stop",
-  AdapterLogs = "adapter.logs",
-  AdapterSocket = "adapter.socket",
+
+  AdapterLogsChange = "adapter.logs.change",
+  AdapterSocketChange = "adapter.socket.change",
+  AdapterMappingChange = "adapter.mapping.change",
+  AdapterRuleChange = "adapter.rule.change",
 
   FromTCP = "data.from.tcp",
   FromRTC = "data.from.rtc",
