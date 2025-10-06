@@ -1,10 +1,10 @@
 import { z } from "zod";
 import { useState, useEffect } from "react";
-import { Popover, Box, Typography, Alert, type PaperProps } from "@mui/material";
+import { Popover, Box, Typography, type PaperProps } from "@mui/material";
 import AddBoxRoundedIcon from "@mui/icons-material/AddBoxRounded";
 
 import { GithubTextField, GithubHeaderButton } from "@/ui/components/Github";
-import { centerTextSx } from "@/ui/theme";
+import { centerTextSx, ellipsisSx } from "@/ui/theme";
 import { handleCreateMapping, handleCreateRule } from "@/adapter/store";
 import type { SocketPair } from "@/adapter/ip";
 
@@ -49,19 +49,12 @@ type RouteCardPopoverProps = {
 const CreateMappingPopover = ({ anchorEl, onClose }: RouteCardPopoverProps) => {
   const open = Boolean(anchorEl);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const [srcAddr, setSrcAddr] = useState("127.0.0.1");
-  const [srcPort, setSrcPort] = useState("");
-  const [dstAddr, setDstAddr] = useState("127.0.0.1");
-  const [dstPort, setDstPort] = useState("");
+  const [errors, setErrors] = useState<Partial<Record<keyof SocketPair, string>>>({});
+  const [map, setMap] = useState({ srcAddr: "127.0.0.1", srcPort: "", dstAddr: "127.0.0.1", dstPort: "" });
 
   const resetForm = () => {
-    setSrcAddr("127.0.0.1");
-    setSrcPort("");
-    setDstAddr("127.0.0.1");
-    setDstPort("");
-    setError(null);
+    setMap({ srcAddr: "127.0.0.1", srcPort: "", dstAddr: "127.0.0.1", dstPort: "" });
+    setErrors({});
     setLoading(false);
   };
 
@@ -74,28 +67,27 @@ const CreateMappingPopover = ({ anchorEl, onClose }: RouteCardPopoverProps) => {
   };
 
   const handleSubmit = async () => {
-    setError(null);
+    setErrors({});
     setLoading(true);
 
     try {
-      const validatedMapping = mappingSchema.parse({ srcAddr, srcPort, dstAddr, dstPort });
+      const validatedMapping = mappingSchema.parse(map);
 
-      const mapping: SocketPair = {
-        srcAddr: validatedMapping.srcAddr,
-        srcPort: validatedMapping.srcPort,
-        dstAddr: validatedMapping.dstAddr,
-        dstPort: validatedMapping.dstPort,
-      };
-
-      const result = await handleCreateMapping(mapping);
+      const result = await handleCreateMapping(validatedMapping);
       if (!result) throw new Error("Failed to create mapping");
 
       onClose();
     } catch (err) {
       if (err instanceof z.ZodError) {
-        setError(err.issues[0].message);
+        const newErrors: Partial<Record<keyof SocketPair, string>> = {};
+        err.issues.forEach((issue) => {
+          const field = issue.path[0] as keyof SocketPair;
+          if (field) newErrors[field] = issue.message;
+        });
+        setErrors(newErrors);
       } else {
-        setError(err instanceof Error ? err.message : "An unknown error occurred");
+        const errMessage = err instanceof Error ? err.message : "An unknown error occurred";
+        setErrors({ srcAddr: errMessage, dstAddr: errMessage, srcPort: errMessage, dstPort: errMessage });
       }
     } finally {
       setLoading(false);
@@ -116,72 +108,74 @@ const CreateMappingPopover = ({ anchorEl, onClose }: RouteCardPopoverProps) => {
         </Typography>
       </Box>
 
-      <Box sx={{ p: 2 }}>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          {error && (
-            <Alert severity="error" sx={{ borderRadius: 1 }}>
-              {error}
-            </Alert>
-          )}
-
-          <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 1, alignItems: "center" }}>
-            <GithubTextField
-              label="Source Address"
-              value={srcAddr}
-              onChange={(e) => setSrcAddr(e.target.value)}
-              size="small"
-              placeholder="127.0.0.1"
-              disabled={loading}
-              fullWidth
-              sx={{ "& .MuiOutlinedInput-root": { bgcolor: "background.default" } }}
-            />
-            <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              :
-            </Typography>
-            <GithubTextField
-              label="Source Port"
-              value={srcPort}
-              onChange={(e) => setSrcPort(e.target.value)}
-              size="small"
-              placeholder="8080"
-              disabled={loading}
-              fullWidth
-              sx={{ "& .MuiOutlinedInput-root": { bgcolor: "background.default" } }}
-            />
-          </Box>
-
-          <Box sx={{ display: "flex", justifyContent: "center" }}>
-            <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              ↓
-            </Typography>
-          </Box>
-
-          <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 1, alignItems: "center" }}>
-            <GithubTextField
-              label="Destination Address"
-              value={dstAddr}
-              onChange={(e) => setDstAddr(e.target.value)}
-              size="small"
-              placeholder="127.0.0.1"
-              disabled={loading}
-              fullWidth
-              sx={{ "& .MuiOutlinedInput-root": { bgcolor: "background.default" } }}
-            />
-            <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              :
-            </Typography>
-            <GithubTextField
-              label="Destination Port"
-              value={dstPort}
-              onChange={(e) => setDstPort(e.target.value)}
-              size="small"
-              placeholder="3000"
-              disabled={loading}
-              fullWidth
-              sx={{ "& .MuiOutlinedInput-root": { bgcolor: "background.default" } }}
-            />
-          </Box>
+      <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 2 }}>
+        <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 1, alignItems: "center" }}>
+          <GithubTextField
+            label="Source Address"
+            value={map.srcAddr}
+            onChange={(e) => setMap((prev) => ({ ...prev, srcAddr: e.target.value }))}
+            size="small"
+            placeholder="127.0.0.1"
+            disabled={loading}
+            fullWidth
+            error={Boolean(errors.srcAddr)}
+            sx={{ "& .MuiOutlinedInput-root": { bgcolor: "background.default" } }}
+          />
+          <Typography variant="body2" sx={{ color: "text.secondary" }}>
+            :
+          </Typography>
+          <GithubTextField
+            label="Source Port"
+            value={map.srcPort}
+            onChange={(e) => setMap((prev) => ({ ...prev, srcPort: e.target.value }))}
+            size="small"
+            placeholder="8080"
+            disabled={loading}
+            fullWidth
+            error={Boolean(errors.srcPort)}
+            sx={{ "& .MuiOutlinedInput-root": { bgcolor: "background.default" } }}
+          />
         </Box>
+
+        <Box sx={{ display: "flex", justifyContent: "center" }}>
+          <Typography variant="body2" sx={{ color: "text.secondary" }}>
+            ↓
+          </Typography>
+        </Box>
+
+        <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: 1, alignItems: "center" }}>
+          <GithubTextField
+            label="Destination Address"
+            value={map.dstAddr}
+            onChange={(e) => setMap((prev) => ({ ...prev, dstAddr: e.target.value }))}
+            size="small"
+            placeholder="127.0.0.1"
+            disabled={loading}
+            fullWidth
+            error={Boolean(errors.dstAddr)}
+            sx={{ "& .MuiOutlinedInput-root": { bgcolor: "background.default" } }}
+          />
+          <Typography variant="body2" sx={{ color: "text.secondary" }}>
+            :
+          </Typography>
+          <GithubTextField
+            label="Destination Port"
+            value={map.dstPort}
+            onChange={(e) => setMap((prev) => ({ ...prev, dstPort: e.target.value }))}
+            size="small"
+            placeholder="3000"
+            disabled={loading}
+            fullWidth
+            error={Boolean(errors.dstPort)}
+            sx={{ "& .MuiOutlinedInput-root": { bgcolor: "background.default" } }}
+          />
+        </Box>
+
+        {Array.from(new Set(Object.values(errors))).length > 0 && (
+          <Typography variant="caption" color="error" sx={{ ...ellipsisSx, WebkitLineClamp: 2 }}>
+            {Array.from(new Set(Object.values(errors))).join(", ")}
+          </Typography>
+        )}
       </Box>
 
       <Box sx={actionAreaSx.container}>
@@ -202,7 +196,6 @@ const CreateRulePopover = ({ anchorEl, onClose }: RouteCardPopoverProps) => {
   const open = Boolean(anchorEl);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const [pattern, setPattern] = useState("");
 
   const resetForm = () => {
@@ -256,27 +249,20 @@ const CreateRulePopover = ({ anchorEl, onClose }: RouteCardPopoverProps) => {
       </Box>
 
       <Box sx={{ p: 2 }}>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          {error && (
-            <Alert severity="error" sx={{ borderRadius: 1 }}>
-              {error}
-            </Alert>
-          )}
-
-          <GithubTextField
-            label="Pattern"
-            value={pattern}
-            onChange={(e) => setPattern(e.target.value)}
-            size="small"
-            placeholder="127.0.0.1:*"
-            disabled={loading}
-            fullWidth
-            multiline
-            rows={2}
-            helperText="Define access patterns for incoming connections"
-            sx={{ "& .MuiOutlinedInput-root": { bgcolor: "background.default" } }}
-          />
-        </Box>
+        <GithubTextField
+          label="Pattern"
+          value={pattern}
+          onChange={(e) => setPattern(e.target.value)}
+          size="small"
+          placeholder="127.0.0.1:*"
+          disabled={loading}
+          fullWidth
+          multiline
+          rows={2}
+          error={Boolean(error)}
+          helperText={error ? error : "Define access patterns for incoming connections"}
+          sx={{ "& .MuiOutlinedInput-root": { bgcolor: "background.default" } }}
+        />
       </Box>
 
       <Box sx={actionAreaSx.container}>
