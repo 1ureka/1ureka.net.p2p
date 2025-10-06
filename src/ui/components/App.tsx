@@ -103,14 +103,12 @@ const Pages = () => {
   );
 };
 
-const App = () => {
-  return (
-    <Stack sx={{ height: "100dvh" }}>
-      <Header />
-      <Pages />
-      <Footer />
-    </Stack>
-  );
-};
+const App = () => (
+  <Stack sx={{ height: "100dvh" }}>
+    <Header />
+    <Pages />
+    <Footer />
+  </Stack>
+);
 
 export { App };

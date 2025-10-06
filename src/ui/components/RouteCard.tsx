@@ -13,7 +13,13 @@ import { useAdapter } from "@/adapter/store";
 import { useState } from "react";
 import { stringifySocketPair } from "@/adapter/ip";
 
-const NoItemDisplay = ({ type, action }: { type: "mapping" | "rule"; action: React.ReactNode }) => {
+type NoItemDisplayProps = {
+  type: "mapping" | "rule";
+  actionDisabled?: boolean;
+  onAction?: (event: React.MouseEvent<HTMLElement>) => void;
+};
+
+const NoItemDisplay = ({ type, actionDisabled, onAction }: NoItemDisplayProps) => {
   const title = type === "mapping" ? "No mappings yet" : "No rules defined";
   const description =
     type === "mapping"
@@ -32,7 +38,14 @@ const NoItemDisplay = ({ type, action }: { type: "mapping" | "rule"; action: Rea
           {description}
         </Typography>
 
-        {action}
+        <GithubButton
+          sx={{ mt: 2.5, py: 0.5, px: 1.5, bgcolor: "background.paper", textTransform: "none", ...centerTextSx }}
+          startIcon={<AddBoxRoundedIcon />}
+          disabled={actionDisabled}
+          onClick={onAction}
+        >
+          <Typography variant="body2">Add</Typography>
+        </GithubButton>
       </Box>
     </Box>
   );
@@ -51,6 +64,12 @@ const MappingCard = () => {
     setAnchorEl(null);
   };
 
+  const items = Array.from(mappings.entries()).map(([id, { map, createdAt }]) => ({
+    id,
+    content: stringifySocketPair(map),
+    createdAt,
+  }));
+
   return (
     <Card sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
       <CardHeader>
@@ -67,32 +86,11 @@ const MappingCard = () => {
       </CardHeader>
 
       <Box sx={{ flex: 1, overflow: "auto", minHeight: 0 }}>
-        {mappings.size <= 0 && (
-          <NoItemDisplay
-            type="mapping"
-            action={
-              <GithubButton
-                sx={{ mt: 2.5, py: 0.5, px: 1.5, bgcolor: "background.paper", textTransform: "none", ...centerTextSx }}
-                startIcon={<AddBoxRoundedIcon />}
-                disabled={disabled}
-                onClick={handleOpen}
-              >
-                <Typography variant="body2">Add mapping</Typography>
-              </GithubButton>
-            }
-          />
-        )}
-
+        {mappings.size <= 0 && <NoItemDisplay type="mapping" actionDisabled={disabled} onAction={handleOpen} />}
         {mappings.size > 0 && (
           <RouteCardList>
-            {Array.from(mappings.entries()).map(([id, { map, createdAt }]) => (
-              <RouteCardListItem
-                key={id}
-                id={id}
-                type="mapping"
-                content={stringifySocketPair(map)}
-                createdAt={createdAt}
-              />
+            {items.map(({ id, content, createdAt }) => (
+              <RouteCardListItem key={id} id={id} type="mapping" content={content} createdAt={createdAt} />
             ))}
           </RouteCardList>
         )}
@@ -116,6 +114,12 @@ const RuleCard = () => {
     setAnchorEl(null);
   };
 
+  const items = Array.from(rules.entries()).map(([id, { pattern, createdAt }]) => ({
+    id,
+    content: pattern,
+    createdAt,
+  }));
+
   return (
     <Card sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
       <CardHeader>
@@ -132,26 +136,11 @@ const RuleCard = () => {
       </CardHeader>
 
       <Box sx={{ flex: 1, overflow: "auto", minHeight: 0 }}>
-        {rules.size <= 0 && (
-          <NoItemDisplay
-            type="rule"
-            action={
-              <GithubButton
-                sx={{ mt: 2.5, py: 0.5, px: 1.5, bgcolor: "background.paper", textTransform: "none", ...centerTextSx }}
-                startIcon={<AddBoxRoundedIcon />}
-                disabled={disabled}
-                onClick={handleOpen}
-              >
-                <Typography variant="body2">Add rule</Typography>
-              </GithubButton>
-            }
-          />
-        )}
-
+        {rules.size <= 0 && <NoItemDisplay type="rule" actionDisabled={disabled} onAction={handleOpen} />}
         {rules.size > 0 && (
           <RouteCardList>
-            {Array.from(rules.entries()).map(([id, { pattern, createdAt }]) => (
-              <RouteCardListItem key={id} id={id} type="rule" content={pattern} createdAt={createdAt} />
+            {items.map(({ id, content, createdAt }) => (
+              <RouteCardListItem key={id} id={id} type="rule" content={content} createdAt={createdAt} />
             ))}
           </RouteCardList>
         )}
