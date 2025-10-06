@@ -3,11 +3,11 @@ import ListAltRoundedIcon from "@mui/icons-material/ListAltRounded";
 import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
 import { Box, Typography } from "@mui/material";
 
-import type { ConnectionLogEntry, ConnectionLogLevel } from "@/utils";
+import type { ConnectionLogLevel } from "@/utils";
 import { centerTextSx } from "@/ui/theme";
 import { GithubButton } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
-import { EventEntry, useLogs, NoItemDisplay } from "@/ui/components/EventsList";
+import { EventsList, useLogs } from "@/ui/components/EventsList";
 import { EventsSummary } from "@/ui/components/EventsSummary";
 
 type LevelFilterProps = {
@@ -45,17 +45,6 @@ const LevelFilter = ({ selectedLevels, onChange }: LevelFilterProps) => {
           </GithubButton>
         ))}
       </Box>
-    </Box>
-  );
-};
-
-const EventsLogs = ({ logs, hasFilters }: { logs: ConnectionLogEntry[]; hasFilters: boolean }) => {
-  return (
-    <Box sx={{ flex: 1, overflow: "auto", minHeight: 0 }}>
-      {logs.length <= 0 && <NoItemDisplay hasFilters={hasFilters} />}
-      {logs.map((log) => (
-        <EventEntry key={log.id} log={log} />
-      ))}
     </Box>
   );
 };
@@ -109,7 +98,7 @@ const EventsPage = () => {
           </Box>
         </Box>
 
-        <EventsLogs logs={filteredLogs} hasFilters={hasFilters} />
+        <EventsList logs={filteredLogs} hasFilters={hasFilters} />
 
         <Box sx={{ p: 1 }} />
       </Card>

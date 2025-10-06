@@ -109,4 +109,15 @@ const NoItemDisplay = ({ hasFilters }: { hasFilters: boolean }) => {
   );
 };
 
-export { EventEntry, useLogs, NoItemDisplay };
+const EventsList = ({ logs, hasFilters }: { logs: ConnectionLogEntry[]; hasFilters: boolean }) => {
+  return (
+    <Box sx={{ flex: 1, overflow: "auto", minHeight: 0 }}>
+      {logs.length <= 0 && <NoItemDisplay hasFilters={hasFilters} />}
+      {logs.map((log) => (
+        <EventEntry key={log.id} log={log} />
+      ))}
+    </Box>
+  );
+};
+
+export { EventsList, useLogs };

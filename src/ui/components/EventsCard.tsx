@@ -4,21 +4,8 @@ import { useTab } from "@/ui/tabs";
 
 import { Card, CardHeader } from "@/ui/components/Card";
 import { GithubHeaderButton } from "@/ui/components/Github";
-import { EventEntry, useLogs, NoItemDisplay } from "@/ui/components/EventsList";
+import { EventsList, useLogs } from "@/ui/components/EventsList";
 import { EventsSummary } from "@/ui/components/EventsSummary";
-
-const EventsLogs = () => {
-  const logs = useLogs();
-
-  return (
-    <Box sx={{ flex: 1, overflow: "auto", minHeight: 0 }}>
-      {logs.length <= 0 && <NoItemDisplay hasFilters={false} />}
-      {logs.map((log) => (
-        <EventEntry key={log.id} log={log} />
-      ))}
-    </Box>
-  );
-};
 
 const EventsCardHeader = () => {
   const setTab = useTab((state) => state.setTab);
@@ -43,11 +30,16 @@ const EventsCardHeader = () => {
   );
 };
 
+const EventsCardBody = () => {
+  const logs = useLogs();
+  return <EventsList logs={logs} hasFilters={false} />;
+};
+
 const EventsCard = () => {
   return (
     <Card sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
       <EventsCardHeader />
-      <EventsLogs />
+      <EventsCardBody />
       <Box sx={{ p: 1 }} />
     </Card>
   );
