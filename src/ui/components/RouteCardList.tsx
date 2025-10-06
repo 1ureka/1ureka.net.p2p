@@ -6,7 +6,7 @@ import { Box, Typography, Tooltip, Zoom } from "@mui/material";
 import { ellipsisSx } from "@/ui/theme";
 import { GithubButton } from "@/ui/components/Github";
 
-import { handleRemoveMapping } from "@/adapter/store";
+import { handleRemoveMapping, handleRemoveRule } from "@/adapter/store";
 import { useEffect, useState } from "react";
 
 function formatElapsed(elapsed: number) {
@@ -37,8 +37,19 @@ type RouteCardListItemProps = {
 };
 
 const RouteCardListItem = ({ id, type, content, createdAt }: RouteCardListItemProps) => {
-  const stopTooltip = type === "mapping" ? "Disable mapping" : "Disable rule";
+  //   const stopTooltip = type === "mapping" ? "Disable mapping" : "Disable rule";
+  const stopTooltip = "work in progress";
   const deleteTooltip = type === "mapping" ? "Remove mapping" : "Remove rule";
+
+  const [loading, setLoading] = useState(false);
+  const handleDelete = async () => {
+    setLoading(true);
+    if (type === "mapping") {
+      await handleRemoveMapping(id);
+    } else {
+      await handleRemoveRule(id);
+    }
+  };
 
   return (
     <Box
@@ -60,12 +71,14 @@ const RouteCardListItem = ({ id, type, content, createdAt }: RouteCardListItemPr
 
       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
         <Tooltip title={stopTooltip} arrow placement="left" slots={{ transition: Zoom }}>
-          <GithubButton sx={{ minWidth: 0, p: 0.2 }} color="inherit">
-            <StopRoundedIcon fontSize="small" />
-          </GithubButton>
+          <Box>
+            <GithubButton sx={{ minWidth: 0, p: 0.2 }} color="inherit" disabled>
+              <StopRoundedIcon fontSize="small" />
+            </GithubButton>
+          </Box>
         </Tooltip>
         <Tooltip title={deleteTooltip} arrow placement="right" slots={{ transition: Zoom }}>
-          <GithubButton sx={{ minWidth: 0, p: 0.2 }} color="inherit">
+          <GithubButton sx={{ minWidth: 0, p: 0.2 }} color="inherit" onClick={handleDelete} loading={loading}>
             <DeleteForeverRoundedIcon fontSize="small" />
           </GithubButton>
         </Tooltip>
