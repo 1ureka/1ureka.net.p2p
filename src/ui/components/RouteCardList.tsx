@@ -58,8 +58,10 @@ const RouteCardListItem = ({ id, type, content, createdAt }: RouteCardListItemPr
         gridTemplateColumns: "1fr auto",
         gridAutoRows: "auto",
         gap: 0.5,
-        "& div:nth-of-type(2n)": { justifySelf: "end" },
         p: 1.5,
+        borderBottom: "2px solid",
+        borderColor: "divider",
+        "& div:nth-of-type(2n)": { justifySelf: "end" },
       }}
     >
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "text.secondary" }}>
@@ -107,9 +109,6 @@ const RouteCardList = ({ children }: { children: React.ReactNode }) => {
         flexDirection: "column",
         "& > div:nth-of-type(2n)": {
           bgcolor: "background.paper",
-          borderTop: "1px solid",
-          borderBottom: "1px solid",
-          borderColor: "divider",
           "& button": { bgcolor: "background.default" },
         },
       }}
