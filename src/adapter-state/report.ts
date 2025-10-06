@@ -52,13 +52,14 @@ const createReporter = (module: string) => {
   return { reportLog, reportError, reportWarn };
 };
 
-const clearHistory = () => {
+const reportClose = () => {
   const win = getWindow();
 
   win.webContents.send(IPCChannel.AdapterLogsChange, { type: "clear" });
-  win.webContents.send(IPCChannel.AdapterSocketChange, { type: "clear" });
-  win.webContents.send(IPCChannel.AdapterMappingChange, { type: "clear" });
-  win.webContents.send(IPCChannel.AdapterRuleChange, { type: "clear" });
+  reportInstance({ instance: null });
+  reportSockets({ type: "clear" });
+  reportMappings({ type: "clear" });
+  reportRules({ type: "clear" });
 };
 
-export { createReporter, clearHistory, reportInstance, reportSockets, reportMappings, reportRules };
+export { createReporter, reportClose, reportInstance, reportSockets, reportMappings, reportRules };
