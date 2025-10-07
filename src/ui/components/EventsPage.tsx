@@ -118,7 +118,7 @@ const EventsPageBody = () => {
 };
 
 const EventsPage = memo(() => (
-  <Box sx={{ px: 4, py: 3, flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+  <Box sx={{ px: 4, py: 3, flex: 1, display: "flex", flexDirection: "column", minHeight: 500 }}>
     <Card sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
       <EventsPageHeader />
       <EventsPageActions />

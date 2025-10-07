@@ -1,3 +1,4 @@
+import DeveloperModeRoundedIcon from "@mui/icons-material/DeveloperModeRounded";
 import { Box, Typography } from "@mui/material";
 import { GithubButton } from "@/ui/components/Github";
 import { centerTextSx } from "@/ui/theme";
@@ -18,10 +19,11 @@ const Footer = () => {
       }}
     >
       <GithubButton
-        sx={{ py: 0.5, px: 1.5, bgcolor: "background.default" }}
+        sx={{ py: 0.5, px: 1.5, ...centerTextSx }}
         onClick={() => window.electron.send(IPCChannel.DeveloperTools)}
+        startIcon={<DeveloperModeRoundedIcon />}
       >
-        open developer tools
+        Open developer tools
       </GithubButton>
 
       <Typography variant="body2" sx={{ color: "text.secondary", textAlign: "right", ...centerTextSx }}>

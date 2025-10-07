@@ -14,7 +14,7 @@ import { MappingCard, RuleCard } from "@/ui/components/RouteCard";
 import { CreateSessionCard, JoinSessionCard } from "@/ui/components/LaunchCard";
 
 const OverviewPage = memo(({ type }: { type: "rule" | "mapping" }) => (
-  <Box sx={{ display: "grid", gridTemplateColumns: "0.75fr 1fr", gap: 2, px: 4, py: 3, minHeight: 0, flex: 1 }}>
+  <Box sx={{ display: "grid", gridTemplateColumns: "0.75fr 1fr", gap: 2, px: 4, py: 3, minHeight: 650, flex: 1 }}>
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minHeight: 0 }}>
       <SessionCard />
       {type === "rule" ? <RuleCard /> : <MappingCard />}
