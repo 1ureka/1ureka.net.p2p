@@ -1,5 +1,5 @@
 import { styled } from "@mui/material/styles";
-import { Box, Button, TextField, Tooltip, Typography } from "@mui/material";
+import { Box, Button, TextField, Tooltip, tooltipClasses, Typography } from "@mui/material";
 import type { BoxProps, ButtonProps, TooltipProps } from "@mui/material";
 import { centerTextSx, generateColorMix, theme } from "@/ui/theme";
 import type { SvgIconComponent } from "@mui/icons-material";
@@ -8,7 +8,22 @@ const GithubTooltip = ({ slotProps, children, boxProps, ...props }: TooltipProps
   <Tooltip
     enterDelay={0}
     slotProps={{
-      popper: { modifiers: [{ name: "offset", options: { offset: [0, -10] } }] },
+      popper: {
+        sx: {
+          [`&.${tooltipClasses.popper}[data-popper-placement*="bottom"] .${tooltipClasses.tooltip}`]: {
+            marginTop: "5px",
+          },
+          [`&.${tooltipClasses.popper}[data-popper-placement*="top"] .${tooltipClasses.tooltip}`]: {
+            marginBottom: "5px",
+          },
+          [`&.${tooltipClasses.popper}[data-popper-placement*="right"] .${tooltipClasses.tooltip}`]: {
+            marginLeft: "5px",
+          },
+          [`&.${tooltipClasses.popper}[data-popper-placement*="left"] .${tooltipClasses.tooltip}`]: {
+            marginRight: "5px",
+          },
+        },
+      },
       tooltip: {
         sx: {
           backgroundColor: (theme) => theme.palette.background.tooltip,
@@ -41,15 +56,21 @@ const GithubTextField = styled(TextField)(({ theme }) => ({
 }));
 
 const GithubButton = styled(Button)(({ theme }) => ({
+  minWidth: "fit-content",
   borderRadius: 6,
   color: theme.palette.text.primary,
   textTransform: "none",
   textWrap: "nowrap",
-  border: "2px solid",
-  borderColor: theme.palette.divider,
+  border: "none",
+  outline: "2px solid",
+  outlineColor: theme.palette.divider,
   backgroundColor: theme.palette.background.paper,
   "&:hover": { filter: "brightness(1.2)" },
   fontWeight: "bold",
+}));
+
+const GithubIconButton = styled(GithubButton)(({ theme }) => ({
+  padding: theme.spacing(0.3),
 }));
 
 type GithubHeaderButtonProps = Omit<ButtonProps, "children" | "startIcon" | "endIcon" | "color"> & {
@@ -92,4 +113,4 @@ const GithubHeaderButton = ({ sx, color, children, StartIcon, EndIcon, ...props 
   );
 };
 
-export { GithubTooltip, GithubButton, GithubTextField, GithubHeaderButton };
+export { GithubTooltip, GithubButton, GithubIconButton, GithubTextField, GithubHeaderButton };
