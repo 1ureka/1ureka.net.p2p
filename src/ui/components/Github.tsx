@@ -4,26 +4,27 @@ import type { BoxProps, ButtonProps, TooltipProps } from "@mui/material";
 import { centerTextSx, generateColorMix, theme } from "@/ui/theme";
 import type { SvgIconComponent } from "@mui/icons-material";
 
+const tooltipMargin = "5px";
+const tooltipPopoverSx = {
+  [`&.${tooltipClasses.popper}[data-popper-placement*="bottom"] .${tooltipClasses.tooltip}`]: {
+    marginTop: tooltipMargin,
+  },
+  [`&.${tooltipClasses.popper}[data-popper-placement*="top"] .${tooltipClasses.tooltip}`]: {
+    marginBottom: tooltipMargin,
+  },
+  [`&.${tooltipClasses.popper}[data-popper-placement*="right"] .${tooltipClasses.tooltip}`]: {
+    marginLeft: tooltipMargin,
+  },
+  [`&.${tooltipClasses.popper}[data-popper-placement*="left"] .${tooltipClasses.tooltip}`]: {
+    marginRight: tooltipMargin,
+  },
+} as const;
+
 const GithubTooltip = ({ slotProps, children, boxProps, ...props }: TooltipProps & { boxProps?: BoxProps }) => (
   <Tooltip
     enterDelay={0}
     slotProps={{
-      popper: {
-        sx: {
-          [`&.${tooltipClasses.popper}[data-popper-placement*="bottom"] .${tooltipClasses.tooltip}`]: {
-            marginTop: "5px",
-          },
-          [`&.${tooltipClasses.popper}[data-popper-placement*="top"] .${tooltipClasses.tooltip}`]: {
-            marginBottom: "5px",
-          },
-          [`&.${tooltipClasses.popper}[data-popper-placement*="right"] .${tooltipClasses.tooltip}`]: {
-            marginLeft: "5px",
-          },
-          [`&.${tooltipClasses.popper}[data-popper-placement*="left"] .${tooltipClasses.tooltip}`]: {
-            marginRight: "5px",
-          },
-        },
-      },
+      popper: { sx: tooltipPopoverSx },
       tooltip: {
         sx: {
           backgroundColor: (theme) => theme.palette.background.tooltip,
