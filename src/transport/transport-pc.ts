@@ -1,4 +1,4 @@
-import { reportLog } from "@/transport-state/report";
+import { reportLog, reportStatus } from "@/transport-state/report";
 
 /**
  * 創建一個只會有一個 RTCDataChannel，且生命週期與 RTCPeerConnection 綁定的 WebRTC 連線
@@ -56,6 +56,7 @@ const createPeerConnection = () => {
    */
   const close = () => {
     peerConnection.close(); // 根據 w3c ED，其是冪等，因此不需擔心重複呼叫
+    reportStatus("failed");
     reportLog({
       message: "RTCPeerConnection and associated DataChannel have been safely closed and resources released",
     });
