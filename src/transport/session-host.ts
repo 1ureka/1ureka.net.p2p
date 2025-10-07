@@ -4,7 +4,7 @@ import { bindDataChannelIPC } from "@/transport/transport-ipc";
 import { bindDataChannelTraffic } from "@/transport/transport-traffic";
 import { createSession, pollingSession, sendSignal } from "@/transport/session-utils";
 
-const GETHER_CANDIDATE_TIMEOUT = 2000; // 收集 ice candidate 的最大等待時間（毫秒）
+const GATHER_CANDIDATE_TIMEOUT = 2000; // 收集 ice candidate 的最大等待時間（毫秒）
 const WAIT_DATA_CHANNEL_TIMEOUT = 5000; // 等待 DataChannel 開啟的最大時間（毫秒）
 
 /**
@@ -49,7 +49,7 @@ const createHostSession = async () => {
     reportStatus("signaling");
 
     if (getAborted()) throw new Error("Session aborted before WebRTC negotiation");
-    const { description, candidates } = await getLocal("createOffer", GETHER_CANDIDATE_TIMEOUT);
+    const { description, candidates } = await getLocal("createOffer", GATHER_CANDIDATE_TIMEOUT);
     await sendSignal(sessionId, { type: "offer", sdp: description, candidate: candidates });
     if (getAborted()) throw new Error("Session aborted after sending offer");
 

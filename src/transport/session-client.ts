@@ -4,7 +4,7 @@ import { bindDataChannelIPC } from "@/transport/transport-ipc";
 import { bindDataChannelTraffic } from "@/transport/transport-traffic";
 import { joinSession, pollingSession, sendSignal } from "@/transport/session-utils";
 
-const GETHER_CANDIDATE_TIMEOUT = 2000; // 收集 ice candidate 的最大等待時間（毫秒）
+const GATHER_CANDIDATE_TIMEOUT = 2000; // 收集 ice candidate 的最大等待時間（毫秒）
 const WAIT_DATA_CHANNEL_TIMEOUT = 5000; // 等待 DataChannel 開啟的最大時間（毫秒）
 
 /**
@@ -43,7 +43,7 @@ const createClientSession = async (sessionId: string) => {
     }
 
     if (getAborted()) throw new Error("Session aborted after setting remote offer");
-    const { description, candidates } = await getLocal("createAnswer", GETHER_CANDIDATE_TIMEOUT);
+    const { description, candidates } = await getLocal("createAnswer", GATHER_CANDIDATE_TIMEOUT);
     await sendSignal(sessionId, { type: "answer", sdp: description, candidate: candidates });
     if (getAborted()) throw new Error("Session aborted after sending answer");
   } catch (error) {
