@@ -12,26 +12,31 @@ import { useAdapter } from "@/adapter-state/store";
 import { useState, memo } from "react";
 import { useSession } from "@/transport-state/store";
 
+const stopDisplayMap = {
+  mapping: {
+    title: "Adapter not started",
+    description: "Start the adapter first to create port mappings and connect local and remote ports.",
+  },
+  rule: {
+    title: "Adapter not started",
+    description: "Start the adapter first to define access rules and allow incoming connections.",
+  },
+};
+
+const noItemDisplayMap = {
+  mapping: {
+    title: "No mappings yet",
+    description: "You haven't added any port mappings yet. Create one to connect local and remote ports.",
+  },
+  rule: {
+    title: "No rules defined",
+    description: "You haven't defined any access rules yet. Add one to allow incoming connections.",
+  },
+};
+
 const RouteCardNoItemDisplay = ({ type }: { type: "mapping" | "rule" }) => {
   const instance = useAdapter((state) => state.instance);
-
-  const title =
-    instance === null
-      ? type === "mapping"
-        ? "Adapter not started"
-        : "Adapter not started"
-      : type === "mapping"
-        ? "No mappings yet"
-        : "No rules defined";
-
-  const description =
-    instance === null
-      ? type === "mapping"
-        ? "Start the adapter first to create port mappings and connect local and remote ports."
-        : "Start the adapter first to define access rules and allow incoming connections."
-      : type === "mapping"
-        ? "You haven't added any port mappings yet. Create one to connect local and remote ports."
-        : "You haven't defined any access rules yet. Add one to allow incoming connections.";
+  const { title, description } = instance === null ? stopDisplayMap[type] : noItemDisplayMap[type];
 
   return (
     <Box sx={{ height: 1, display: "grid", placeItems: "center" }}>
