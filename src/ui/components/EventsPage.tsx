@@ -123,7 +123,6 @@ const EventsPage = memo(() => (
       <EventsPageHeader />
       <EventsPageActions />
       <EventsPageBody />
-      <Box sx={{ p: 1 }} />
     </Card>
   </Box>
 ));

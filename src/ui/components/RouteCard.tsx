@@ -4,7 +4,7 @@ import InfoOutlineRoundedIcon from "@mui/icons-material/InfoOutlineRounded";
 import { Box, Typography } from "@mui/material";
 import { centerTextSx } from "@/ui/theme";
 import { Card, CardHeader } from "@/ui/components/Card";
-import { GithubButton, GithubHeaderButton, GithubTooltip } from "@/ui/components/Github";
+import { GithubButton, GithubTooltip } from "@/ui/components/Github";
 import { RouteCardList, RouteCardListItem } from "@/ui/components/RouteCardList";
 import { CreateMappingPopover, CreateRulePopover } from "@/ui/components/RouteCardDialog";
 
@@ -72,10 +72,14 @@ const MappingCard = () => {
         <Box sx={{ flex: 1 }} />
 
         <GithubTooltip title={addDisabled ? "Start adapter first" : "Add a new mapping"}>
-          <GithubHeaderButton StartIcon={AddBoxRoundedIcon} disabled={addDisabled} onClick={handleOpen}>
-            Add
-          </GithubHeaderButton>
+          <GithubButton size="small" disabled={addDisabled} onClick={handleOpen}>
+            <AddBoxRoundedIcon fontSize="small" />
+            <Typography variant="body2" sx={{ ...centerTextSx }}>
+              Add
+            </Typography>
+          </GithubButton>
         </GithubTooltip>
+
         <CreateMappingPopover anchorEl={anchorEl} onClose={handleClose} />
       </CardHeader>
 
@@ -89,8 +93,6 @@ const MappingCard = () => {
           </RouteCardList>
         )}
       </Box>
-
-      <Box sx={{ p: 1 }} />
     </Card>
   );
 };
@@ -118,10 +120,14 @@ const RuleCard = () => {
         <Box sx={{ flex: 1 }} />
 
         <GithubTooltip title={addDisabled ? "Start adapter first" : "Add a new rule"}>
-          <GithubHeaderButton StartIcon={AddBoxRoundedIcon} disabled={addDisabled} onClick={handleOpen}>
-            add
-          </GithubHeaderButton>
+          <GithubButton size="small" disabled={addDisabled} onClick={handleOpen}>
+            <AddBoxRoundedIcon fontSize="small" />
+            <Typography variant="body2" sx={{ ...centerTextSx }}>
+              Add
+            </Typography>
+          </GithubButton>
         </GithubTooltip>
+
         <CreateRulePopover anchorEl={anchorEl} onClose={handleClose} />
       </CardHeader>
 
@@ -135,8 +141,6 @@ const RuleCard = () => {
           </RouteCardList>
         )}
       </Box>
-
-      <Box sx={{ p: 1 }} />
     </Card>
   );
 };

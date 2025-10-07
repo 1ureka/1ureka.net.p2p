@@ -2,17 +2,21 @@ import ListAltRoundedIcon from "@mui/icons-material/ListAltRounded";
 import { Box, Typography } from "@mui/material";
 import { useTab } from "@/ui/tabs";
 
+import { centerTextSx } from "@/ui/theme";
 import { Card, CardHeader } from "@/ui/components/Card";
-import { GithubHeaderButton } from "@/ui/components/Github";
+import { GithubButton } from "@/ui/components/Github";
 import { EventsList, useLogs } from "@/ui/components/EventsList";
 import { EventsSummary } from "@/ui/components/EventsSummary";
 
 const LinkButton = () => {
   const setTab = useTab((state) => state.setTab);
   return (
-    <GithubHeaderButton StartIcon={ListAltRoundedIcon} onClick={() => setTab("events")}>
-      view all logs
-    </GithubHeaderButton>
+    <GithubButton onClick={() => setTab("events")} size="small">
+      <ListAltRoundedIcon fontSize="small" />
+      <Typography variant="body2" sx={centerTextSx}>
+        View all
+      </Typography>
+    </GithubButton>
   );
 };
 
@@ -40,7 +44,6 @@ const EventsCard = () => (
   <Card sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
     <EventsCardHeader />
     <EventsCardBody />
-    <Box sx={{ p: 1 }} />
   </Card>
 );
 
