@@ -1,6 +1,6 @@
 import FileUploadRoundedIcon from "@mui/icons-material/FileUploadRounded";
 import FileDownloadRoundedIcon from "@mui/icons-material/FileDownloadRounded";
-import QueryStatsRoundedIcon from "@mui/icons-material/QueryStatsRounded";
+import ReadMoreRoundedIcon from "@mui/icons-material/ReadMoreRounded";
 
 import type { XAxis, YAxis } from "@mui/x-charts/models";
 import { LineChart, type LineSeries } from "@mui/x-charts/LineChart";
@@ -128,10 +128,10 @@ const TrafficCard = () => {
             <Box sx={{ flex: 1 }} />
 
             <GithubButton size="small" onClick={() => setTab("metrics")}>
-              <QueryStatsRoundedIcon fontSize="small" />
               <Typography variant="body2" sx={centerTextSx}>
-                Open metrics
+                Details
               </Typography>
+              <ReadMoreRoundedIcon fontSize="small" />
             </GithubButton>
           </CardHeader>
 

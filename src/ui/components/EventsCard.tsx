@@ -1,4 +1,4 @@
-import ListAltRoundedIcon from "@mui/icons-material/ListAltRounded";
+import ReadMoreRoundedIcon from "@mui/icons-material/ReadMoreRounded";
 import { Box, Typography } from "@mui/material";
 import { useTab } from "@/ui/tabs";
 
@@ -12,10 +12,10 @@ const LinkButton = () => {
   const setTab = useTab((state) => state.setTab);
   return (
     <GithubButton onClick={() => setTab("events")} size="small">
-      <ListAltRoundedIcon fontSize="small" />
       <Typography variant="body2" sx={centerTextSx}>
-        View all
+        Details
       </Typography>
+      <ReadMoreRoundedIcon fontSize="small" />
     </GithubButton>
   );
 };
