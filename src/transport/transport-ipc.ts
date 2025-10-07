@@ -43,12 +43,14 @@ const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
   window.electron.on(IPCChannel.FromTCP, handleIPCMessage);
 
   const cleanup = () => {
+    dataChannel.removeEventListener("close", cleanup);
+    dataChannel.removeEventListener("error", cleanup);
     window.electron.off(IPCChannel.FromTCP, handleIPCMessage);
     sender.close();
   };
 
-  dataChannel.onclose = () => cleanup();
-  dataChannel.onerror = () => cleanup();
+  dataChannel.addEventListener("close", cleanup);
+  dataChannel.addEventListener("error", cleanup);
 };
 
 export { bindDataChannelIPC };
