@@ -80,6 +80,7 @@ const SessionCardCopyButton = () => {
 };
 
 const SessionCard = () => {
+  const role = useSession((state) => state.role);
   const session = useSession((state) => state.session);
   const status = useSession((state) => state.status);
   const instance = useAdapter((state) => state.instance);
@@ -150,11 +151,13 @@ const SessionCard = () => {
         <SessionCardLabel>Host</SessionCardLabel>
         <Typography variant="body2" sx={ellipsisSx}>
           {session.host || "--"}
+          {role === "host" ? " (You)" : ""}
         </Typography>
 
         <SessionCardLabel>Client</SessionCardLabel>
         <Typography variant="body2" sx={ellipsisSx}>
           {session.client || "--"}
+          {role === "client" ? " (You)" : ""}
         </Typography>
 
         <SessionCardLabel>Session ID</SessionCardLabel>
