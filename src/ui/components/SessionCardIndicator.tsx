@@ -13,7 +13,7 @@ const colorMap: Record<ConnectionStatus, string> = {
   waiting: orange,
   signaling: orange,
   connected: green,
-  aborting: red,
+  aborting: orange,
   failed: red,
 } as const;
 
