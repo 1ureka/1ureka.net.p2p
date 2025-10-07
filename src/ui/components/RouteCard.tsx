@@ -1,4 +1,6 @@
 import AddBoxRoundedIcon from "@mui/icons-material/AddBoxRounded";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import InfoOutlineRoundedIcon from "@mui/icons-material/InfoOutlineRounded";
 
 import { Box, Typography } from "@mui/material";
@@ -62,10 +64,8 @@ const RouteCardHeader = ({ type, actionDisabled, onAction }: RouteCardProps) => 
 
       <GithubTooltip title={actionDisabled ? "Start adapter first" : actionTooltip}>
         <GithubButton size="small" disabled={actionDisabled} onClick={onAction}>
-          <AddBoxRoundedIcon fontSize="small" />
-          <Typography variant="body2" sx={centerTextSx}>
-            Add
-          </Typography>
+          <AddRoundedIcon fontSize="small" sx={{ mx: 0.5 }} />
+          <ExpandMoreRoundedIcon fontSize="small" />
         </GithubButton>
       </GithubTooltip>
     </CardHeader>
