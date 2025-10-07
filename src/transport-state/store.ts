@@ -32,21 +32,5 @@ const useSession = create<SessionState>(() => ({
   session: { id: "", host: "", client: "", createdAt: "", signal: {} },
 }));
 
-/**
- * 轉換當前狀態至下一狀態，回傳是否成功轉換
- */
-const setStatus = (status: ConnectionStatus): boolean => {
-  const { status: current } = useSession.getState();
-
-  const validNextStatuses = validTransitions[current];
-  if (!validNextStatuses.includes(status)) {
-    reportError({ message: `Invalid status transition from ${current} to ${status}` });
-    return false;
-  }
-
-  useSession.setState({ status });
-  return true;
-};
-
-export { useSession, setStatus };
+export { useSession, validTransitions };
 export type { ConnectionStatus };

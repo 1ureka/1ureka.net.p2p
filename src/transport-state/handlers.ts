@@ -1,5 +1,5 @@
-import { useSession, setStatus } from "@/transport-state/store";
-import { reportWarn } from "@/transport-state/report";
+import { useSession } from "@/transport-state/store";
+import { reportStatus, reportWarn } from "@/transport-state/report";
 import { createHostSession } from "@/transport/session-host";
 import { createClientSession } from "@/transport/session-client";
 
@@ -14,12 +14,12 @@ const handleJoinSession = (sessionId: string) => {
 };
 
 const handleStop = () => {
-  if (!setStatus("aborting")) return;
+  if (!reportStatus("aborting")) return;
   reportWarn({ message: "Stop requested by user" });
 };
 
 const handleLeave = () => {
-  if (!setStatus("disconnected")) return;
+  if (!reportStatus("disconnected")) return;
   useSession.setState({ session: { id: "", host: "", client: "", createdAt: "", signal: {} }, history: [] });
 };
 

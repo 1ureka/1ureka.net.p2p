@@ -1,5 +1,4 @@
-import { setStatus } from "@/transport-state/store";
-import { reportLog, reportError, onceAborted, getAborted } from "@/transport-state/report";
+import { reportStatus, reportLog, reportError, onceAborted, getAborted } from "@/transport-state/report";
 import { createPeerConnection } from "@/transport/transport-pc";
 import { bindDataChannelIPC } from "@/transport/transport-ipc";
 import { createSession, pollingSession, sendSignal } from "@/transport/session-utils";
@@ -15,7 +14,7 @@ const createHostSession = async () => {
 
   // 1. 創建新會話
   try {
-    if (!setStatus("joining")) return;
+    if (!reportStatus("joining")) return;
 
     if (getAborted()) throw new Error("Session creation aborted before starting");
     const { id } = await createSession();
@@ -23,13 +22,13 @@ const createHostSession = async () => {
     if (getAborted()) throw new Error("Session creation aborted after creating session");
   } catch (error) {
     reportError({ message: "Failed to create session", data: error });
-    setStatus("failed");
+    reportStatus("failed");
     return;
   }
 
   // 2. 等待加入事件
   try {
-    setStatus("waiting");
+    reportStatus("waiting");
 
     for await (const session of pollingSession(sessionId, "join")) {
       if (getAborted()) throw new Error("Session aborted while waiting for client to join");
@@ -38,7 +37,7 @@ const createHostSession = async () => {
     }
   } catch (error) {
     reportError({ message: "Failed to wait for client to join session", data: error });
-    setStatus("failed");
+    reportStatus("failed");
     return;
   }
 
@@ -46,7 +45,7 @@ const createHostSession = async () => {
 
   // 3. 交換信令
   try {
-    setStatus("signaling");
+    reportStatus("signaling");
 
     if (getAborted()) throw new Error("Session aborted before WebRTC negotiation");
     const { description, candidates } = await getLocal("createOffer", GETHER_CANDIDATE_TIMEOUT);
@@ -63,7 +62,7 @@ const createHostSession = async () => {
     }
   } catch (error) {
     reportError({ message: "Error occurred during signaling exchange", data: error });
-    setStatus("failed");
+    reportStatus("failed");
     close();
     return;
   }
@@ -75,17 +74,17 @@ const createHostSession = async () => {
     bindDataChannelIPC(dataChannel);
     if (getAborted()) throw new Error("Session aborted after DataChannel established");
 
-    setStatus("connected");
+    reportStatus("connected");
     reportLog({ message: "DataChannel established successfully" });
 
     onceAborted(() => {
       reportLog({ message: "Session aborted and connection closed" });
-      setStatus("failed");
+      reportStatus("failed");
       close();
     });
   } catch (error) {
     reportError({ message: "Failed to open DataChannel", data: error });
-    setStatus("failed");
+    reportStatus("failed");
     close();
     return;
   }
