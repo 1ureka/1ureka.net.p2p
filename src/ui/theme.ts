@@ -13,7 +13,7 @@ export const theme = createTheme({
     primary: { main: "#58A6FF" },
     background: { header: "#151b23", default: "#212830", paper: "#2a313c", tooltip: "#3d444d" },
     text: { primary: "#C9D1D9", secondary: "#8B949E", disabled: "#484F58" },
-    divider: "#30363D",
+    divider: "#3d444d",
   },
   typography: {
     fontFamily: `"Comfortaa", "jf openhuninn"`,
