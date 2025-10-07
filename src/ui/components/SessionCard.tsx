@@ -1,18 +1,19 @@
-import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
-import DoneRoundedIcon from "@mui/icons-material/DoneRounded";
+import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import StopRoundedIcon from "@mui/icons-material/StopRounded";
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Divider, Typography } from "@mui/material";
 
-import { ellipsisSx } from "@/ui/theme";
+import { centerTextSx, ellipsisSx, generateColorMix } from "@/ui/theme";
 import { Card, CardHeader } from "@/ui/components/Card";
-import { GithubHeaderButton, GithubTooltip } from "@/ui/components/Github";
+import { GithubButton, GithubHeaderButton, GithubIconButton, GithubTooltip } from "@/ui/components/Github";
 import { ConnectionIndicator } from "@/ui/components/SessionCardIndicator";
+import { SessionCardCopyButton } from "@/ui/components/SessionCardCopyBtn";
 
+import { handleStartHostAdapter, handleStartClientAdapter, handleStopAdapter } from "@/adapter-state/handlers";
 import { handleLeave, handleStop } from "@/transport-state/handlers";
 import { useSession } from "@/transport-state/store";
 import { useAdapter } from "@/adapter-state/store";
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 
 const SessionCardLabel = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -22,58 +23,163 @@ const SessionCardLabel = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-const SessionCardCopyButton = () => {
-  const [copied, setCopied] = useState(false);
-  const timer = useRef<NodeJS.Timeout | null>(null);
-  const session = useSession((state) => state.session);
-
-  const handleCopy = async () => {
-    if (timer.current !== null) clearTimeout(timer.current);
-    await navigator.clipboard.writeText(session.id);
-    setCopied(true);
-  };
-
-  useEffect(() => {
-    if (!copied) return;
-    timer.current = setTimeout(() => setCopied(false), 2000);
-  }, [copied]);
+const SessionCardSubHeader = ({ children }: { children: React.ReactNode }) => {
+  const bgcolor = ({ palette }: { palette: { background: { paper: string; default: string } } }) =>
+    generateColorMix(palette.background.paper, palette.background.default, 50);
 
   return (
-    <Box sx={{ color: "text.secondary", translate: "0px -1.5px", height: 0, display: "grid", placeItems: "center" }}>
-      <Button sx={{ m: 0, p: 0.5, minWidth: 0, height: 0, opacity: 0 }} color="inherit">
-        <ContentCopyRoundedIcon fontSize="small" />
-      </Button>
-
-      <GithubTooltip
-        title={copied ? "Copied!" : "Copy to clipboard"}
-        placement="right"
-        boxProps={{ sx: { position: "absolute" } }}
-      >
-        <Button sx={{ m: 0, p: 0.5, minWidth: 0 }} color="inherit" onClick={handleCopy} disabled={copied}>
-          {copied ? <DoneRoundedIcon fontSize="small" /> : <ContentCopyRoundedIcon fontSize="small" />}
-        </Button>
-      </GithubTooltip>
+    <Box sx={{ borderBottom: "2px solid", borderColor: "divider", bgcolor }}>
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: 40, pl: 2, pr: 1 }}>
+        {children}
+      </Box>
     </Box>
   );
 };
 
-const SessionCard = () => {
-  const role = useSession((state) => state.role);
-  const session = useSession((state) => state.session);
-  const status = useSession((state) => state.status);
-  const instance = useAdapter((state) => state.instance);
+const SessionCardSubBody = ({ children }: { children: React.ReactNode }) => (
+  <Box sx={{ display: "grid", gridTemplateColumns: "0.3fr 1fr", gap: 1.5, p: 2, px: 3 }}>{children}</Box>
+);
 
+// ------------------------------------------------------------------------------
+
+// TODO: error display
+const AdapterHeader = () => {
+  const instance = useAdapter((state) => state.instance);
+  const role = useSession((state) => state.role);
+
+  const [startState, setStartState] = useState<{ loading: boolean; error: string | null }>({
+    loading: false,
+    error: null,
+  });
+
+  const handleStart = async () => {
+    try {
+      setStartState({ loading: true, error: null });
+      if (role === "host") await handleStartHostAdapter();
+      if (role === "client") await handleStartClientAdapter();
+      throw new Error("Role is not set");
+    } catch (err) {
+      setStartState({ loading: false, error: err instanceof Error ? err.message : "Unknown error occurred" });
+    } finally {
+      setStartState({ loading: false, error: null });
+    }
+  };
+
+  const [stopState, setStopState] = useState<{ loading: boolean }>({ loading: false });
+
+  const handleStop = async () => {
+    try {
+      setStopState({ loading: true });
+      await handleStopAdapter();
+    } finally {
+      setStopState({ loading: false });
+    }
+  };
+
+  return (
+    <SessionCardSubHeader>
+      <Typography variant="subtitle2" sx={{ color: "text.secondary", ...centerTextSx }}>
+        Adapter
+      </Typography>
+
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <GithubTooltip title={"Start adapter"}>
+          <GithubIconButton disabled={instance !== null} loading={startState.loading} onClick={handleStart}>
+            <PlayArrowRoundedIcon fontSize="small" />
+          </GithubIconButton>
+        </GithubTooltip>
+
+        <GithubTooltip title={"Stop adapter"}>
+          <GithubIconButton disabled={instance === null} loading={stopState.loading} onClick={handleStop}>
+            <StopRoundedIcon fontSize="small" />
+          </GithubIconButton>
+        </GithubTooltip>
+      </Box>
+    </SessionCardSubHeader>
+  );
+};
+
+const AdapterBody = () => {
+  const instance = useAdapter((state) => state.instance);
+  const mappings = useAdapter((state) => state.mappings);
+  const rules = useAdapter((state) => state.rules);
+  const status = instance ? "connected" : "failed";
+
+  return (
+    <SessionCardSubBody>
+      <SessionCardLabel>Status</SessionCardLabel>
+      <ConnectionIndicator status={status} />
+
+      <SessionCardLabel>Configs</SessionCardLabel>
+      <Typography variant="body2" sx={ellipsisSx}>
+        {instance ? (instance === "host" ? `${rules.length} rules` : `${mappings.length} mappings`) : "--"}
+      </Typography>
+    </SessionCardSubBody>
+  );
+};
+
+const TransportHeader = () => {
+  const status = useSession((state) => state.status);
   const stopLoading = status === "aborting";
   const stopDisabled = ["disconnected", "joining", "aborting", "failed"].includes(status);
-  const leaveDisabled = status !== "failed" || instance !== null;
 
-  const getStopTooltip = () => {
-    if (status === "disconnected") return "Not connected to session";
-    if (status === "joining") return "Joining session";
-    if (status === "aborting") return "Stopping connection";
-    if (status === "failed") return "Connection stopped";
-    return "";
-  };
+  return (
+    <SessionCardSubHeader>
+      <Typography variant="subtitle2" sx={{ color: "text.secondary", ...centerTextSx }}>
+        Transport
+      </Typography>
+
+      <GithubTooltip title={"Stop connection"}>
+        <GithubIconButton disabled={stopDisabled} loading={stopLoading} onClick={() => handleStop()}>
+          <StopRoundedIcon fontSize="small" />
+        </GithubIconButton>
+      </GithubTooltip>
+    </SessionCardSubHeader>
+  );
+};
+
+const TransportBody = () => {
+  const session = useSession((state) => state.session);
+  const status = useSession((state) => state.status);
+
+  return (
+    <SessionCardSubBody>
+      <SessionCardLabel>Status</SessionCardLabel>
+      <ConnectionIndicator status={status} />
+
+      <SessionCardLabel>Host</SessionCardLabel>
+      <Typography variant="body2" sx={ellipsisSx}>
+        {session.host || "--"}
+      </Typography>
+
+      <SessionCardLabel>Client</SessionCardLabel>
+      <Typography variant="body2" sx={ellipsisSx}>
+        {session.client || "--"}
+      </Typography>
+
+      <SessionCardLabel>Session ID</SessionCardLabel>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Typography variant="body2" sx={ellipsisSx}>
+          {session.id || "--"}
+        </Typography>
+        <SessionCardCopyButton />
+      </Box>
+
+      <SessionCardLabel>Created at</SessionCardLabel>
+      <Typography variant="body2" sx={ellipsisSx}>
+        {new Date(session.createdAt).toLocaleString()}
+      </Typography>
+    </SessionCardSubBody>
+  );
+};
+
+// ------------------------------------------------------------------------------
+
+const SessionCardHeader = () => {
+  const role = useSession((state) => state.role);
+  const status = useSession((state) => state.status);
+  const instance = useAdapter((state) => state.instance);
+  const leaveDisabled = status !== "failed" || instance !== null;
 
   const getLeaveTooltip = () => {
     if (status !== "failed") return "Stop connection first";
@@ -82,71 +188,41 @@ const SessionCard = () => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <Typography variant="subtitle1" component="h2">
+    <CardHeader>
+      <Box sx={{ display: "flex", gap: 1, alignItems: "baseline" }}>
+        <Typography variant="subtitle1" component="h2" sx={{ ...centerTextSx }}>
           Session
         </Typography>
-
-        <Box sx={{ flex: 1 }} />
-
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <GithubTooltip title={getStopTooltip()}>
-            <GithubHeaderButton
-              color="warning"
-              StartIcon={StopRoundedIcon}
-              disabled={stopDisabled}
-              loading={stopLoading}
-              onClick={() => handleStop()}
-            >
-              stop
-            </GithubHeaderButton>
-          </GithubTooltip>
-
-          <GithubTooltip title={getLeaveTooltip()}>
-            <GithubHeaderButton
-              color="error"
-              StartIcon={LogoutRoundedIcon}
-              disabled={leaveDisabled}
-              onClick={() => handleLeave()}
-            >
-              leave
-            </GithubHeaderButton>
-          </GithubTooltip>
-        </Box>
-      </CardHeader>
-
-      <Box sx={{ display: "grid", gridTemplateColumns: "0.3fr 1fr", gap: 2, p: 2.5, px: 3 }}>
-        <SessionCardLabel>Status</SessionCardLabel>
-        <ConnectionIndicator status={status} />
-
-        <SessionCardLabel>Host</SessionCardLabel>
-        <Typography variant="body2" sx={ellipsisSx}>
-          {session.host || "--"}
-          {role === "host" ? " (You)" : ""}
-        </Typography>
-
-        <SessionCardLabel>Client</SessionCardLabel>
-        <Typography variant="body2" sx={ellipsisSx}>
-          {session.client || "--"}
-          {role === "client" ? " (You)" : ""}
-        </Typography>
-
-        <SessionCardLabel>Session ID</SessionCardLabel>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Typography variant="body2" sx={ellipsisSx}>
-            {session.id || "--"}
-          </Typography>
-          <SessionCardCopyButton />
-        </Box>
-
-        <SessionCardLabel>Created at</SessionCardLabel>
-        <Typography variant="body2" sx={ellipsisSx}>
-          {new Date(session.createdAt).toLocaleString()}
+        <Typography variant="subtitle2" sx={{ color: "text.secondary", ...centerTextSx }}>
+          {`as ${role}`}
         </Typography>
       </Box>
-    </Card>
+
+      <Box sx={{ flex: 1 }} />
+
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <GithubTooltip title={getLeaveTooltip()}>
+          <GithubButton size="small" color="error" disabled={leaveDisabled} onClick={handleLeave}>
+            <LogoutRoundedIcon fontSize="small" />
+            <Typography variant="body2" sx={{ ...centerTextSx }}>
+              Leave
+            </Typography>
+          </GithubButton>
+        </GithubTooltip>
+      </Box>
+    </CardHeader>
   );
 };
+
+const SessionCard = () => (
+  <Card>
+    <SessionCardHeader />
+    <AdapterHeader />
+    <AdapterBody />
+    <Divider sx={{ borderWidth: 1, borderColor: "divider" }} />
+    <TransportHeader />
+    <TransportBody />
+  </Card>
+);
 
 export { SessionCard };
