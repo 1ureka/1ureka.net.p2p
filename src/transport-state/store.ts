@@ -17,6 +17,11 @@ const validTransitions: Record<ConnectionStatus, ConnectionStatus[]> = {
 };
 
 /**
+ * 流量監控資料點
+ */
+type TrafficPoint = { timestamp: number; rate: number };
+
+/**
  * 全域狀態管理 (Zustand)
  */
 type SessionState = {
@@ -24,13 +29,15 @@ type SessionState = {
   status: ConnectionStatus;
   history: ConnectionLogEntry[];
   session: Session;
+  traffic: ReadonlyArray<TrafficPoint>;
 };
 const useSession = create<SessionState>(() => ({
   role: "host",
   status: "disconnected",
   history: [],
   session: { id: "", host: "", client: "", createdAt: "", signal: {} },
+  traffic: [],
 }));
 
 export { useSession, validTransitions };
-export type { ConnectionStatus };
+export type { ConnectionStatus, TrafficPoint };
