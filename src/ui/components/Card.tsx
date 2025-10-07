@@ -11,7 +11,9 @@ const Card = ({ children, sx }: { children: React.ReactNode; sx?: BoxProps["sx"]
 const CardHeader = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
-      <Box sx={{ display: "flex", alignItems: "center", bgcolor: "background.paper", gap: 2, px: 3, height: 40 }}>
+      <Box
+        sx={{ display: "flex", alignItems: "center", bgcolor: "background.paper", gap: 2, pl: 2, pr: 1, height: 40 }}
+      >
         {children}
       </Box>
       <Divider sx={{ borderWidth: 1 }} />
