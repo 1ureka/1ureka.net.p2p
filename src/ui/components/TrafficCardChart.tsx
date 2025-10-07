@@ -1,34 +1,7 @@
 import type { XAxis, YAxis } from "@mui/x-charts/models";
 import { LineChart, type LineSeries } from "@mui/x-charts/LineChart";
-import { create } from "zustand";
 import { theme } from "@/ui/theme";
-
-type Point = { timestamp: number; rate: number };
-
-const useTraffic = create<{ points: ReadonlyArray<Point> }>((set) => {
-  const maxMbps = 15;
-  const intervalMs = 1000;
-
-  const maxBytesPerSec = (maxMbps * 1_000_000) / 8;
-  const maxBytesPerInterval = Math.floor((maxBytesPerSec * intervalMs) / 1000);
-
-  function generatePoint(): Point {
-    const t = Date.now();
-    const base = Math.sin(t / 5000) * 0.5 + 0.5;
-    const noise = (Math.random() - 0.5) * 0.3;
-    let value = (base + noise) * maxBytesPerInterval;
-    value = Math.max(0, Math.min(maxBytesPerInterval, value));
-    return { timestamp: t, rate: Math.floor(value) };
-  }
-
-  setInterval(() => {
-    set((state) => ({ points: [...state.points, generatePoint()] }));
-  }, intervalMs);
-
-  return { points: [] };
-});
-
-// --------------------------------------------
+import { useSession } from "@/transport-state/store";
 
 const createFormatter = (now: number) => {
   const formatElapsed = (timestamp: number) => {
@@ -45,7 +18,7 @@ const createFormatter = (now: number) => {
 };
 
 const TrafficChart = () => {
-  const points = useTraffic((state) => state.points);
+  const points = useSession((state) => state.traffic);
   const now = Date.now();
   const { formatElapsed, formatBytes } = createFormatter(now);
 
