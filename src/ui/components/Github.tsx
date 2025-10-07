@@ -67,6 +67,7 @@ const GithubButton = styled(Button)(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
   "&:hover": { filter: "brightness(1.2)" },
   fontWeight: "bold",
+  gap: theme.spacing(0.5),
 }));
 
 const GithubIconButton = styled(GithubButton)(({ theme }) => ({

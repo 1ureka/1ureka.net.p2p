@@ -5,7 +5,7 @@ import { Box, Divider, Typography } from "@mui/material";
 
 import { centerTextSx, ellipsisSx, generateColorMix } from "@/ui/theme";
 import { Card, CardHeader } from "@/ui/components/Card";
-import { GithubButton, GithubHeaderButton, GithubIconButton, GithubTooltip } from "@/ui/components/Github";
+import { GithubButton, GithubIconButton, GithubTooltip } from "@/ui/components/Github";
 import { ConnectionIndicator } from "@/ui/components/SessionCardIndicator";
 import { SessionCardCopyButton } from "@/ui/components/SessionCardCopyBtn";
 
