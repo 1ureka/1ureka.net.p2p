@@ -2,12 +2,12 @@ import SignpostRoundedIcon from "@mui/icons-material/SignpostRounded";
 import StopRoundedIcon from "@mui/icons-material/StopRounded";
 import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 
+import { useEffect, useState } from "react";
 import { Box, Typography, Tooltip, Zoom } from "@mui/material";
+import { motion } from "motion/react";
 import { ellipsisSx } from "@/ui/theme";
 import { GithubButton } from "@/ui/components/Github";
-
 import { handleRemoveMapping, handleRemoveRule } from "@/adapter-state/handlers";
-import { useEffect, useState } from "react";
 
 function formatElapsed(elapsed: number) {
   const hours = Math.floor(elapsed / 3600);
@@ -53,6 +53,10 @@ const RouteCardListItem = ({ id, type, content, createdAt }: RouteCardListItemPr
 
   return (
     <Box
+      component={motion.div}
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      layout="position"
       sx={{
         display: "grid",
         gridTemplateColumns: "1fr auto",
@@ -62,6 +66,7 @@ const RouteCardListItem = ({ id, type, content, createdAt }: RouteCardListItemPr
         borderBottom: "2px solid",
         borderColor: "divider",
         "& div:nth-of-type(2n)": { justifySelf: "end" },
+        transition: "background-color 0.3s ease",
       }}
     >
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "text.secondary" }}>

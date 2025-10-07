@@ -1,5 +1,6 @@
 import InfoOutlineRoundedIcon from "@mui/icons-material/InfoOutlineRounded";
 import { Box, Typography, type BoxProps } from "@mui/material";
+import { motion } from "motion/react";
 import { format } from "pretty-format";
 
 import { useAdapter } from "@/adapter-state/store";
@@ -63,7 +64,13 @@ const EventEntry = ({ log }: { log: ConnectionLogEntry }) => {
   };
 
   return (
-    <Box sx={{ position: "relative", "&:hover": { filter: "brightness(1.25)" }, py: 0.5, px: 1.5 }}>
+    <Box
+      component={motion.div}
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      layout="position"
+      sx={{ position: "relative", "&:hover": { filter: "brightness(1.25)" }, py: 0.5, px: 1.5 }}
+    >
       <Box sx={{ position: "absolute", inset: 0, pointerEvents: "none", bgcolor, opacity: 0.25 }} />
 
       <Box sx={{ display: "flex", alignItems: "flex-end", gap: 1 }}>
