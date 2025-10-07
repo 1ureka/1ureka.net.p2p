@@ -55,20 +55,49 @@ const GithubTextField = styled(TextField)(({ theme }) => ({
   },
 }));
 
-const GithubButton = styled(Button)(({ theme }) => ({
-  minWidth: "fit-content",
-  borderRadius: 6,
-  color: theme.palette.text.primary,
-  textTransform: "none",
-  textWrap: "nowrap",
-  border: "none",
-  outline: "2px solid",
-  outlineColor: theme.palette.divider,
-  backgroundColor: theme.palette.background.paper,
-  "&:hover": { filter: "brightness(1.2)" },
-  fontWeight: "bold",
-  gap: theme.spacing(0.5),
-}));
+const GithubButton = styled(Button)(({ theme, color, disabled }) => {
+  const restStyle = {
+    color: theme.palette.text.primary,
+    outlineColor: theme.palette.divider,
+    backgroundColor: theme.palette.background.paper,
+  };
+  const errorStyle = {
+    color: theme.palette.error.main,
+    outlineColor: generateColorMix(theme.palette.error.main, theme.palette.divider, 50),
+    backgroundColor: generateColorMix(theme.palette.error.main, theme.palette.background.paper, 10),
+  };
+  const warningStyle = {
+    color: theme.palette.warning.main,
+    outlineColor: generateColorMix(theme.palette.warning.main, theme.palette.divider, 50),
+    backgroundColor: generateColorMix(theme.palette.warning.main, theme.palette.background.paper, 10),
+  };
+  const primaryStyle = {
+    color: theme.palette.primary.main,
+    outlineColor: generateColorMix(theme.palette.primary.main, theme.palette.divider, 50),
+    backgroundColor: generateColorMix(theme.palette.primary.main, theme.palette.background.paper, 10),
+  };
+
+  let themeStyle = restStyle;
+  if (color === "error") themeStyle = errorStyle;
+  else if (color === "warning") themeStyle = warningStyle;
+  else if (color === "primary") themeStyle = primaryStyle;
+  if (disabled) themeStyle = restStyle;
+
+  return {
+    minWidth: "fit-content",
+    borderRadius: 6,
+    color: themeStyle.color,
+    textTransform: "none",
+    textWrap: "nowrap",
+    border: "none",
+    outline: "2px solid",
+    outlineColor: themeStyle.outlineColor,
+    backgroundColor: themeStyle.backgroundColor,
+    "&:hover": { filter: "brightness(1.2)" },
+    fontWeight: "bold",
+    gap: theme.spacing(0.5),
+  };
+});
 
 const GithubIconButton = styled(GithubButton)(({ theme }) => ({
   padding: theme.spacing(0.3),
