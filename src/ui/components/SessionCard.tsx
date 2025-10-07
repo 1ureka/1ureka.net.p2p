@@ -4,58 +4,13 @@ import StopRoundedIcon from "@mui/icons-material/StopRounded";
 import { Box, Button, Typography } from "@mui/material";
 
 import { ellipsisSx } from "@/ui/theme";
-import { GithubHeaderButton, GithubTooltip } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
-import { type ConnectionStatus, useSession } from "@/transport-state/store";
-import { useAdapter } from "@/adapter-state/store";
+import { GithubHeaderButton, GithubTooltip } from "@/ui/components/Github";
+import { ConnectionIndicator } from "@/ui/components/SessionCardIndicator";
+
 import { handleLeave, handleStop } from "@/transport-state/handlers";
-
-const green = "#4caf50";
-const red = "#f44336";
-const orange = "#ff9800";
-const gray = "#9e9e9e";
-
-const colorMap: Record<ConnectionStatus, string> = {
-  disconnected: gray,
-  joining: orange,
-  waiting: orange,
-  signaling: orange,
-  connected: green,
-  aborting: red,
-  failed: red,
-} as const;
-
-const ConnectionIndicator = ({ status }: { status: ConnectionStatus }) => (
-  <Box sx={{ display: "grid", placeItems: "center", height: 0, translate: "0px -1.5px" }}>
-    <Box
-      sx={{
-        width: 12,
-        aspectRatio: "1/1",
-        borderRadius: 99,
-        bgcolor: colorMap[status],
-        position: "absolute",
-        animation: "ping 1.5s ease-in-out infinite",
-        "&::before": {
-          content: '""',
-          position: "absolute",
-          inset: 0,
-          borderRadius: 99,
-          bgcolor: colorMap[status],
-          opacity: 0.5,
-          animation: "ping-ring 1.5s ease-in-out infinite",
-        },
-        "@keyframes ping": {
-          "0%, 100%": { opacity: 1 },
-          "50%": { opacity: 0.5 },
-        },
-        "@keyframes ping-ring": {
-          "0%": { transform: "scale(1)", opacity: 0.9 },
-          "100%": { transform: "scale(2.5)", opacity: 0 },
-        },
-      }}
-    />
-  </Box>
-);
+import { useSession } from "@/transport-state/store";
+import { useAdapter } from "@/adapter-state/store";
 
 const SessionCardLabel = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -88,7 +43,6 @@ const SessionCard = () => {
   const stopLoading = status === "aborting";
   const stopDisabled = ["disconnected", "joining", "aborting", "failed"].includes(status);
   const leaveDisabled = status !== "failed" || instance !== null;
-  const statusString = status === "failed" ? "Stopped" : status.charAt(0).toUpperCase() + status.slice(1);
 
   const getStopTooltip = () => {
     if (status === "disconnected") return "Not connected to session";
@@ -141,12 +95,7 @@ const SessionCard = () => {
 
       <Box sx={{ display: "grid", gridTemplateColumns: "0.3fr 1fr", gap: 2, p: 2.5, px: 3 }}>
         <SessionCardLabel>Status</SessionCardLabel>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-          <ConnectionIndicator status={status} />
-          <Typography variant="body2" sx={{ color: colorMap[status], ...ellipsisSx }}>
-            {statusString}
-          </Typography>
-        </Box>
+        <ConnectionIndicator status={status} />
 
         <SessionCardLabel>Host</SessionCardLabel>
         <Typography variant="body2" sx={ellipsisSx}>
