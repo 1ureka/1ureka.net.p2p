@@ -1,6 +1,7 @@
 import { reportStatus, reportLog, reportError, onceAborted, getAborted } from "@/transport-state/report";
 import { createPeerConnection } from "@/transport/transport-pc";
 import { bindDataChannelIPC } from "@/transport/transport-ipc";
+import { bindDataChannelTraffic } from "@/transport/transport-traffic";
 import { joinSession, pollingSession, sendSignal } from "@/transport/session-utils";
 
 const GETHER_CANDIDATE_TIMEOUT = 2000; // 收集 ice candidate 的最大等待時間（毫秒）
@@ -56,6 +57,7 @@ const createClientSession = async (sessionId: string) => {
   try {
     if (getAborted()) throw new Error("Session aborted before DataChannel establishment");
     const dataChannel = await getDataChannel(WAIT_DATA_CHANNEL_TIMEOUT);
+    bindDataChannelTraffic(dataChannel);
     bindDataChannelIPC(dataChannel);
     if (getAborted()) throw new Error("Session aborted after DataChannel established");
 
