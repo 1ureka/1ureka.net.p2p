@@ -93,7 +93,7 @@ const MappingCard = () => {
   const mappings = useAdapter((state) => state.mappings);
   const instance = useAdapter((state) => state.instance);
 
-  const isAdapterRunning = instance === "client";
+  const isAdapterRunning = instance !== null;
   const addDisabled = !isAdapterRunning;
   const startDisabled = isAdapterRunning;
   const stopDisabled = !isAdapterRunning;
@@ -134,52 +134,54 @@ const MappingCard = () => {
           Mappings
         </Typography>
 
-        <Box sx={{ flexGrow: 1 }} />
+        <Box sx={{ flex: 1 }} />
 
-        <Tooltip
-          title={startDisabled ? "Adapter is already running" : ""}
-          arrow
-          placement="top"
-          slots={{ transition: Zoom }}
-        >
-          <Box>
-            <GithubHeaderButton
-              StartIcon={PlayArrowRoundedIcon}
-              disabled={startDisabled}
-              loading={loading}
-              onClick={handleStart}
-            >
-              start
-            </GithubHeaderButton>
-          </Box>
-        </Tooltip>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Tooltip
+            title={startDisabled ? "Adapter is already running" : ""}
+            arrow
+            placement="top"
+            slots={{ transition: Zoom }}
+          >
+            <Box>
+              <GithubHeaderButton
+                StartIcon={PlayArrowRoundedIcon}
+                disabled={startDisabled}
+                loading={loading}
+                onClick={handleStart}
+              >
+                start
+              </GithubHeaderButton>
+            </Box>
+          </Tooltip>
 
-        <Tooltip
-          title={stopDisabled ? "Adapter is not running" : ""}
-          arrow
-          placement="top"
-          slots={{ transition: Zoom }}
-        >
-          <Box>
-            <GithubHeaderButton
-              color="warning"
-              StartIcon={StopRoundedIcon}
-              disabled={stopDisabled}
-              loading={loading}
-              onClick={handleStop}
-            >
-              stop
-            </GithubHeaderButton>
-          </Box>
-        </Tooltip>
+          <Tooltip
+            title={stopDisabled ? "Adapter is not running" : ""}
+            arrow
+            placement="top"
+            slots={{ transition: Zoom }}
+          >
+            <Box>
+              <GithubHeaderButton
+                color="warning"
+                StartIcon={StopRoundedIcon}
+                disabled={stopDisabled}
+                loading={loading}
+                onClick={handleStop}
+              >
+                stop
+              </GithubHeaderButton>
+            </Box>
+          </Tooltip>
 
-        <Tooltip title={addDisabled ? "Start adapter first" : ""} arrow placement="top" slots={{ transition: Zoom }}>
-          <Box>
-            <GithubHeaderButton StartIcon={AddBoxRoundedIcon} disabled={addDisabled} onClick={handleOpen}>
-              add
-            </GithubHeaderButton>
-          </Box>
-        </Tooltip>
+          <Tooltip title={addDisabled ? "Start adapter first" : ""} arrow placement="top" slots={{ transition: Zoom }}>
+            <Box>
+              <GithubHeaderButton StartIcon={AddBoxRoundedIcon} disabled={addDisabled} onClick={handleOpen}>
+                add
+              </GithubHeaderButton>
+            </Box>
+          </Tooltip>
+        </Box>
         <CreateMappingPopover anchorEl={anchorEl} onClose={handleClose} />
       </CardHeader>
 
@@ -209,7 +211,7 @@ const RuleCard = () => {
   const rules = useAdapter((state) => state.rules);
   const instance = useAdapter((state) => state.instance);
 
-  const isAdapterRunning = instance === "host";
+  const isAdapterRunning = instance !== null;
   const addDisabled = !isAdapterRunning;
   const startDisabled = isAdapterRunning;
   const stopDisabled = !isAdapterRunning;
@@ -250,52 +252,54 @@ const RuleCard = () => {
           Rules
         </Typography>
 
-        <Box sx={{ flexGrow: 1 }} />
+        <Box sx={{ flex: 1 }} />
 
-        <Tooltip
-          title={startDisabled ? "Adapter is already running" : ""}
-          arrow
-          placement="top"
-          slots={{ transition: Zoom }}
-        >
-          <Box>
-            <GithubHeaderButton
-              StartIcon={PlayArrowRoundedIcon}
-              disabled={startDisabled}
-              loading={loading}
-              onClick={handleStart}
-            >
-              start
-            </GithubHeaderButton>
-          </Box>
-        </Tooltip>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Tooltip
+            title={startDisabled ? "Adapter is already running" : ""}
+            arrow
+            placement="top"
+            slots={{ transition: Zoom }}
+          >
+            <Box>
+              <GithubHeaderButton
+                StartIcon={PlayArrowRoundedIcon}
+                disabled={startDisabled}
+                loading={loading}
+                onClick={handleStart}
+              >
+                start
+              </GithubHeaderButton>
+            </Box>
+          </Tooltip>
 
-        <Tooltip
-          title={stopDisabled ? "Adapter is not running" : ""}
-          arrow
-          placement="top"
-          slots={{ transition: Zoom }}
-        >
-          <Box>
-            <GithubHeaderButton
-              color="warning"
-              StartIcon={StopRoundedIcon}
-              disabled={stopDisabled}
-              loading={loading}
-              onClick={handleStop}
-            >
-              stop
-            </GithubHeaderButton>
-          </Box>
-        </Tooltip>
+          <Tooltip
+            title={stopDisabled ? "Adapter is not running" : ""}
+            arrow
+            placement="top"
+            slots={{ transition: Zoom }}
+          >
+            <Box>
+              <GithubHeaderButton
+                color="warning"
+                StartIcon={StopRoundedIcon}
+                disabled={stopDisabled}
+                loading={loading}
+                onClick={handleStop}
+              >
+                stop
+              </GithubHeaderButton>
+            </Box>
+          </Tooltip>
 
-        <Tooltip title={addDisabled ? "Start adapter first" : ""} arrow placement="top" slots={{ transition: Zoom }}>
-          <Box>
-            <GithubHeaderButton StartIcon={AddBoxRoundedIcon} disabled={addDisabled} onClick={handleOpen}>
-              add
-            </GithubHeaderButton>
-          </Box>
-        </Tooltip>
+          <Tooltip title={addDisabled ? "Start adapter first" : ""} arrow placement="top" slots={{ transition: Zoom }}>
+            <Box>
+              <GithubHeaderButton StartIcon={AddBoxRoundedIcon} disabled={addDisabled} onClick={handleOpen}>
+                add
+              </GithubHeaderButton>
+            </Box>
+          </Tooltip>
+        </Box>
         <CreateRulePopover anchorEl={anchorEl} onClose={handleClose} />
       </CardHeader>
 
