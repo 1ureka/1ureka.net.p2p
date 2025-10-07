@@ -1,10 +1,8 @@
-import AddBoxRoundedIcon from "@mui/icons-material/AddBoxRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import InfoOutlineRoundedIcon from "@mui/icons-material/InfoOutlineRounded";
 
 import { Box, Typography } from "@mui/material";
-import { centerTextSx } from "@/ui/theme";
 import { Card, CardHeader } from "@/ui/components/Card";
 import { GithubButton, GithubTooltip } from "@/ui/components/Github";
 import { RouteCardList, RouteCardListItem } from "@/ui/components/RouteCardList";
@@ -14,18 +12,26 @@ import { useAdapter } from "@/adapter-state/store";
 import { useState, memo } from "react";
 import { useSession } from "@/transport-state/store";
 
-type RouteCardProps = {
-  type: "mapping" | "rule";
-  actionDisabled?: boolean;
-  onAction?: (event: React.MouseEvent<HTMLElement>) => void;
-};
+const RouteCardNoItemDisplay = ({ type }: { type: "mapping" | "rule" }) => {
+  const instance = useAdapter((state) => state.instance);
 
-const RouteCardNoItemDisplay = ({ type, actionDisabled, onAction }: RouteCardProps) => {
-  const title = type === "mapping" ? "No mappings yet" : "No rules defined";
+  const title =
+    instance === null
+      ? type === "mapping"
+        ? "Adapter not started"
+        : "Adapter not started"
+      : type === "mapping"
+        ? "No mappings yet"
+        : "No rules defined";
+
   const description =
-    type === "mapping"
-      ? "You haven’t added any port mappings yet. Create one to connect local and remote ports."
-      : "You haven’t defined any access rules yet. Add one to allow incoming connections.";
+    instance === null
+      ? type === "mapping"
+        ? "Start the adapter first to create port mappings and connect local and remote ports."
+        : "Start the adapter first to define access rules and allow incoming connections."
+      : type === "mapping"
+        ? "You haven't added any port mappings yet. Create one to connect local and remote ports."
+        : "You haven't defined any access rules yet. Add one to allow incoming connections.";
 
   return (
     <Box sx={{ height: 1, display: "grid", placeItems: "center" }}>
@@ -38,19 +44,18 @@ const RouteCardNoItemDisplay = ({ type, actionDisabled, onAction }: RouteCardPro
         <Typography variant="body2" sx={{ textAlign: "center", maxWidth: 400 }}>
           {description}
         </Typography>
-
-        <GithubButton sx={{ mt: 2, px: 1.5 }} disabled={actionDisabled} onClick={onAction}>
-          <AddBoxRoundedIcon fontSize="small" />
-          <Typography variant="body2" sx={centerTextSx}>
-            Add
-          </Typography>
-        </GithubButton>
       </Box>
     </Box>
   );
 };
 
-const RouteCardHeader = ({ type, actionDisabled, onAction }: RouteCardProps) => {
+type RouteCardHeaderProps = {
+  type: "mapping" | "rule";
+  actionDisabled?: boolean;
+  onAction?: (event: React.MouseEvent<HTMLElement>) => void;
+};
+
+const RouteCardHeader = ({ type, actionDisabled, onAction }: RouteCardHeaderProps) => {
   const title = type === "mapping" ? "Mappings" : "Rules";
   const actionTooltip = type === "mapping" ? "Add a new mapping" : "Add a new rule";
 
@@ -72,11 +77,12 @@ const RouteCardHeader = ({ type, actionDisabled, onAction }: RouteCardProps) => 
   );
 };
 
-type RouteCardBodyProps = RouteCardProps & {
+type RouteCardBodyProps = {
+  type: "mapping" | "rule";
   items: { id: string; content: string; createdAt: number }[];
 };
 
-const RouteCardBody = ({ type, actionDisabled, onAction, items }: RouteCardBodyProps) => (
+const RouteCardBody = ({ type, items }: RouteCardBodyProps) => (
   <Box sx={{ flex: 1, overflow: "auto", minHeight: 0 }}>
     {items.length > 0 ? (
       <RouteCardList>
@@ -85,7 +91,7 @@ const RouteCardBody = ({ type, actionDisabled, onAction, items }: RouteCardBodyP
         ))}
       </RouteCardList>
     ) : (
-      <RouteCardNoItemDisplay type={type} actionDisabled={actionDisabled} onAction={onAction} />
+      <RouteCardNoItemDisplay type={type} />
     )}
   </Box>
 );
@@ -110,8 +116,6 @@ const MappingCard = () => {
       <RouteCardHeader type="mapping" actionDisabled={addDisabled} onAction={handleOpen} />
       <RouteCardBody
         type="mapping"
-        actionDisabled={addDisabled}
-        onAction={handleOpen}
         items={mappings.map(({ id, mapping, createdAt }) => ({ id, content: mapping, createdAt }))}
       />
 
@@ -138,8 +142,6 @@ const RuleCard = () => {
       <RouteCardHeader type="rule" actionDisabled={addDisabled} onAction={handleOpen} />
       <RouteCardBody
         type="rule"
-        actionDisabled={addDisabled}
-        onAction={handleOpen}
         items={rules.map(({ id, pattern, createdAt }) => ({ id, content: pattern, createdAt }))}
       />
 
