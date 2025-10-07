@@ -10,14 +10,14 @@ import { EventsCard } from "@/ui/components/EventsCard";
 import { EventsPage } from "@/ui/components/EventsPage";
 import { SessionCard } from "@/ui/components/SessionCard";
 import { TrafficCard } from "@/ui/components/TrafficCard";
-import { MappingCard, RuleCard } from "@/ui/components/RouteCard";
+import { RouteCard } from "@/ui/components/RouteCard";
 import { CreateSessionCard, JoinSessionCard } from "@/ui/components/LaunchCard";
 
-const OverviewPage = memo(({ type }: { type: "rule" | "mapping" }) => (
+const OverviewPage = memo(() => (
   <Box sx={{ display: "grid", gridTemplateColumns: "0.75fr 1fr", gap: 2, px: 4, py: 3, minHeight: 650, flex: 1 }}>
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minHeight: 0 }}>
       <SessionCard />
-      {type === "rule" ? <RuleCard /> : <MappingCard />}
+      <RouteCard />
     </Box>
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minHeight: 0 }}>
       <TrafficCard />
@@ -76,10 +76,8 @@ const PageWrapperProps = {
 
 const Pages = () => {
   const status = useSession((state) => state.status);
-  const role = useSession((state) => state.role);
   const tab = useTab((state) => state.tab);
-
-  const overviewType = ["disconnected", "joining"].includes(status) ? null : role;
+  const overviewType = ["disconnected", "joining"].includes(status) ? null : "session";
 
   return (
     <AnimatePresence mode="wait">
@@ -88,14 +86,9 @@ const Pages = () => {
           <LaunchPage />
         </Stack>
       )}
-      {tab === "overview" && overviewType === "host" && (
-        <Stack key="overview-host" {...PageWrapperProps}>
-          <OverviewPage type="rule" />
-        </Stack>
-      )}
-      {tab === "overview" && overviewType === "client" && (
-        <Stack key="overview-client" {...PageWrapperProps}>
-          <OverviewPage type="mapping" />
+      {tab === "overview" && overviewType !== null && (
+        <Stack key="overview-session" {...PageWrapperProps}>
+          <OverviewPage />
         </Stack>
       )}
       {tab === "events" && (

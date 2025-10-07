@@ -9,15 +9,16 @@ import { RouteCardList, RouteCardListItem } from "@/ui/components/RouteCardList"
 import { CreateMappingPopover, CreateRulePopover } from "@/ui/components/RouteCardDialog";
 
 import { useAdapter } from "@/adapter-state/store";
-import { useState } from "react";
+import { useState, memo } from "react";
+import { useSession } from "@/transport-state/store";
 
-type NoItemDisplayProps = {
+type RouteCardProps = {
   type: "mapping" | "rule";
   actionDisabled?: boolean;
   onAction?: (event: React.MouseEvent<HTMLElement>) => void;
 };
 
-const NoItemDisplay = ({ type, actionDisabled, onAction }: NoItemDisplayProps) => {
+const RouteCardNoItemDisplay = ({ type, actionDisabled, onAction }: RouteCardProps) => {
   const title = type === "mapping" ? "No mappings yet" : "No rules defined";
   const description =
     type === "mapping"
@@ -36,18 +37,60 @@ const NoItemDisplay = ({ type, actionDisabled, onAction }: NoItemDisplayProps) =
           {description}
         </Typography>
 
-        <GithubButton
-          sx={{ mt: 2.5, py: 0.5, px: 1.5, bgcolor: "background.paper", textTransform: "none", ...centerTextSx }}
-          startIcon={<AddBoxRoundedIcon />}
-          disabled={actionDisabled}
-          onClick={onAction}
-        >
-          <Typography variant="body2">Add</Typography>
+        <GithubButton sx={{ mt: 2, px: 1.5 }} disabled={actionDisabled} onClick={onAction}>
+          <AddBoxRoundedIcon fontSize="small" />
+          <Typography variant="body2" sx={centerTextSx}>
+            Add
+          </Typography>
         </GithubButton>
       </Box>
     </Box>
   );
 };
+
+const RouteCardHeader = ({ type, actionDisabled, onAction }: RouteCardProps) => {
+  const title = type === "mapping" ? "Mappings" : "Rules";
+  const actionTooltip = type === "mapping" ? "Add a new mapping" : "Add a new rule";
+
+  return (
+    <CardHeader>
+      <Typography variant="subtitle1" component="h2">
+        {title}
+      </Typography>
+
+      <Box sx={{ flex: 1 }} />
+
+      <GithubTooltip title={actionDisabled ? "Start adapter first" : actionTooltip}>
+        <GithubButton size="small" disabled={actionDisabled} onClick={onAction}>
+          <AddBoxRoundedIcon fontSize="small" />
+          <Typography variant="body2" sx={centerTextSx}>
+            Add
+          </Typography>
+        </GithubButton>
+      </GithubTooltip>
+    </CardHeader>
+  );
+};
+
+type RouteCardBodyProps = RouteCardProps & {
+  items: { id: string; content: string; createdAt: number }[];
+};
+
+const RouteCardBody = ({ type, actionDisabled, onAction, items }: RouteCardBodyProps) => (
+  <Box sx={{ flex: 1, overflow: "auto", minHeight: 0 }}>
+    {items.length > 0 ? (
+      <RouteCardList>
+        {items.map(({ id, content, createdAt }) => (
+          <RouteCardListItem key={id} id={id} type={type} content={content} createdAt={createdAt} />
+        ))}
+      </RouteCardList>
+    ) : (
+      <RouteCardNoItemDisplay type={type} actionDisabled={actionDisabled} onAction={onAction} />
+    )}
+  </Box>
+);
+
+// -------------------------------------------------------------------------------
 
 const MappingCard = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -64,35 +107,15 @@ const MappingCard = () => {
 
   return (
     <Card sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
-      <CardHeader>
-        <Typography variant="subtitle1" component="h2">
-          Mappings
-        </Typography>
+      <RouteCardHeader type="mapping" actionDisabled={addDisabled} onAction={handleOpen} />
+      <RouteCardBody
+        type="mapping"
+        actionDisabled={addDisabled}
+        onAction={handleOpen}
+        items={mappings.map(({ id, mapping, createdAt }) => ({ id, content: mapping, createdAt }))}
+      />
 
-        <Box sx={{ flex: 1 }} />
-
-        <GithubTooltip title={addDisabled ? "Start adapter first" : "Add a new mapping"}>
-          <GithubButton size="small" disabled={addDisabled} onClick={handleOpen}>
-            <AddBoxRoundedIcon fontSize="small" />
-            <Typography variant="body2" sx={{ ...centerTextSx }}>
-              Add
-            </Typography>
-          </GithubButton>
-        </GithubTooltip>
-
-        <CreateMappingPopover anchorEl={anchorEl} onClose={handleClose} />
-      </CardHeader>
-
-      <Box sx={{ flex: 1, overflow: "auto", minHeight: 0 }}>
-        {mappings.length <= 0 && <NoItemDisplay type="mapping" actionDisabled={addDisabled} onAction={handleOpen} />}
-        {mappings.length > 0 && (
-          <RouteCardList>
-            {mappings.map(({ id, mapping, createdAt }) => (
-              <RouteCardListItem key={id} id={id} type="mapping" content={mapping} createdAt={createdAt} />
-            ))}
-          </RouteCardList>
-        )}
-      </Box>
+      <CreateMappingPopover anchorEl={anchorEl} onClose={handleClose} />
     </Card>
   );
 };
@@ -112,37 +135,30 @@ const RuleCard = () => {
 
   return (
     <Card sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
-      <CardHeader>
-        <Typography variant="subtitle1" component="h2">
-          Rules
-        </Typography>
+      <RouteCardHeader type="rule" actionDisabled={addDisabled} onAction={handleOpen} />
+      <RouteCardBody
+        type="rule"
+        actionDisabled={addDisabled}
+        onAction={handleOpen}
+        items={rules.map(({ id, pattern, createdAt }) => ({ id, content: pattern, createdAt }))}
+      />
 
-        <Box sx={{ flex: 1 }} />
-
-        <GithubTooltip title={addDisabled ? "Start adapter first" : "Add a new rule"}>
-          <GithubButton size="small" disabled={addDisabled} onClick={handleOpen}>
-            <AddBoxRoundedIcon fontSize="small" />
-            <Typography variant="body2" sx={{ ...centerTextSx }}>
-              Add
-            </Typography>
-          </GithubButton>
-        </GithubTooltip>
-
-        <CreateRulePopover anchorEl={anchorEl} onClose={handleClose} />
-      </CardHeader>
-
-      <Box sx={{ flex: 1, overflow: "auto", minHeight: 0 }}>
-        {rules.length <= 0 && <NoItemDisplay type="rule" actionDisabled={addDisabled} onAction={handleOpen} />}
-        {rules.length > 0 && (
-          <RouteCardList>
-            {rules.map(({ id, pattern, createdAt }) => (
-              <RouteCardListItem key={id} id={id} type="rule" content={pattern} createdAt={createdAt} />
-            ))}
-          </RouteCardList>
-        )}
-      </Box>
+      <CreateRulePopover anchorEl={anchorEl} onClose={handleClose} />
     </Card>
   );
 };
 
-export { MappingCard, RuleCard };
+// -------------------------------------------------------------------------------
+
+const RouteCard = memo(() => {
+  const role = useSession((state) => state.role);
+
+  if (role === "client") return <MappingCard />;
+  if (role === "host") return <RuleCard />;
+
+  throw new Error("RouteCard must be used when role is either 'client' or 'host'");
+});
+
+RouteCard.displayName = "RouteCard";
+
+export { RouteCard };
