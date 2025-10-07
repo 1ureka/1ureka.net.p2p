@@ -3,6 +3,7 @@ import { createTheme } from "@mui/material/styles";
 declare module "@mui/material/styles" {
   interface TypeBackground {
     header: string;
+    tooltip: string;
   }
 }
 
@@ -10,7 +11,7 @@ export const theme = createTheme({
   palette: {
     mode: "dark",
     primary: { main: "#58A6FF" },
-    background: { header: "#151b23", default: "#212830", paper: "#2a313c" },
+    background: { header: "#151b23", default: "#212830", paper: "#2a313c", tooltip: "#3d444d" },
     text: { primary: "#C9D1D9", secondary: "#8B949E", disabled: "#484F58" },
     divider: "#30363D",
   },

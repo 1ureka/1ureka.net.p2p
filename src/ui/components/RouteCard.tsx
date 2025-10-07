@@ -4,10 +4,10 @@ import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import StopRoundedIcon from "@mui/icons-material/StopRounded";
 import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
 
-import { Box, Typography, Tooltip, Zoom } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { centerTextSx } from "@/ui/theme";
 import { Card, CardHeader } from "@/ui/components/Card";
-import { GithubButton, GithubHeaderButton } from "@/ui/components/Github";
+import { GithubButton, GithubHeaderButton, GithubTooltip } from "@/ui/components/Github";
 import { RouteCardList, RouteCardListItem } from "@/ui/components/RouteCardList";
 import { CreateMappingPopover, CreateRulePopover } from "@/ui/components/RouteCardDialog";
 
@@ -137,50 +137,34 @@ const MappingCard = () => {
         <Box sx={{ flex: 1 }} />
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Tooltip
-            title={startDisabled ? "Adapter is already running" : ""}
-            arrow
-            placement="top"
-            slots={{ transition: Zoom }}
-          >
-            <Box>
-              <GithubHeaderButton
-                StartIcon={PlayArrowRoundedIcon}
-                disabled={startDisabled}
-                loading={loading}
-                onClick={handleStart}
-              >
-                start
-              </GithubHeaderButton>
-            </Box>
-          </Tooltip>
+          <GithubTooltip title={startDisabled ? "Adapter is already running" : ""}>
+            <GithubHeaderButton
+              StartIcon={PlayArrowRoundedIcon}
+              disabled={startDisabled}
+              loading={loading}
+              onClick={handleStart}
+            >
+              start
+            </GithubHeaderButton>
+          </GithubTooltip>
 
-          <Tooltip
-            title={stopDisabled ? "Adapter is not running" : ""}
-            arrow
-            placement="top"
-            slots={{ transition: Zoom }}
-          >
-            <Box>
-              <GithubHeaderButton
-                color="warning"
-                StartIcon={StopRoundedIcon}
-                disabled={stopDisabled}
-                loading={loading}
-                onClick={handleStop}
-              >
-                stop
-              </GithubHeaderButton>
-            </Box>
-          </Tooltip>
+          <GithubTooltip title={stopDisabled ? "Adapter is not running" : ""}>
+            <GithubHeaderButton
+              color="warning"
+              StartIcon={StopRoundedIcon}
+              disabled={stopDisabled}
+              loading={loading}
+              onClick={handleStop}
+            >
+              stop
+            </GithubHeaderButton>
+          </GithubTooltip>
 
-          <Tooltip title={addDisabled ? "Start adapter first" : ""} arrow placement="top" slots={{ transition: Zoom }}>
-            <Box>
-              <GithubHeaderButton StartIcon={AddBoxRoundedIcon} disabled={addDisabled} onClick={handleOpen}>
-                add
-              </GithubHeaderButton>
-            </Box>
-          </Tooltip>
+          <GithubTooltip title={addDisabled ? "Start adapter first" : ""}>
+            <GithubHeaderButton StartIcon={AddBoxRoundedIcon} disabled={addDisabled} onClick={handleOpen}>
+              add
+            </GithubHeaderButton>
+          </GithubTooltip>
         </Box>
         <CreateMappingPopover anchorEl={anchorEl} onClose={handleClose} />
       </CardHeader>
@@ -255,50 +239,34 @@ const RuleCard = () => {
         <Box sx={{ flex: 1 }} />
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Tooltip
-            title={startDisabled ? "Adapter is already running" : ""}
-            arrow
-            placement="top"
-            slots={{ transition: Zoom }}
-          >
-            <Box>
-              <GithubHeaderButton
-                StartIcon={PlayArrowRoundedIcon}
-                disabled={startDisabled}
-                loading={loading}
-                onClick={handleStart}
-              >
-                start
-              </GithubHeaderButton>
-            </Box>
-          </Tooltip>
+          <GithubTooltip title={startDisabled ? "Adapter is already running" : ""}>
+            <GithubHeaderButton
+              StartIcon={PlayArrowRoundedIcon}
+              disabled={startDisabled}
+              loading={loading}
+              onClick={handleStart}
+            >
+              start
+            </GithubHeaderButton>
+          </GithubTooltip>
 
-          <Tooltip
-            title={stopDisabled ? "Adapter is not running" : ""}
-            arrow
-            placement="top"
-            slots={{ transition: Zoom }}
-          >
-            <Box>
-              <GithubHeaderButton
-                color="warning"
-                StartIcon={StopRoundedIcon}
-                disabled={stopDisabled}
-                loading={loading}
-                onClick={handleStop}
-              >
-                stop
-              </GithubHeaderButton>
-            </Box>
-          </Tooltip>
+          <GithubTooltip title={stopDisabled ? "Adapter is not running" : ""}>
+            <GithubHeaderButton
+              color="warning"
+              StartIcon={StopRoundedIcon}
+              disabled={stopDisabled}
+              loading={loading}
+              onClick={handleStop}
+            >
+              stop
+            </GithubHeaderButton>
+          </GithubTooltip>
 
-          <Tooltip title={addDisabled ? "Start adapter first" : ""} arrow placement="top" slots={{ transition: Zoom }}>
-            <Box>
-              <GithubHeaderButton StartIcon={AddBoxRoundedIcon} disabled={addDisabled} onClick={handleOpen}>
-                add
-              </GithubHeaderButton>
-            </Box>
-          </Tooltip>
+          <GithubTooltip title={addDisabled ? "Start adapter first" : ""}>
+            <GithubHeaderButton StartIcon={AddBoxRoundedIcon} disabled={addDisabled} onClick={handleOpen}>
+              add
+            </GithubHeaderButton>
+          </GithubTooltip>
         </Box>
         <CreateRulePopover anchorEl={anchorEl} onClose={handleClose} />
       </CardHeader>

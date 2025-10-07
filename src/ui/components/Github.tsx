@@ -1,7 +1,31 @@
 import { styled } from "@mui/material/styles";
-import { Button, type ButtonProps, TextField, Typography } from "@mui/material";
+import { Box, Button, TextField, Tooltip, Typography } from "@mui/material";
+import type { BoxProps, ButtonProps, TooltipProps } from "@mui/material";
 import { centerTextSx, generateColorMix, theme } from "@/ui/theme";
 import type { SvgIconComponent } from "@mui/icons-material";
+
+const GithubTooltip = ({ slotProps, children, boxProps, ...props }: TooltipProps & { boxProps?: BoxProps }) => (
+  <Tooltip
+    enterDelay={0}
+    slotProps={{
+      popper: { modifiers: [{ name: "offset", options: { offset: [0, -10] } }] },
+      tooltip: {
+        sx: {
+          backgroundColor: (theme) => theme.palette.background.tooltip,
+          color: (theme) => theme.palette.text.primary,
+          borderRadius: "0.375rem",
+          fontSize: "0.75rem",
+          p: 1.25,
+          ...centerTextSx,
+        },
+      },
+      ...slotProps,
+    }}
+    {...props}
+  >
+    <Box {...boxProps}>{children}</Box>
+  </Tooltip>
+);
 
 const GithubTextField = styled(TextField)(({ theme }) => ({
   "& .MuiFormLabel-root": { fontSize: "0.85rem" },
@@ -68,4 +92,4 @@ const GithubHeaderButton = ({ sx, color, children, StartIcon, EndIcon, ...props 
   );
 };
 
-export { GithubButton, GithubTextField, GithubHeaderButton };
+export { GithubTooltip, GithubButton, GithubTextField, GithubHeaderButton };

@@ -1,10 +1,10 @@
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import StopRoundedIcon from "@mui/icons-material/StopRounded";
-import { Box, Button, Typography, Tooltip, Zoom } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 
 import { ellipsisSx } from "@/ui/theme";
-import { GithubHeaderButton } from "@/ui/components/Github";
+import { GithubHeaderButton, GithubTooltip } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
 import { type ConnectionStatus, useSession } from "@/transport-state/store";
 import { useAdapter } from "@/adapter-state/store";
@@ -113,32 +113,28 @@ const SessionCard = () => {
         <Box sx={{ flex: 1 }} />
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Tooltip title={getStopTooltip()} arrow placement="top" slots={{ transition: Zoom }}>
-            <Box>
-              <GithubHeaderButton
-                color="warning"
-                StartIcon={StopRoundedIcon}
-                disabled={stopDisabled}
-                loading={stopLoading}
-                onClick={() => handleStop()}
-              >
-                stop
-              </GithubHeaderButton>
-            </Box>
-          </Tooltip>
+          <GithubTooltip title={getStopTooltip()}>
+            <GithubHeaderButton
+              color="warning"
+              StartIcon={StopRoundedIcon}
+              disabled={stopDisabled}
+              loading={stopLoading}
+              onClick={() => handleStop()}
+            >
+              stop
+            </GithubHeaderButton>
+          </GithubTooltip>
 
-          <Tooltip title={getLeaveTooltip()} arrow placement="top" slots={{ transition: Zoom }}>
-            <Box>
-              <GithubHeaderButton
-                color="error"
-                StartIcon={LogoutRoundedIcon}
-                disabled={leaveDisabled}
-                onClick={() => handleLeave()}
-              >
-                leave
-              </GithubHeaderButton>
-            </Box>
-          </Tooltip>
+          <GithubTooltip title={getLeaveTooltip()}>
+            <GithubHeaderButton
+              color="error"
+              StartIcon={LogoutRoundedIcon}
+              disabled={leaveDisabled}
+              onClick={() => handleLeave()}
+            >
+              leave
+            </GithubHeaderButton>
+          </GithubTooltip>
         </Box>
       </CardHeader>
 

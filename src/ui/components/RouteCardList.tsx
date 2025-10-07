@@ -3,10 +3,10 @@ import StopRoundedIcon from "@mui/icons-material/StopRounded";
 import DeleteForeverRoundedIcon from "@mui/icons-material/DeleteForeverRounded";
 
 import { useEffect, useState } from "react";
-import { Box, Typography, Tooltip, Zoom } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { motion } from "motion/react";
 import { ellipsisSx } from "@/ui/theme";
-import { GithubButton } from "@/ui/components/Github";
+import { GithubButton, GithubTooltip } from "@/ui/components/Github";
 import { handleRemoveMapping, handleRemoveRule } from "@/adapter-state/handlers";
 
 function formatElapsed(elapsed: number) {
@@ -77,18 +77,16 @@ const RouteCardListItem = ({ id, type, content, createdAt }: RouteCardListItemPr
       </Box>
 
       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-        <Tooltip title={stopTooltip} arrow placement="left" slots={{ transition: Zoom }}>
-          <Box>
-            <GithubButton sx={{ minWidth: 0, p: 0.2 }} color="inherit" disabled>
-              <StopRoundedIcon fontSize="small" />
-            </GithubButton>
-          </Box>
-        </Tooltip>
-        <Tooltip title={deleteTooltip} arrow placement="right" slots={{ transition: Zoom }}>
+        <GithubTooltip title={stopTooltip}>
+          <GithubButton sx={{ minWidth: 0, p: 0.2 }} color="inherit" disabled>
+            <StopRoundedIcon fontSize="small" />
+          </GithubButton>
+        </GithubTooltip>
+        <GithubTooltip title={deleteTooltip}>
           <GithubButton sx={{ minWidth: 0, p: 0.2 }} color="inherit" onClick={handleDelete} loading={loading}>
             <DeleteForeverRoundedIcon fontSize="small" />
           </GithubButton>
-        </Tooltip>
+        </GithubTooltip>
       </Box>
 
       <Box>
