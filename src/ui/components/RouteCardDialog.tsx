@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Popover, Box, Typography, type PaperProps } from "@mui/material";
 import AddBoxRoundedIcon from "@mui/icons-material/AddBoxRounded";
 
-import { GithubTextField, GithubHeaderButton } from "@/ui/components/Github";
+import { GithubTextField, GithubButton } from "@/ui/components/Github";
 import { centerTextSx, ellipsisSx } from "@/ui/theme";
 import { handleCreateMapping, handleCreateRule } from "@/adapter-state/handlers";
 import type { SocketPair } from "@/adapter/ip";
@@ -29,16 +29,13 @@ const commonPaperProps: PaperProps = {
   elevation: 0,
 };
 
-const actionAreaSx: Record<"container" | "button", PaperProps["sx"]> = {
-  container: {
-    p: 1,
-    borderTop: 2,
-    borderColor: "divider",
-    display: "grid",
-    justifyItems: "end",
-    bgcolor: "background.default",
-  },
-  button: { bgcolor: "background.paper" },
+const actionAreaSx: PaperProps["sx"] = {
+  p: 1,
+  borderTop: 2,
+  borderColor: "divider",
+  display: "grid",
+  justifyItems: "end",
+  bgcolor: "background.default",
 };
 
 type RouteCardPopoverProps = {
@@ -174,15 +171,13 @@ const CreateMappingPopover = ({ anchorEl, onClose }: RouteCardPopoverProps) => {
         )}
       </Box>
 
-      <Box sx={actionAreaSx.container}>
-        <GithubHeaderButton
-          StartIcon={AddBoxRoundedIcon}
-          sx={actionAreaSx.button}
-          onClick={handleSubmit}
-          loading={loading}
-        >
-          Add mapping
-        </GithubHeaderButton>
+      <Box sx={actionAreaSx}>
+        <GithubButton size="small" onClick={handleSubmit} loading={loading}>
+          <AddBoxRoundedIcon fontSize="small" />
+          <Typography variant="body2" sx={centerTextSx}>
+            Add mapping
+          </Typography>
+        </GithubButton>
       </Box>
     </Popover>
   );
@@ -257,15 +252,13 @@ const CreateRulePopover = ({ anchorEl, onClose }: RouteCardPopoverProps) => {
         />
       </Box>
 
-      <Box sx={actionAreaSx.container}>
-        <GithubHeaderButton
-          StartIcon={AddBoxRoundedIcon}
-          sx={actionAreaSx.button}
-          onClick={handleSubmit}
-          loading={loading}
-        >
-          Add rule
-        </GithubHeaderButton>
+      <Box sx={actionAreaSx}>
+        <GithubButton size="small" onClick={handleSubmit} loading={loading}>
+          <AddBoxRoundedIcon fontSize="small" />
+          <Typography variant="body2" sx={centerTextSx}>
+            Add rule
+          </Typography>
+        </GithubButton>
       </Box>
     </Popover>
   );

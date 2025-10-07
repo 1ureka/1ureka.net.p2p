@@ -1,8 +1,7 @@
 import { styled } from "@mui/material/styles";
-import { Box, Button, TextField, Tooltip, tooltipClasses, Typography } from "@mui/material";
-import type { BoxProps, ButtonProps, TooltipProps } from "@mui/material";
-import { centerTextSx, generateColorMix, theme } from "@/ui/theme";
-import type { SvgIconComponent } from "@mui/icons-material";
+import { Box, Button, TextField, Tooltip, tooltipClasses } from "@mui/material";
+import type { BoxProps, TooltipProps } from "@mui/material";
+import { centerTextSx, generateColorMix } from "@/ui/theme";
 
 const tooltipMargin = "5px";
 const tooltipPopoverSx = {
@@ -104,44 +103,4 @@ const GithubIconButton = styled(GithubButton)(({ theme }) => ({
   padding: theme.spacing(0.3),
 }));
 
-type GithubHeaderButtonProps = Omit<ButtonProps, "children" | "startIcon" | "endIcon" | "color"> & {
-  color?: "primary" | "secondary" | "success" | "error" | "info" | "warning";
-  children: string;
-  StartIcon?: SvgIconComponent;
-  EndIcon?: SvgIconComponent;
-};
-
-const GithubHeaderButton = ({ sx, color, children, StartIcon, EndIcon, ...props }: GithubHeaderButtonProps) => {
-  const buttonSx: ButtonProps["sx"] = {
-    py: 0.5,
-    px: 1,
-    bgcolor: "background.default",
-    color: color ? `${color}.main` : undefined,
-    borderColor: color ? generateColorMix(theme.palette[color].main, "#0000", 50) : undefined,
-    ...sx,
-  };
-
-  const textSx: ButtonProps["sx"] = {
-    textTransform: "none",
-    textWrap: "nowrap",
-    color: "inherit",
-    ...centerTextSx,
-  };
-
-  return (
-    <GithubButton
-      sx={buttonSx}
-      startIcon={StartIcon ? <StartIcon fontSize="small" /> : null}
-      endIcon={EndIcon ? <EndIcon fontSize="small" /> : null}
-      color={color}
-      variant="outlined"
-      {...props}
-    >
-      <Typography variant="body2" sx={textSx}>
-        {children}
-      </Typography>
-    </GithubButton>
-  );
-};
-
-export { GithubTooltip, GithubButton, GithubIconButton, GithubTextField, GithubHeaderButton };
+export { GithubTooltip, GithubButton, GithubIconButton, GithubTextField };
