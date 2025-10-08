@@ -47,17 +47,19 @@ const createTrafficReporter = () => {
   const INTERVAL_MS = 1000; // 每秒回報一次
   const MAX_AGE_MS = 120000; // 保留 2 分鐘資料
 
-  let accumulatedBytes = 0;
+  let accumulatedEgress = 0;
+  let accumulatedIngress = 0;
   let intervalId: ReturnType<typeof setInterval> | null = null;
 
   const startReporting = () => {
     if (intervalId !== null) return; // 已經在運行
 
-    accumulatedBytes = 0;
+    accumulatedEgress = 0;
+    accumulatedIngress = 0;
 
     intervalId = setInterval(() => {
       const now = Date.now();
-      const point: TrafficPoint = { timestamp: now, rate: accumulatedBytes };
+      const point: TrafficPoint = { timestamp: now, egress: accumulatedEgress, ingress: accumulatedIngress };
 
       useSession.setState((state) => {
         const cutoffTime = now - MAX_AGE_MS;
@@ -66,7 +68,8 @@ const createTrafficReporter = () => {
       });
 
       // 重置累計值
-      accumulatedBytes = 0;
+      accumulatedEgress = 0;
+      accumulatedIngress = 0;
     }, INTERVAL_MS);
   };
 
@@ -75,27 +78,34 @@ const createTrafficReporter = () => {
       clearInterval(intervalId);
       intervalId = null;
     }
-    accumulatedBytes = 0;
+    accumulatedEgress = 0;
+    accumulatedIngress = 0;
   };
 
-  const addBytes = (bytes: number) => {
-    accumulatedBytes += bytes;
+  const addEgress = (bytes: number) => {
+    accumulatedEgress += bytes;
   };
 
-  return { startReporting, stopReporting, addBytes };
+  const addIngress = (bytes: number) => {
+    accumulatedIngress += bytes;
+  };
+
+  return { startReporting, stopReporting, addEgress, addIngress };
 };
 
 // 全域單例
 const trafficReporter = createTrafficReporter();
 
-/** 回報流量資料，可隨時呼叫，會自動累加到當前秒 */
-const reportTraffic = (bytes: number) => trafficReporter.addBytes(bytes);
+/** 回報出站流量資料，可隨時呼叫，會自動累加到當前秒 */
+const reportEgress = (bytes: number) => trafficReporter.addEgress(bytes);
+/** 回報入站流量資料，可隨時呼叫，會自動累加到當前秒 */
+const reportIngress = (bytes: number) => trafficReporter.addIngress(bytes);
 /** 啟動流量監控 */
 const startTrafficMonitoring = () => trafficReporter.startReporting();
 /** 停止流量監控 */
 const stopTrafficMonitoring = () => trafficReporter.stopReporting();
 
-export { reportTraffic, startTrafficMonitoring, stopTrafficMonitoring };
+export { reportEgress, reportIngress, startTrafficMonitoring, stopTrafficMonitoring };
 
 // ------------------------------------------------------------------------------
 

@@ -1,4 +1,4 @@
-import { reportTraffic, startTrafficMonitoring, stopTrafficMonitoring } from "@/transport-state/report";
+import { reportEgress, reportIngress, startTrafficMonitoring, stopTrafficMonitoring } from "@/transport-state/report";
 
 /**
  * 綁定 DataChannel 流量監控
@@ -8,7 +8,7 @@ const bindDataChannelTraffic = (dataChannel: RTCDataChannel) => {
   // 啟動流量監控系統
   startTrafficMonitoring();
 
-  // 監控傳入流量
+  // 監控傳入流量 (Ingress)
   const originalOnMessage = dataChannel.onmessage;
   dataChannel.onmessage = (event) => {
     try {
@@ -24,7 +24,7 @@ const bindDataChannelTraffic = (dataChannel: RTCDataChannel) => {
       }
 
       if (bytes > 0) {
-        reportTraffic(bytes);
+        reportIngress(bytes);
       }
 
       // 呼叫原始的 onmessage handler
@@ -39,7 +39,7 @@ const bindDataChannelTraffic = (dataChannel: RTCDataChannel) => {
     }
   };
 
-  // 監控傳出流量（透過 monkey patch send 方法）
+  // 監控傳出流量 (Egress)（透過 monkey patch send 方法）
   const originalSend = dataChannel.send.bind(dataChannel);
   dataChannel.send = (data: string | Blob | ArrayBuffer | ArrayBufferView) => {
     try {
@@ -56,7 +56,7 @@ const bindDataChannelTraffic = (dataChannel: RTCDataChannel) => {
       }
 
       if (bytes > 0) {
-        reportTraffic(bytes);
+        reportEgress(bytes);
       }
     } catch {
       // 忽略統計錯誤，繼續發送

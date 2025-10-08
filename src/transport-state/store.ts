@@ -19,7 +19,7 @@ const validTransitions: Record<ConnectionStatus, ConnectionStatus[]> = {
 /**
  * 流量監控資料點
  */
-type TrafficPoint = { timestamp: number; rate: number };
+type TrafficPoint = { timestamp: number; egress: number; ingress: number };
 
 /**
  * 全域狀態管理 (Zustand)
