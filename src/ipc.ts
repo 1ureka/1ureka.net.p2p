@@ -17,8 +17,10 @@ enum IPCChannel {
 
   FromTCP = "data.from.tcp",
   FromRTC = "data.from.rtc",
-  OSInfo = "os.info",
-  DeveloperTools = "developer.tools",
+
+  OSInfo = "utils.os.info",
+  PrettyFormat = "utils.pretty.format",
+  DeveloperTools = "utils.developer.tools",
 }
 
 export { IPCChannel };

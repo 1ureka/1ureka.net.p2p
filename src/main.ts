@@ -1,5 +1,6 @@
 import os from "node:os";
 import path from "node:path";
+import { inspect } from "node:util";
 import started from "electron-squirrel-startup";
 
 import { app, BrowserWindow, Menu, ipcMain } from "electron";
@@ -59,6 +60,10 @@ const handleReady = () => {
     if (!win.webContents.isDevToolsOpened()) {
       win.webContents.openDevTools();
     }
+  });
+
+  ipcMain.handle(IPCChannel.PrettyFormat, async (_, data: unknown) => {
+    return inspect(data, { depth: 3, colors: false });
   });
 };
 
