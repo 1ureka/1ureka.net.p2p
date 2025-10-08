@@ -5,8 +5,8 @@ import InfoOutlineRoundedIcon from "@mui/icons-material/InfoOutlineRounded";
 import { Box, Typography } from "@mui/material";
 import { Card, CardHeader } from "@/ui/components/Card";
 import { GithubButton, GithubTooltip } from "@/ui/components/Github";
-import { RouteCardList, RouteCardListItem } from "@/ui/components/RouteCardList";
-import { CreateMappingPopover, CreateRulePopover } from "@/ui/components/RouteCardDialog";
+import { RouteCardList, RouteCardListItem } from "@/ui/configs/RouteCardList";
+import { CreateMappingPopover, CreateRulePopover } from "@/ui/configs/RouteCardDialog";
 
 import { useAdapter } from "@/adapter-state/store";
 import { useState, memo } from "react";

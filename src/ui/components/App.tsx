@@ -6,13 +6,13 @@ import { memo } from "react";
 
 import { Header } from "@/ui/components/Header";
 import { Footer } from "@/ui/components/Footer";
-
 import { LaunchPage } from "@/ui/launch/LaunchPage";
-import { SessionCard } from "@/ui/session/SessionCard";
-import { RouteCard } from "@/ui/components/RouteCard";
-import { EventsCard } from "@/ui/events/EventsCard";
 import { EventsPage } from "@/ui/events/EventsPage";
 import { MetricPage } from "@/ui/metrics/MetricPage";
+
+import { SessionCard } from "@/ui/session/SessionCard";
+import { EventsCard } from "@/ui/events/EventsCard";
+import { RouteCard } from "@/ui/configs/RouteCard";
 
 const OverviewPage = memo(() => (
   <Box sx={{ display: "grid", gridTemplateColumns: "0.75fr 1fr", gap: 2, px: 4, py: 3, minHeight: 650, flex: 1 }}>
