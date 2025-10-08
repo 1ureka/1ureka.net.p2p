@@ -1,8 +1,6 @@
 import net from "net";
-import { ipcMain, type BrowserWindow } from "electron";
-import { IPCChannel } from "@/ipc";
-
-import { createReporter } from "@/adapter/report";
+import crypto from "node:crypto";
+import { createReporter, reportSockets, reportRules } from "@/adapter-state/report";
 import { PacketEvent } from "@/adapter/packet";
 import { createChunker, createReassembler } from "@/adapter/framing";
 import { SocketPairMap, stringifySocketPair, type SocketPair } from "@/adapter/ip";
@@ -10,9 +8,8 @@ import { SocketPairMap, stringifySocketPair, type SocketPair } from "@/adapter/i
 /**
  * 建立 Host 端的 Adapter (連接到本地的 TCP 伺服器)
  */
-function createHostAdapter(win: BrowserWindow) {
-  const { reportLog, reportWarn, reportError, clearHistory, reportConnection } = createReporter("Host", win);
-  clearHistory();
+function createHostAdapter(send: (packet: Buffer) => void) {
+  const { reportLog, reportWarn, reportError } = createReporter("Host");
 
   const chunker = createChunker();
   const reassembler = createReassembler();
@@ -37,7 +34,7 @@ function createHostAdapter(win: BrowserWindow) {
         socket.on("connect", () => {
           res();
           reportLog({ message: `TCP socket connected for socket ${stringifySocketPair(socketPair)}` });
-          reportConnection(socketPair, "add");
+          reportSockets({ type: "add", pair: socketPair });
         });
       })
     );
@@ -55,7 +52,7 @@ function createHostAdapter(win: BrowserWindow) {
     const handleDataFromLocal = (chunk: Buffer) => {
       try {
         for (const packet of chunker.generate(socketPair, PacketEvent.DATA, chunk)) {
-          win.webContents.send(IPCChannel.FromTCP, packet);
+          send(packet);
         }
       } catch (error) {
         reportError({
@@ -68,7 +65,7 @@ function createHostAdapter(win: BrowserWindow) {
     const handleCloseFromLocal = () => {
       try {
         for (const packet of chunker.generate(socketPair, PacketEvent.CLOSE, Buffer.alloc(0))) {
-          win.webContents.send(IPCChannel.FromTCP, packet);
+          send(packet);
         }
       } catch (error) {
         reportError({
@@ -84,7 +81,7 @@ function createHostAdapter(win: BrowserWindow) {
       socketPromises.delete(socketPair);
 
       reportLog({ message: `TCP socket closed for socket ${stringifySocketPair(socketPair)}` });
-      reportConnection(socketPair, "del");
+      reportSockets({ type: "del", pair: socketPair });
     };
 
     socket.on("close", handleCloseFromLocal);
@@ -93,29 +90,23 @@ function createHostAdapter(win: BrowserWindow) {
   };
 
   /**
-   * 處理來自 RTC 端的 DATA 封包，將資料寫入對應的 TCP socket
-   */
-  const handleDataFromRTC = (socketPair: SocketPair, data: Buffer) => {
-    const success = sockets.get(socketPair)?.write(data);
-    if (!success) {
-      return reportError({
-        message: `Socket ${stringifySocketPair(socketPair)} does not exist or is not writable, cannot process incoming packet.`,
-      });
-    }
-  };
-
-  /**
-   * 處理來自 RTC 端的 CLOSE 封包，將對應的 TCP socket 關閉
-   */
-  const handleCloseFromRTC = (socketPair: SocketPair) => {
-    sockets.get(socketPair)?.destroy();
-    reportLog({ message: `TCP socket closed by remote client for socket ${stringifySocketPair(socketPair)}` });
-  };
-
-  /**
    * 處理來自 RTC 端的封包，並根據封包內容進行相應的處理
    */
   const handlePacketFromRTC = (_: unknown, buffer: Buffer) => {
+    const handleDataFromRTC = (socketPair: SocketPair, data: Buffer) => {
+      const success = sockets.get(socketPair)?.write(data);
+      if (!success) {
+        return reportError({
+          message: `Socket ${stringifySocketPair(socketPair)} does not exist or is not writable, cannot process incoming packet.`,
+        });
+      }
+    };
+
+    const handleCloseFromRTC = (socketPair: SocketPair) => {
+      sockets.get(socketPair)?.destroy();
+      reportLog({ message: `TCP socket closed by remote client for socket ${stringifySocketPair(socketPair)}` });
+    };
+
     try {
       for (const { pair, event, data } of reassembler.processPacket(Buffer.from(buffer))) {
         if (event === PacketEvent.CONNECT) {
@@ -125,9 +116,8 @@ function createHostAdapter(win: BrowserWindow) {
           const promise = socketPromises.get(pair);
 
           if (!promise) {
-            reportError({
-              message: `Socket ${stringifySocketPair(pair)} does not exist, cannot process incoming DATA packet.`,
-            });
+            const pairStr = stringifySocketPair(pair);
+            reportError({ message: `Socket ${pairStr} does not exist, cannot process incoming DATA packet.` });
           } else {
             // 利用 then 會順序執行的特性，保持 TCP 資料順序
             promise.then(() => handleDataFromRTC(pair, data));
@@ -143,8 +133,36 @@ function createHostAdapter(win: BrowserWindow) {
     }
   };
 
-  ipcMain.removeAllListeners(IPCChannel.FromRTC);
-  ipcMain.on(IPCChannel.FromRTC, handlePacketFromRTC);
+  // ------------------------------------------------------------------------------
+
+  // TODO: 管理動態 rules
+  const handleCreateRule = (_: unknown, pattern: string) => {
+    const id = crypto.randomUUID();
+
+    reportLog({ message: "Create rule - Not implemented yet" });
+    reportRules({ type: "add", id, pattern });
+  };
+
+  const handleRemoveRule = (_: unknown, id: string) => {
+    reportLog({ message: "Remove rule - Not implemented yet" });
+    reportRules({ type: "del", id });
+  };
+
+  // ------------------------------------------------------------------------------
+
+  /**
+   * 關閉 Adapter，釋放所有資源
+   */
+  const handleClose = () => {
+    for (const socket of sockets.values()) {
+      socket.destroy();
+      socket.removeAllListeners("data");
+      socket.removeAllListeners("error");
+      socket.removeAllListeners("close");
+    }
+  };
+
+  return { handlePacketFromRTC, handleClose, handleCreateRule, handleRemoveRule };
 }
 
 export { createHostAdapter };

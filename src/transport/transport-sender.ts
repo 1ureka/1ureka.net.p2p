@@ -1,4 +1,4 @@
-import { report } from "@/transport/store";
+import { reportError } from "@/transport-state/report";
 
 /**
  * 為 RTCDataChannel 創建一個發送器，確保在緩衝區滿時不會丟失資料。
@@ -16,7 +16,7 @@ function createDataChannelSender(dataChannel: RTCDataChannel, threshold = 64 * 1
     draining = true;
 
     if (dataChannel.readyState !== "open") {
-      report({ error: "Received data when DataChannel is not open" });
+      reportError({ message: "Received data when DataChannel is not open" });
       draining = false;
       return;
     }

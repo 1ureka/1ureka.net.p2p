@@ -1,100 +1,135 @@
-import LanRoundedIcon from "@mui/icons-material/LanRounded";
-import { Box, Typography } from "@mui/material";
-import { AnimatePresence, motion } from "motion/react";
+import { Box, Stack, Typography } from "@mui/material";
+import { motion, AnimatePresence } from "motion/react";
+import { useSession } from "@/transport-state/store";
+import { useTab } from "@/ui/tabs";
+import { memo } from "react";
 
-import { Background } from "@/ui/components/Background";
-import { LayoutColumn, LayoutRow } from "@/ui/components/Layout";
-import { ClientPanel, HostPanel, SessionPanel, HowToChoosePanel } from "@/ui/components/Panels";
-import { LogPanel, SocketPanel, TrafficPanel } from "@/ui/components/Panels";
-import { useSession } from "@/transport/store";
+import { Header } from "@/ui/components/Header";
+import { Footer } from "@/ui/components/Footer";
+import { EventsCard } from "@/ui/components/EventsCard";
+import { EventsPage } from "@/ui/components/EventsPage";
+import { SessionCard } from "@/ui/components/SessionCard";
+import { TrafficCard } from "@/ui/components/TrafficCard";
+import { RouteCard } from "@/ui/components/RouteCard";
+import { CreateSessionCard, JoinSessionCard } from "@/ui/components/LaunchCard";
 
-const Title = () => (
-  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3, p: 1.5 }}>
-    <Box sx={{ bgcolor: "primary.main", p: 1, borderRadius: 1 }}>
-      <LanRoundedIcon fontSize="large" sx={{ display: "block", color: "text.primary" }} />
+const OverviewPage = memo(() => (
+  <Box sx={{ display: "grid", gridTemplateColumns: "0.75fr 1fr", gap: 2, px: 4, py: 3, minHeight: 650, flex: 1 }}>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minHeight: 0 }}>
+      <SessionCard />
+      <RouteCard />
+    </Box>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minHeight: 0 }}>
+      <TrafficCard />
+      <EventsCard />
+    </Box>
+  </Box>
+));
+
+OverviewPage.displayName = "OverviewPage";
+
+const LaunchPage = memo(() => (
+  <Box sx={{ display: "grid", placeItems: "center", gridTemplateRows: "1fr auto 1fr", flex: 1, gap: 5, py: 3 }}>
+    <Box sx={{ textAlign: "center", alignSelf: "end" }}>
+      <Typography variant="subtitle1" component="h1">
+        Share TCP Services Over P2P
+      </Typography>
+      <Typography variant="body2" sx={{ color: "text.secondary", maxWidth: 600 }}>
+        Connect directly with others without port forwarding, fixed IPs, or proxy services. Choose your role to get
+        started.
+      </Typography>
     </Box>
 
-    <Typography variant="h6" component="h1">
-      1ureka.net.p2p
-    </Typography>
-  </Box>
-);
+    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", alignItems: "start", width: 750, gap: 2 }}>
+      <CreateSessionCard />
+      <JoinSessionCard />
+    </Box>
 
-const LeftPanels = () => {
-  const sessionId = useSession((state) => state.session.id);
+    <Box sx={{ textAlign: "center", alignSelf: "start" }}>
+      <Typography variant="body2" sx={{ color: "text.secondary" }}>
+        Not sure which option to choose?
+      </Typography>
+      <Typography variant="body2" sx={{ color: "text.secondary" }}>
+        {"Check out the documentation for guidance: "}
+        <Typography
+          variant="body2"
+          component="a"
+          href="#"
+          sx={{ color: "primary.main", textDecoration: "none", "&:hover": { textDecoration: "underline" } }}
+        >
+          usage guide
+        </Typography>
+      </Typography>
+    </Box>
+  </Box>
+));
+
+LaunchPage.displayName = "LaunchPage";
+
+const WorkInProgressPage = memo(() => (
+  <Box sx={{ display: "grid", placeItems: "center", flex: 1, py: 3 }}>
+    <Box sx={{ textAlign: "center", maxWidth: 600 }}>
+      <Typography variant="h6" component="h1" sx={{ mb: 2, fontWeight: 500 }}>
+        🚧 Work in Progress
+      </Typography>
+      <Typography variant="body1" sx={{ color: "text.secondary", mb: 1 }}>
+        The Metrics page is currently under development.
+      </Typography>
+      <Typography variant="body2" sx={{ color: "text.secondary" }}>
+        This page will provide detailed statistics about your P2P connections, including bandwidth usage, latency
+        measurements, and connection quality metrics.
+      </Typography>
+    </Box>
+  </Box>
+));
+
+WorkInProgressPage.displayName = "WorkInProgressPage";
+
+const PageWrapperProps = {
+  sx: { flex: 1, minHeight: 0, overflow: "auto" },
+  component: motion.div,
+  initial: { opacity: 0, y: -10 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: 10 },
+} as const;
+
+const Pages = () => {
+  const status = useSession((state) => state.status);
+  const tab = useTab((state) => state.tab);
+  const overviewType = ["disconnected", "joining"].includes(status) ? null : "session";
 
   return (
-    <AnimatePresence mode="popLayout" initial={false}>
-      {!sessionId ? (
-        <motion.div
-          key={"host-panel"}
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-        >
-          <HostPanel />
-        </motion.div>
-      ) : null}
-      {!sessionId ? (
-        <motion.div
-          key={"client-panel"}
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-        >
-          <ClientPanel />
-        </motion.div>
-      ) : null}
-      {!sessionId ? (
-        <motion.div
-          key={"how-to-choose-panel"}
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-        >
-          <HowToChoosePanel />
-        </motion.div>
-      ) : null}
-      {sessionId ? (
-        <motion.div
-          key={"session-panel"}
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-        >
-          <SessionPanel />
-        </motion.div>
-      ) : null}
+    <AnimatePresence mode="wait">
+      {tab === "overview" && overviewType === null && (
+        <Stack key="overview-null" {...PageWrapperProps}>
+          <LaunchPage />
+        </Stack>
+      )}
+      {tab === "overview" && overviewType !== null && (
+        <Stack key="overview-session" {...PageWrapperProps}>
+          <OverviewPage />
+        </Stack>
+      )}
+      {tab === "events" && (
+        <Stack key="events" {...PageWrapperProps}>
+          <EventsPage />
+        </Stack>
+      )}
+      {tab === "metrics" && (
+        <Stack key="metrics" {...PageWrapperProps}>
+          <WorkInProgressPage />
+        </Stack>
+      )}
     </AnimatePresence>
   );
 };
 
-const rootSx = {
-  width: "100dvw",
-  height: "100dvh",
-  p: 2.5,
-  gridTemplateColumns: "400px minmax(400px, 1fr)",
-};
-
 const App = () => (
-  <LayoutRow sx={rootSx}>
-    <Background />
-    <LayoutColumn>
-      <Title />
-      <LeftPanels />
-    </LayoutColumn>
-    <LayoutColumn sx={{ gridTemplateRows: "1fr 0.5fr", height: 1 }}>
-      <LogPanel />
-      <LayoutRow>
-        <SocketPanel />
-        <TrafficPanel />
-      </LayoutRow>
-    </LayoutColumn>
-
-    <Typography variant="caption" sx={{ position: "absolute", bottom: 8, left: 8, color: "text.disabled" }}>
-      v1.0.0-alpha.4
-    </Typography>
-  </LayoutRow>
+  <Stack sx={{ height: "100dvh" }}>
+    <Header />
+    <Pages />
+    <Footer />
+  </Stack>
 );
 
 export { App };
