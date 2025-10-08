@@ -145,6 +145,8 @@ export { reportStatus, reportSession };
 const getAborted = () => useSession.getState().status === "aborting";
 /** 訂閱一次 aborted 狀態，用於連線後中斷處理 */
 const onceAborted = (callback: () => void) => {
+  reportLog({ message: "registering onceAborted handler" });
+
   if (getAborted()) {
     callback();
     return;
@@ -152,8 +154,8 @@ const onceAborted = (callback: () => void) => {
 
   const unsub = useSession.subscribe((state) => {
     if (state.status !== "aborting") return;
-    callback();
     unsub();
+    callback();
   });
 };
 
