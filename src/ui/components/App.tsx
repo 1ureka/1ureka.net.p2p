@@ -8,7 +8,7 @@ import { Header } from "@/ui/components/Header";
 import { Footer } from "@/ui/components/Footer";
 
 import { CreateSessionCard, JoinSessionCard } from "@/ui/components/LaunchCard";
-import { SessionCard } from "@/ui/overview/session/SessionCard";
+import { SessionCard } from "@/ui/session/SessionCard";
 import { RouteCard } from "@/ui/components/RouteCard";
 import { EventsCard } from "@/ui/events/EventsCard";
 import { EventsPage } from "@/ui/events/EventsPage";

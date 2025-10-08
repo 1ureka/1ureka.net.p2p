@@ -4,8 +4,8 @@ import { Box, Typography } from "@mui/material";
 import { useTab } from "@/ui/tabs";
 import { centerTextSx } from "@/ui/theme";
 import { GithubButton } from "@/ui/components/Github";
-import { SessionCardSubHeader } from "@/ui/overview/session/SessionCard";
-import { SessionCardChart } from "@/ui/overview/session/SessionCardChart";
+import { SessionCardSubHeader } from "@/ui/session/SessionCard";
+import { SessionCardChart } from "@/ui/session/SessionCardChart";
 
 const TrafficHeader = () => {
   const setTab = useTab((state) => state.setTab);

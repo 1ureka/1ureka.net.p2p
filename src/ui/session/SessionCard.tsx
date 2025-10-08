@@ -4,9 +4,9 @@ import { Box, Divider, Typography } from "@mui/material";
 import { centerTextSx, generateColorMix } from "@/ui/theme";
 import { Card, CardHeader } from "@/ui/components/Card";
 import { GithubButton, GithubTooltip } from "@/ui/components/Github";
-import { AdapterHeader, AdapterBody } from "@/ui/overview/session/SectionAdapter";
-import { TransportHeader, TransportBody } from "@/ui/overview/session/SectionTransport";
-import { TrafficHeader, TrafficBody } from "@/ui/overview/session/SectionTraffic";
+import { AdapterHeader, AdapterBody } from "@/ui/session/SectionAdapter";
+import { TransportHeader, TransportBody } from "@/ui/session/SectionTransport";
+import { TrafficHeader, TrafficBody } from "@/ui/session/SectionTraffic";
 
 import { handleLeave } from "@/transport-state/handlers";
 import { useSession } from "@/transport-state/store";

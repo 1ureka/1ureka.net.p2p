@@ -3,9 +3,9 @@ import { Box, Typography } from "@mui/material";
 
 import { centerTextSx, ellipsisSx } from "@/ui/theme";
 import { GithubIconButton, GithubTooltip } from "@/ui/components/Github";
-import { ConnectionIndicator } from "@/ui/overview/session/SessionCardIndicator";
-import { SessionCardCopyButton } from "@/ui/overview/session/SessionCardCopyBtn";
-import { SessionCardLabel, SessionCardSubHeader, SessionCardSubBody } from "@/ui/overview/session/SessionCard";
+import { ConnectionIndicator } from "@/ui/session/SessionCardIndicator";
+import { SessionCardCopyButton } from "@/ui/session/SessionCardCopyBtn";
+import { SessionCardLabel, SessionCardSubHeader, SessionCardSubBody } from "@/ui/session/SessionCard";
 
 import { handleStop } from "@/transport-state/handlers";
 import { useSession } from "@/transport-state/store";
