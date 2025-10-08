@@ -9,7 +9,7 @@ const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
   const sender = createDataChannelSender(dataChannel);
 
   // DataChannel → IPC: 當 DataChannel 收到資料時，轉發到主程序的橋接邏輯
-  dataChannel.onmessage = (event) => {
+  const handleDataChannelMessage = (event: MessageEvent) => {
     try {
       const buffer = event.data;
       if (buffer instanceof ArrayBuffer) {
@@ -39,18 +39,19 @@ const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
     }
   };
 
-  // 註冊 IPC 監聽器
   window.electron.on(IPCChannel.FromTCP, handleIPCMessage);
 
-  const cleanup = () => {
-    dataChannel.removeEventListener("close", cleanup);
-    dataChannel.removeEventListener("error", cleanup);
+  const handleClose = () => {
+    dataChannel.removeEventListener("message", handleDataChannelMessage);
+    dataChannel.removeEventListener("close", handleClose);
+    dataChannel.removeEventListener("error", handleClose);
     window.electron.off(IPCChannel.FromTCP, handleIPCMessage);
     sender.close();
   };
 
-  dataChannel.addEventListener("close", cleanup);
-  dataChannel.addEventListener("error", cleanup);
+  dataChannel.addEventListener("message", handleDataChannelMessage);
+  dataChannel.addEventListener("close", handleClose);
+  dataChannel.addEventListener("error", handleClose);
 };
 
 export { bindDataChannelIPC };
