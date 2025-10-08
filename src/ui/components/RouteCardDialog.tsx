@@ -92,7 +92,8 @@ const CreateMappingPopover = ({ anchorEl, onClose }: RouteCardPopoverProps) => {
       anchorEl={anchorEl}
       open={open}
       onClose={handleClose}
-      anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+      anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      transformOrigin={{ vertical: "top", horizontal: "right" }}
       slotProps={{ paper: commonPaperProps }}
     >
       <Box sx={{ p: 2, borderBottom: 2, borderColor: "divider" }}>
@@ -226,7 +227,8 @@ const CreateRulePopover = ({ anchorEl, onClose }: RouteCardPopoverProps) => {
       anchorEl={anchorEl}
       open={open}
       onClose={handleClose}
-      anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+      anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      transformOrigin={{ vertical: "top", horizontal: "right" }}
       slotProps={{ paper: commonPaperProps }}
     >
       <Box sx={{ p: 2, borderBottom: 2, borderColor: "divider" }}>
