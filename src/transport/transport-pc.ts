@@ -39,6 +39,12 @@ const createPeerConnection = () => {
   });
 
   /**
+   * 因為 getDataChannel 通常會在未來某個時間點才會被呼叫，所以這邊先捕捉錯誤，只是為了避免無意義的 console.error
+   * 由於 dataChannelPromise 本身仍是同個 Promise，因此 getDataChannel 仍然可以捕捉到同樣的錯誤
+   */
+  dataChannelPromise.catch(() => {}); /* eslint-disable-line @typescript-eslint/no-empty-function */
+
+  /**
    * 創建本地 ICE Candidate 收集器
    */
   const candidatePromise = new Promise<string[]>((resolve) => {
