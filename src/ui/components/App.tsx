@@ -6,11 +6,27 @@ import { memo } from "react";
 
 import { Header } from "@/ui/components/Header";
 import { Footer } from "@/ui/components/Footer";
-import { CreateSessionCard, JoinSessionCard } from "@/ui/components/LaunchCard";
 
-import { OverviewPage } from "@/ui/overview/OverviewPage";
+import { CreateSessionCard, JoinSessionCard } from "@/ui/components/LaunchCard";
+import { SessionCard } from "@/ui/overview/session/SessionCard";
+import { RouteCard } from "@/ui/components/RouteCard";
+import { EventsCard } from "@/ui/events/EventsCard";
 import { EventsPage } from "@/ui/events/EventsPage";
 import { MetricPage } from "@/ui/metrics/MetricPage";
+
+const OverviewPage = memo(() => (
+  <Box sx={{ display: "grid", gridTemplateColumns: "0.75fr 1fr", gap: 2, px: 4, py: 3, minHeight: 650, flex: 1 }}>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minHeight: 0 }}>
+      <SessionCard />
+    </Box>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minHeight: 0 }}>
+      <RouteCard />
+      <EventsCard />
+    </Box>
+  </Box>
+));
+
+OverviewPage.displayName = "OverviewPage";
 
 const LaunchPage = memo(() => (
   <Box sx={{ display: "grid", placeItems: "center", gridTemplateRows: "1fr auto 1fr", flex: 1, gap: 5, py: 3 }}>
