@@ -27,7 +27,7 @@ const createWindow = () => {
   mainWindow = new BrowserWindow({
     minWidth: 850,
     width: 1250,
-    height: 800,
+    height: 850,
     webPreferences: { preload: path.join(__dirname, "preload.js") },
     backgroundColor: "#212830",
   });
@@ -37,6 +37,8 @@ const createWindow = () => {
   } else {
     mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
   }
+
+  mainWindow.maximize();
 };
 
 export const getWindow = () => {

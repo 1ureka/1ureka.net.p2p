@@ -66,6 +66,25 @@ const LaunchPage = memo(() => (
 
 LaunchPage.displayName = "LaunchPage";
 
+const WorkInProgressPage = memo(() => (
+  <Box sx={{ display: "grid", placeItems: "center", flex: 1, py: 3 }}>
+    <Box sx={{ textAlign: "center", maxWidth: 600 }}>
+      <Typography variant="h6" component="h1" sx={{ mb: 2, fontWeight: 500 }}>
+        🚧 Work in Progress
+      </Typography>
+      <Typography variant="body1" sx={{ color: "text.secondary", mb: 1 }}>
+        The Metrics page is currently under development.
+      </Typography>
+      <Typography variant="body2" sx={{ color: "text.secondary" }}>
+        This page will provide detailed statistics about your P2P connections, including bandwidth usage, latency
+        measurements, and connection quality metrics.
+      </Typography>
+    </Box>
+  </Box>
+));
+
+WorkInProgressPage.displayName = "WorkInProgressPage";
+
 const PageWrapperProps = {
   sx: { flex: 1, minHeight: 0, overflow: "auto" },
   component: motion.div,
@@ -94,6 +113,11 @@ const Pages = () => {
       {tab === "events" && (
         <Stack key="events" {...PageWrapperProps}>
           <EventsPage />
+        </Stack>
+      )}
+      {tab === "metrics" && (
+        <Stack key="metrics" {...PageWrapperProps}>
+          <WorkInProgressPage />
         </Stack>
       )}
     </AnimatePresence>
