@@ -17,7 +17,7 @@ const createFormatter = (now: number) => {
   return { formatElapsed, formatBytes };
 };
 
-const TrafficChart = () => {
+const TrafficChart = ({ direction }: { direction: "egress" | "ingress" }) => {
   const points = useSession((state) => state.traffic);
   const now = Date.now();
   const { formatElapsed, formatBytes } = createFormatter(now);
@@ -30,12 +30,12 @@ const TrafficChart = () => {
   };
 
   const yAxis: YAxis<"linear"> = {
-    dataKey: "rate",
+    dataKey: direction,
     valueFormatter: formatBytes,
   };
 
   const series: LineSeries = {
-    dataKey: "rate",
+    dataKey: direction,
     showMark: false,
     area: true,
     curve: "linear",

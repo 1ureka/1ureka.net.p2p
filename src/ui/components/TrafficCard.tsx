@@ -53,7 +53,7 @@ const TrafficCardBody = () => {
 
         <Divider />
 
-        <TrafficChart />
+        <TrafficChart direction="egress" />
       </Box>
 
       <Divider orientation="vertical" flexItem sx={{ borderWidth: 1, borderColor: "divider" }} />
@@ -70,7 +70,7 @@ const TrafficCardBody = () => {
 
         <Divider />
 
-        <TrafficChart />
+        <TrafficChart direction="ingress" />
       </Box>
     </Box>
   );
