@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { ConnectionLogEntry } from "@/utils";
+import type { ConnectionLogFormattedEntry } from "@/utils";
 import type { Session } from "@/transport/session-utils";
 
 /**
@@ -27,7 +27,7 @@ type TrafficPoint = { timestamp: number; rate: number };
 type SessionState = {
   role: "host" | "client";
   status: ConnectionStatus;
-  history: ConnectionLogEntry[];
+  history: ConnectionLogFormattedEntry[];
   session: Session;
   traffic: ReadonlyArray<TrafficPoint>;
 };

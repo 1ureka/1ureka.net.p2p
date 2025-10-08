@@ -35,6 +35,7 @@ export function defer<T>() {
 }
 
 export type ConnectionLogLevel = "info" | "warn" | "error";
+export type ConnectionLogFormattedEntry = Omit<ConnectionLogEntry, "data"> & { data?: string };
 export type ConnectionLogEntry = {
   id: string;
   level: ConnectionLogLevel;
@@ -45,17 +46,18 @@ export type ConnectionLogEntry = {
 };
 
 // 合併連續重複的日誌條目
-export function mergeRepeatedLogs(logs: ConnectionLogEntry[]): ConnectionLogEntry[] {
+export function mergeRepeatedLogs(logs: ConnectionLogFormattedEntry[]): ConnectionLogFormattedEntry[] {
   const getOriginalMessage = (message: string) => message.replace(/ \(x\d+\)$/, "");
 
-  const getLogKey = (log: ConnectionLogEntry) => `${log.level}:${log.module}:${getOriginalMessage(log.message)}`;
+  const getLogKey = (log: ConnectionLogFormattedEntry) =>
+    `${log.level}:${log.module}:${getOriginalMessage(log.message)}`;
 
-  const formatLog = (log: ConnectionLogEntry, count: number) =>
+  const formatLog = (log: ConnectionLogFormattedEntry, count: number) =>
     count > 1
       ? { ...log, message: `${getOriginalMessage(log.message)} (x${count})` }
       : { ...log, message: getOriginalMessage(log.message) };
 
-  return logs.reduce<ConnectionLogEntry[]>((acc, current) => {
+  return logs.reduce<ConnectionLogFormattedEntry[]>((acc, current) => {
     const last = acc[acc.length - 1];
 
     if (last && getLogKey(last) === getLogKey(current)) {

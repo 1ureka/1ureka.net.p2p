@@ -1,3 +1,4 @@
+import { IPCChannel } from "@/ipc";
 import { useSession, validTransitions, type ConnectionStatus, type TrafficPoint } from "@/transport-state/store";
 import type { Session } from "@/transport/session-utils";
 import type { ConnectionLogEntry } from "@/utils";
@@ -5,9 +6,12 @@ import type { ConnectionLogEntry } from "@/utils";
 /**
  * 日誌紀錄基礎函式
  */
-const report = (entry: Omit<ConnectionLogEntry, "id" | "timestamp" | "module">) => {
-  const logEntry: ConnectionLogEntry = {
+const report = async (entry: Omit<ConnectionLogEntry, "id" | "timestamp" | "module">) => {
+  const data = entry.data ? await window.electron.request(IPCChannel.PrettyFormat, entry.data) : undefined;
+
+  const logEntry = {
     ...entry,
+    data,
     module: "session",
     timestamp: Date.now(),
     id: crypto.randomUUID(),

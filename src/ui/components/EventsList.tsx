@@ -1,11 +1,10 @@
 import InfoOutlineRoundedIcon from "@mui/icons-material/InfoOutlineRounded";
 import { Box, Typography, type BoxProps } from "@mui/material";
 import { motion } from "motion/react";
-import { format } from "pretty-format";
 
 import { useAdapter } from "@/adapter-state/store";
 import { useSession } from "@/transport-state/store";
-import { mergeRepeatedLogs, type ConnectionLogEntry, type ConnectionLogLevel } from "@/utils";
+import { ConnectionLogFormattedEntry, mergeRepeatedLogs, type ConnectionLogLevel } from "@/utils";
 import { ellipsisSx } from "@/ui/theme";
 
 const formatLevel = (level: ConnectionLogLevel) => {
@@ -40,7 +39,7 @@ const useLogs = () => {
   return mergeRepeatedLogs(logs);
 };
 
-const EventEntry = ({ log }: { log: ConnectionLogEntry }) => {
+const EventEntry = ({ log }: { log: ConnectionLogFormattedEntry }) => {
   const { level, module, message, data, timestamp } = log;
   const bgcolor = colorMap[level].background;
 
@@ -87,7 +86,7 @@ const EventEntry = ({ log }: { log: ConnectionLogEntry }) => {
 
       {data && (
         <Typography variant="caption" sx={{ ml: 1, ...dataSx }}>
-          {format(data)}
+          {data}
         </Typography>
       )}
     </Box>
@@ -116,7 +115,7 @@ const NoItemDisplay = ({ hasFilters }: { hasFilters: boolean }) => {
   );
 };
 
-const EventsList = ({ logs, hasFilters }: { logs: ConnectionLogEntry[]; hasFilters: boolean }) => {
+const EventsList = ({ logs, hasFilters }: { logs: ConnectionLogFormattedEntry[]; hasFilters: boolean }) => {
   return (
     <Box sx={{ flex: 1, overflow: "auto", minHeight: 0 }}>
       {logs.length <= 0 && <NoItemDisplay hasFilters={hasFilters} />}

@@ -1,5 +1,6 @@
 /* eslint-disable import/no-duplicates */
 
+import { inspect } from "node:util";
 import { getWindow } from "@/main";
 import { IPCChannel } from "@/ipc";
 import { randomUUID } from "crypto";
@@ -36,13 +37,18 @@ const reportRules = (props: RuleChangePayload) => {
 const createReporter = (module: string) => {
   const win = getWindow();
 
-  const report = (entry: Omit<ConnectionLogEntry, "id" | "timestamp" | "module">) => {
-    const logEntry: ConnectionLogEntry = { ...entry, module, timestamp: Date.now(), id: randomUUID() };
+  const report = ({ data, ...rest }: Omit<ConnectionLogEntry, "id" | "timestamp" | "module">) => {
+    const entry = {
+      ...rest,
+      id: randomUUID(),
+      timestamp: Date.now(),
+      module,
+      data: data ? inspect(data, { depth: 3, colors: false }) : undefined,
+    };
 
-    const { level, message, data } = logEntry;
-    getReportMethods(level)(module, level.toUpperCase(), message, data ?? "");
+    getReportMethods(entry.level)(entry.module, entry.level.toUpperCase(), entry.message, entry.data ?? "");
 
-    const props: LogsChangePayload = { type: "add", entry: logEntry };
+    const props: LogsChangePayload = { type: "add", entry };
     win.webContents.send(IPCChannel.AdapterLogsChange, props);
   };
 

@@ -1,11 +1,11 @@
-import type { ConnectionLogEntry } from "@/utils";
+import type { ConnectionLogFormattedEntry } from "@/utils";
 import { IPCChannel } from "@/ipc";
 import { create } from "zustand";
 import { type SocketPair, SocketPairSet, stringifySocketPair } from "@/adapter/ip";
 
 type InstanceChangePayload = { instance: "host" | "client" | null };
 
-type LogsChangePayload = { type: "add"; entry: ConnectionLogEntry } | { type: "clear"; entry?: never };
+type LogsChangePayload = { type: "add"; entry: ConnectionLogFormattedEntry } | { type: "clear"; entry?: never };
 
 type SocketChangePayload =
   | { type: "add"; pair: SocketPair }
@@ -24,7 +24,7 @@ type RuleChangePayload =
 
 type AdapterState = {
   instance: "host" | "client" | null;
-  history: ConnectionLogEntry[];
+  history: ConnectionLogFormattedEntry[];
   sockets: SocketPair[];
   mappings: { id: string; mapping: string; createdAt: number }[];
   rules: { id: string; pattern: string; createdAt: number }[];
