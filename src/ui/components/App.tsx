@@ -6,10 +6,10 @@ import { memo } from "react";
 
 import { Header } from "@/ui/components/Header";
 import { Footer } from "@/ui/components/Footer";
-import { EventsPage } from "@/ui/components/EventsPage";
 import { CreateSessionCard, JoinSessionCard } from "@/ui/components/LaunchCard";
 
 import { OverviewPage } from "@/ui/overview/OverviewPage";
+import { EventsPage } from "@/ui/events/EventsPage";
 import { MetricPage } from "@/ui/metrics/MetricPage";
 
 const LaunchPage = memo(() => (

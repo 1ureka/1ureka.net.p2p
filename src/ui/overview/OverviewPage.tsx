@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { Box } from "@mui/material";
-import { EventsCard } from "@/ui/components/EventsCard";
+import { EventsCard } from "@/ui/events/EventsCard";
 import { SessionCard } from "@/ui/overview/session/SessionCard";
 import { RouteCard } from "@/ui/components/RouteCard";
 
