@@ -4,7 +4,7 @@ import FileDownloadRoundedIcon from "@mui/icons-material/FileDownloadRounded";
 import { Box, Divider, Typography } from "@mui/material";
 import { centerTextSx, generateColorMix } from "@/ui/theme";
 import { Card, CardHeader } from "@/ui/components/Card";
-import { TrafficChart } from "@/ui/metrics/TrafficCardChart";
+import { TrafficChart } from "@/ui/metrics/MetricTrafficChart";
 
 const TrafficCardSubHeader = ({ children }: { children: React.ReactNode }) => {
   const bgcolor = ({ palette }: { palette: { background: { paper: string; default: string } } }) =>

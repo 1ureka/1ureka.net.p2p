@@ -4,7 +4,7 @@ import { Box, Typography } from "@mui/material";
 
 import { centerTextSx } from "@/ui/theme";
 import { Card, CardHeader } from "@/ui/components/Card";
-import { TrafficCard } from "@/ui/metrics/TrafficCard";
+import { TrafficCard } from "@/ui/metrics/MetricTraffic";
 
 const containerSx = {
   gap: 2,
