@@ -14,6 +14,7 @@ const yAxis2: YAxis<"linear"> = { dataKey: "ingress", valueFormatter: formatByte
 
 const series1: LineSeries = {
   id: "egress",
+  label: "Egress",
   dataKey: "egress",
   showMark: false,
   area: true,
@@ -23,11 +24,12 @@ const series1: LineSeries = {
 };
 const series2: LineSeries = {
   id: "ingress",
+  label: "Ingress",
   dataKey: "ingress",
   showMark: false,
   area: true,
   curve: "linear",
-  color: theme.palette.secondary.main,
+  color: theme.palette.success.main,
   valueFormatter: formatBytes,
 };
 
@@ -64,8 +66,8 @@ const SessionCardChart = () => {
         <stop offset="100%" stopColor={theme.palette.primary.main} stopOpacity={0} />
       </linearGradient>
       <linearGradient id="GradientIngress" x1="0%" y1="100%" x2="0%" y2="0%">
-        <stop offset="0%" stopColor={theme.palette.secondary.main} stopOpacity={0.3} />
-        <stop offset="100%" stopColor={theme.palette.secondary.main} stopOpacity={0} />
+        <stop offset="0%" stopColor={theme.palette.success.main} stopOpacity={0.3} />
+        <stop offset="100%" stopColor={theme.palette.success.main} stopOpacity={0} />
       </linearGradient>
     </LineChart>
   );
