@@ -153,7 +153,7 @@ class SocketPairSet extends AbstractSocketPairCollection {
 /**
  * 檢查 IP 地址類型，用於 host adapter 的規則匹配
  */
-function checkRules(addrStr: string): "ipv4local" | "ipv6local" | "lan" | "external" | "invalid" {
+function classifyAddress(addrStr: string): "ipv4local" | "ipv6local" | "lan" | "external" | "invalid" {
   try {
     const addr = ipaddr.process(addrStr);
 
@@ -191,5 +191,5 @@ function checkRules(addrStr: string): "ipv4local" | "ipv6local" | "lan" | "exter
   }
 }
 
-export { createAddressBuffer, parseAddressBuffer, stringifyAddress, stringifySocketPair, checkRules };
+export { createAddressBuffer, parseAddressBuffer, stringifyAddress, stringifySocketPair, classifyAddress };
 export { SocketPair, SocketPairMap, SocketPairSet };
