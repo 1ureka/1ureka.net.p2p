@@ -17,7 +17,7 @@ const CardHeader = ({ children }: { children: React.ReactNode }) => {
       >
         {children}
       </Box>
-      <Divider sx={{ borderWidth: 1 }} />
+      <Divider />
     </>
   );
 };
