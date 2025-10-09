@@ -2,6 +2,7 @@ import type { ConnectionLogFormattedEntry } from "@/utils";
 import { IPCChannel } from "@/ipc";
 import { create } from "zustand";
 import { type SocketPair, SocketPairSet, stringifySocketPair } from "@/adapter/ip";
+import { type Rules, defaultRules } from "@/adapter/adapter-host";
 
 type InstanceChangePayload = { instance: "host" | "client" | null };
 
@@ -17,23 +18,19 @@ type MappingChangePayload =
   | { type: "del"; id: string; map?: never }
   | { type: "clear"; id?: never; map?: never };
 
-type RuleChangePayload =
-  | { type: "add"; id: string; pattern: string }
-  | { type: "del"; id: string; pattern?: never }
-  | { type: "clear"; id?: never; pattern?: never };
+type RuleChangePayload = { type: "set"; rules: Rules } | { type: "clear"; rules?: never };
 
 type AdapterState = {
   instance: "host" | "client" | null;
   history: ConnectionLogFormattedEntry[];
   sockets: SocketPair[];
   mappings: { id: string; mapping: string; createdAt: number }[];
-  rules: { id: string; pattern: string; createdAt: number }[];
+  rules: Rules;
 };
 
 const useAdapter = create<AdapterState>((set) => {
   const socketSet = new SocketPairSet();
   const mappingSet: Map<string, { map: SocketPair; createdAt: number }> = new Map();
-  const ruleSet: Map<string, { pattern: string; createdAt: number }> = new Map();
 
   window.electron.on(IPCChannel.AdapterInstanceChange, ({ instance }: InstanceChangePayload) => {
     set({ instance });
@@ -85,27 +82,16 @@ const useAdapter = create<AdapterState>((set) => {
     set({ mappings });
   });
 
-  window.electron.on(IPCChannel.AdapterRuleChange, ({ id, pattern, type }: RuleChangePayload) => {
-    if (type === "add" && pattern && id) {
-      ruleSet.set(id, { pattern, createdAt: Date.now() });
-    }
-    if (type === "del" && id) {
-      ruleSet.delete(id);
+  window.electron.on(IPCChannel.AdapterRuleChange, ({ type, rules }: RuleChangePayload) => {
+    if (type === "set") {
+      set({ rules: { ...rules } });
     }
     if (type === "clear") {
-      ruleSet.clear();
+      set({ rules: { ...defaultRules } });
     }
-
-    const rules = Array.from(ruleSet, ([id, { pattern, createdAt }]) => ({
-      id,
-      pattern,
-      createdAt,
-    }));
-
-    set({ rules });
   });
 
-  return { instance: null, history: [], sockets: [], mappings: [], rules: [] };
+  return { instance: null, history: [], sockets: [], mappings: [], rules: { ...defaultRules } };
 });
 
 export { useAdapter };
