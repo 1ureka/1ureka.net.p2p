@@ -11,8 +11,8 @@ import { EventsPage } from "@/ui/events/EventsPage";
 import { MetricPage } from "@/ui/metrics/MetricPage";
 
 import { SessionCard } from "@/ui/session/SessionCard";
+import { ConfigsCard } from "@/ui/configs/ConfigsCard";
 import { EventsCard } from "@/ui/events/EventsCard";
-import { RouteCard } from "@/ui/configs/RouteCard";
 
 const OverviewPage = memo(() => (
   <Box sx={{ display: "grid", gridTemplateColumns: "0.75fr 1fr", gap: 2, px: 4, py: 3, minHeight: 650, flex: 1 }}>
@@ -20,7 +20,7 @@ const OverviewPage = memo(() => (
       <SessionCard />
     </Box>
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minHeight: 0 }}>
-      <RouteCard />
+      <ConfigsCard />
       <EventsCard />
     </Box>
   </Box>

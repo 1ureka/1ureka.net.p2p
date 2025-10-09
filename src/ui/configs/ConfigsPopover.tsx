@@ -38,12 +38,12 @@ const actionAreaSx: PaperProps["sx"] = {
   bgcolor: "background.default",
 };
 
-type RouteCardPopoverProps = {
+type ConfigsCardPopoverProps = {
   anchorEl: null | HTMLElement;
   onClose: () => void;
 };
 
-const CreateMappingPopover = ({ anchorEl, onClose }: RouteCardPopoverProps) => {
+const CreateMappingPopover = ({ anchorEl, onClose }: ConfigsCardPopoverProps) => {
   const open = Boolean(anchorEl);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof SocketPair, string>>>({});
@@ -184,7 +184,7 @@ const CreateMappingPopover = ({ anchorEl, onClose }: RouteCardPopoverProps) => {
   );
 };
 
-const CreateRulePopover = ({ anchorEl, onClose }: RouteCardPopoverProps) => {
+const CreateRulePopover = ({ anchorEl, onClose }: ConfigsCardPopoverProps) => {
   const open = Boolean(anchorEl);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
