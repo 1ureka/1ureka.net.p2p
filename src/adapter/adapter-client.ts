@@ -153,6 +153,8 @@ function createClientAdapter(send: (packet: Buffer) => void) {
     };
 
     const serverListeningHandler = () => {
+      server.off("listening", serverListeningHandler);
+
       resolve(server);
       reportLog({ message: `Client Adapter listening on ${local}, forwarding to ${remote}` });
     };
