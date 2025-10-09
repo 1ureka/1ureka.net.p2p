@@ -1,10 +1,5 @@
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import InfoOutlineRoundedIcon from "@mui/icons-material/InfoOutlineRounded";
-
 import { Box, Typography } from "@mui/material";
-import { CardHeader } from "@/ui/components/Card";
-import { GithubButton, GithubTooltip } from "@/ui/components/Github";
 import { ConfigsCardList, ConfigsCardListItem } from "@/ui/configs/ConfigsCardList";
 import { useAdapter } from "@/adapter-state/store";
 
@@ -17,7 +12,6 @@ const displayMap = {
     title: "No mappings yet",
     description: "You haven't added any port mappings yet. Create one to connect local and remote ports.",
   },
-  running: { title: "Mappings", tooltip: "Add a new mapping" },
 };
 
 const ConfigsCardNoItemDisplay = () => {
@@ -40,32 +34,6 @@ const ConfigsCardNoItemDisplay = () => {
   );
 };
 
-type ConfigsCardHeaderProps = {
-  actionDisabled?: boolean;
-  onAction?: (event: React.MouseEvent<HTMLElement>) => void;
-};
-
-const ConfigsCardHeader = ({ actionDisabled, onAction }: ConfigsCardHeaderProps) => {
-  const { title, tooltip } = displayMap.running;
-
-  return (
-    <CardHeader>
-      <Typography variant="subtitle1" component="h2">
-        {title}
-      </Typography>
-
-      <Box sx={{ flex: 1 }} />
-
-      <GithubTooltip title={actionDisabled ? "Start adapter first" : tooltip}>
-        <GithubButton size="small" disabled={actionDisabled} onClick={onAction}>
-          <AddRoundedIcon fontSize="small" sx={{ mx: 0.5 }} />
-          <ExpandMoreRoundedIcon fontSize="small" />
-        </GithubButton>
-      </GithubTooltip>
-    </CardHeader>
-  );
-};
-
 type ConfigsCardBodyProps = {
   items: { id: string; content: string; createdAt: number }[];
 };
@@ -84,4 +52,4 @@ const ConfigsCardBody = ({ items }: ConfigsCardBodyProps) => (
   </Box>
 );
 
-export { ConfigsCardNoItemDisplay, ConfigsCardHeader, ConfigsCardBody };
+export { ConfigsCardNoItemDisplay, ConfigsCardBody };
