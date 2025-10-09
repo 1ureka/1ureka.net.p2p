@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { useState, useEffect } from "react";
-import { Popover, Box, Typography, type PaperProps } from "@mui/material";
+import { Popover, Box, Typography, Checkbox, FormControlLabel, type PaperProps } from "@mui/material";
 import AddBoxRoundedIcon from "@mui/icons-material/AddBoxRounded";
 
 import { GithubTextField, GithubButton } from "@/ui/components/Github";
@@ -29,11 +29,13 @@ const commonPaperProps: PaperProps = {
 };
 
 const actionAreaSx: PaperProps["sx"] = {
+  height: 48,
   p: 1,
   borderTop: 2,
   borderColor: "divider",
-  display: "grid",
-  justifyItems: "end",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
   bgcolor: "background.default",
 };
 
@@ -47,16 +49,29 @@ const CreateMappingPopover = ({ anchorEl, onClose }: ConfigsCardPopoverProps) =>
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof SocketPair, string>>>({});
   const [map, setMap] = useState({ srcAddr: "127.0.0.1", srcPort: "", dstAddr: "127.0.0.1", dstPort: "" });
+  const [autoMirror, setAutoMirror] = useState(true);
 
   const resetForm = () => {
     setMap({ srcAddr: "127.0.0.1", srcPort: "", dstAddr: "127.0.0.1", dstPort: "" });
     setErrors({});
     setLoading(false);
+    setAutoMirror(true);
   };
 
   useEffect(() => {
     if (!open) resetForm();
   }, [open]);
+
+  // 自動鏡像邏輯
+  useEffect(() => {
+    if (autoMirror) {
+      setMap((prev) => ({
+        ...prev,
+        dstAddr: prev.srcAddr,
+        dstPort: prev.srcPort,
+      }));
+    }
+  }, [autoMirror, map.srcAddr, map.srcPort]);
 
   const handleClose = () => {
     if (!loading) onClose();
@@ -143,7 +158,7 @@ const CreateMappingPopover = ({ anchorEl, onClose }: ConfigsCardPopoverProps) =>
             onChange={(e) => setMap((prev) => ({ ...prev, dstAddr: e.target.value }))}
             size="small"
             placeholder="127.0.0.1"
-            disabled={loading}
+            disabled={loading || autoMirror}
             fullWidth
             error={Boolean(errors.dstAddr)}
             sx={{ "& .MuiOutlinedInput-root": { bgcolor: "background.default" } }}
@@ -157,7 +172,7 @@ const CreateMappingPopover = ({ anchorEl, onClose }: ConfigsCardPopoverProps) =>
             onChange={(e) => setMap((prev) => ({ ...prev, dstPort: e.target.value }))}
             size="small"
             placeholder="3000"
-            disabled={loading}
+            disabled={loading || autoMirror}
             fullWidth
             error={Boolean(errors.dstPort)}
             sx={{ "& .MuiOutlinedInput-root": { bgcolor: "background.default" } }}
@@ -172,9 +187,25 @@ const CreateMappingPopover = ({ anchorEl, onClose }: ConfigsCardPopoverProps) =>
       </Box>
 
       <Box sx={actionAreaSx}>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={autoMirror}
+              onChange={(e) => setAutoMirror(e.target.checked)}
+              size="small"
+              disabled={loading}
+            />
+          }
+          label={
+            <Typography variant="caption" sx={{ color: "text.secondary", ...centerTextSx }}>
+              Auto mirror
+            </Typography>
+          }
+          sx={{ m: 0 }}
+        />
         <GithubButton size="small" onClick={handleSubmit} loading={loading}>
           <AddBoxRoundedIcon fontSize="small" />
-          <Typography variant="body2" sx={centerTextSx}>
+          <Typography variant="caption" sx={centerTextSx}>
             Add mapping
           </Typography>
         </GithubButton>
