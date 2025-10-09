@@ -9,33 +9,20 @@ import { ConfigsCardList, ConfigsCardListItem } from "@/ui/configs/ConfigsCardLi
 import { useAdapter } from "@/adapter-state/store";
 
 const displayMap = {
-  mapping: {
-    stopped: {
-      title: "Adapter not started",
-      description: "Start the adapter first to create port mappings and connect local and remote ports.",
-    },
-    empty: {
-      title: "No mappings yet",
-      description: "You haven't added any port mappings yet. Create one to connect local and remote ports.",
-    },
-    running: { title: "Mappings", tooltip: "Add a new mapping" },
+  stopped: {
+    title: "Adapter not started",
+    description: "Start the adapter first to create port mappings and connect local and remote ports.",
   },
-  rule: {
-    stopped: {
-      title: "Adapter not started",
-      description: "Start the adapter first to define access rules and allow incoming connections.",
-    },
-    empty: {
-      title: "No rules defined",
-      description: "You haven't defined any access rules yet. Add one to allow incoming connections.",
-    },
-    running: { title: "Rules", tooltip: "Add a new rule" },
+  empty: {
+    title: "No mappings yet",
+    description: "You haven't added any port mappings yet. Create one to connect local and remote ports.",
   },
+  running: { title: "Mappings", tooltip: "Add a new mapping" },
 };
 
-const ConfigsCardNoItemDisplay = ({ type }: { type: "mapping" | "rule" }) => {
+const ConfigsCardNoItemDisplay = () => {
   const instance = useAdapter((state) => state.instance);
-  const { title, description } = displayMap[type][instance === null ? "stopped" : "empty"];
+  const { title, description } = displayMap[instance === null ? "stopped" : "empty"];
 
   return (
     <Box sx={{ height: 1, display: "grid", placeItems: "center" }}>
@@ -54,13 +41,12 @@ const ConfigsCardNoItemDisplay = ({ type }: { type: "mapping" | "rule" }) => {
 };
 
 type ConfigsCardHeaderProps = {
-  type: "mapping" | "rule";
   actionDisabled?: boolean;
   onAction?: (event: React.MouseEvent<HTMLElement>) => void;
 };
 
-const ConfigsCardHeader = ({ type, actionDisabled, onAction }: ConfigsCardHeaderProps) => {
-  const { title, tooltip } = displayMap[type].running;
+const ConfigsCardHeader = ({ actionDisabled, onAction }: ConfigsCardHeaderProps) => {
+  const { title, tooltip } = displayMap.running;
 
   return (
     <CardHeader>
@@ -81,20 +67,19 @@ const ConfigsCardHeader = ({ type, actionDisabled, onAction }: ConfigsCardHeader
 };
 
 type ConfigsCardBodyProps = {
-  type: "mapping" | "rule";
   items: { id: string; content: string; createdAt: number }[];
 };
 
-const ConfigsCardBody = ({ type, items }: ConfigsCardBodyProps) => (
+const ConfigsCardBody = ({ items }: ConfigsCardBodyProps) => (
   <Box sx={{ flex: 1, overflow: "auto", minHeight: 0 }}>
     {items.length > 0 ? (
       <ConfigsCardList>
         {items.map(({ id, content, createdAt }) => (
-          <ConfigsCardListItem key={id} id={id} type={type} content={content} createdAt={createdAt} />
+          <ConfigsCardListItem key={id} id={id} content={content} createdAt={createdAt} />
         ))}
       </ConfigsCardList>
     ) : (
-      <ConfigsCardNoItemDisplay type={type} />
+      <ConfigsCardNoItemDisplay />
     )}
   </Box>
 );

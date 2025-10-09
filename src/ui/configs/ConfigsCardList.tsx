@@ -6,7 +6,7 @@ import { Box, type BoxProps, Typography } from "@mui/material";
 import { motion } from "motion/react";
 import { ellipsisSx } from "@/ui/theme";
 import { GithubButton, GithubTooltip } from "@/ui/components/Github";
-import { handleRemoveMapping, handleRemoveRule } from "@/adapter-state/handlers";
+import { handleRemoveMapping } from "@/adapter-state/handlers";
 
 function formatElapsed(elapsed: number) {
   const hours = Math.floor(elapsed / 3600);
@@ -30,7 +30,6 @@ const ElapsedDisplay = ({ createdAt }: { createdAt: number }) => {
 
 type ConfigsCardListItemProps = {
   id: string;
-  type: "mapping" | "rule";
   content: string;
   createdAt: number;
 };
@@ -47,15 +46,11 @@ const listItemSx: BoxProps["sx"] = {
   transition: "background-color 0.3s ease",
 };
 
-const ConfigsCardListItem = ({ id, type, content, createdAt }: ConfigsCardListItemProps) => {
+const ConfigsCardListItem = ({ id, content, createdAt }: ConfigsCardListItemProps) => {
   const [loading, setLoading] = useState(false);
   const handleDelete = async () => {
     setLoading(true);
-    if (type === "mapping") {
-      await handleRemoveMapping(id);
-    } else {
-      await handleRemoveRule(id);
-    }
+    await handleRemoveMapping(id);
   };
 
   return (
@@ -68,12 +63,10 @@ const ConfigsCardListItem = ({ id, type, content, createdAt }: ConfigsCardListIt
     >
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "text.secondary" }}>
         <SignpostRoundedIcon color="inherit" fontSize="small" />
-        <Typography variant="body2">
-          {type} #{id}
-        </Typography>
+        <Typography variant="body2">mapping #{id}</Typography>
       </Box>
 
-      <GithubTooltip title={type === "mapping" ? "Remove mapping" : "Remove rule"}>
+      <GithubTooltip title={"Remove mapping"}>
         <GithubButton sx={{ minWidth: 0, p: 0.2 }} color="inherit" onClick={handleDelete} loading={loading}>
           <DeleteForeverRoundedIcon fontSize="small" />
         </GithubButton>
