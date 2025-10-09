@@ -1,8 +1,8 @@
 import type { ConnectionLogFormattedEntry } from "@/utils";
+import type { Rules } from "@/adapter/adapter-host";
 import { IPCChannel } from "@/ipc";
 import { create } from "zustand";
 import { type SocketPair, SocketPairSet, stringifySocketPair } from "@/adapter/ip";
-import { type Rules, defaultRules } from "@/adapter/adapter-host";
 
 type InstanceChangePayload = { instance: "host" | "client" | null };
 
@@ -31,6 +31,7 @@ type AdapterState = {
 const useAdapter = create<AdapterState>((set) => {
   const socketSet = new SocketPairSet();
   const mappingSet: Map<string, { map: SocketPair; createdAt: number }> = new Map();
+  const defaultRules: Rules = { allowIPv4Local: true, allowIPv6Local: false, allowLAN: false, allowExternal: false };
 
   window.electron.on(IPCChannel.AdapterInstanceChange, ({ instance }: InstanceChangePayload) => {
     set({ instance });

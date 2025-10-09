@@ -8,7 +8,6 @@ import { SocketPairMap, stringifySocketPair, type SocketPair, classifyAddress } 
  * Host 端的四種訪問權限設置
  */
 type Rules = { allowIPv4Local: boolean; allowIPv6Local: boolean; allowLAN: boolean; allowExternal: boolean };
-const defaultRules: Rules = { allowIPv4Local: true, allowIPv6Local: false, allowLAN: false, allowExternal: false };
 
 /**
  * 建立 Host 端的 Adapter (連接到本地的 TCP 伺服器)
@@ -20,7 +19,7 @@ function createHostAdapter(send: (packet: Buffer) => void) {
   const reassembler = createReassembler();
   const sockets = new SocketPairMap<net.Socket>();
   const socketPromises = new SocketPairMap<Promise<void>>();
-  const rules = { ...defaultRules };
+  const rules = { allowIPv4Local: true, allowIPv6Local: false, allowLAN: false, allowExternal: false };
 
   /**
    * 檢查 SocketPair 是否符合當前的訪問規則
@@ -200,4 +199,4 @@ function createHostAdapter(send: (packet: Buffer) => void) {
   return { handlePacketFromRTC, handleClose, handleChangeRules };
 }
 
-export { createHostAdapter, type Rules, defaultRules };
+export { createHostAdapter, type Rules };
