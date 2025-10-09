@@ -7,7 +7,8 @@ import { IPCChannel } from "@/ipc";
 
 const createAdapterService = () => {
   const win = getWindow();
-  ipcMain.removeAllListeners();
+  ipcMain.removeHandler(IPCChannel.AdapterStartHost);
+  ipcMain.removeHandler(IPCChannel.AdapterStartClient);
 
   // ------------------------------------------------------------------------------
 
@@ -24,18 +25,18 @@ const createAdapterService = () => {
     reporter.reportLog({ message: "Starting host adapter..." });
 
     const handlers = createHostAdapter((packet) => win.webContents.send(IPCChannel.FromTCP, packet));
-    const { handlePacketFromRTC, handleClose, handleCreateRule, handleRemoveRule } = handlers;
+    const { handlePacketFromRTC, handleClose, handleChangeRules } = handlers;
 
     ipcMain.on(IPCChannel.FromRTC, handlePacketFromRTC);
-    ipcMain.handle(IPCChannel.AdapterCreateRule, handleCreateRule);
-    ipcMain.handle(IPCChannel.AdapterRemoveRule, handleRemoveRule);
+    ipcMain.handle(IPCChannel.AdapterChangeRules, handleChangeRules);
 
     ipcMain.handleOnce(IPCChannel.AdapterStop, () => {
       ipcMain.off(IPCChannel.FromRTC, handlePacketFromRTC);
-      ipcMain.removeHandler(IPCChannel.AdapterCreateRule);
-      ipcMain.removeHandler(IPCChannel.AdapterRemoveRule);
+      ipcMain.removeHandler(IPCChannel.AdapterChangeRules);
+
       handleClose();
       win.adapter = undefined;
+
       reportClose();
       reporter.reportLog({ message: "Adapter stopped successfully." });
     });
@@ -68,8 +69,10 @@ const createAdapterService = () => {
       ipcMain.off(IPCChannel.FromRTC, handlePacketFromRTC);
       ipcMain.removeHandler(IPCChannel.AdapterCreateMapping);
       ipcMain.removeHandler(IPCChannel.AdapterRemoveMapping);
+
       handleClose();
       win.adapter = undefined;
+
       reportClose();
       reporter.reportLog({ message: "Adapter stopped successfully." });
     });

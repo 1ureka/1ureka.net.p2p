@@ -1,9 +1,13 @@
 import net from "net";
-import crypto from "node:crypto";
 import { createReporter, reportSockets, reportRules } from "@/adapter-state/report";
 import { PacketEvent } from "@/adapter/packet";
 import { createChunker, createReassembler } from "@/adapter/framing";
-import { SocketPairMap, stringifySocketPair, type SocketPair } from "@/adapter/ip";
+import { SocketPairMap, stringifySocketPair, type SocketPair, classifyAddress } from "@/adapter/ip";
+
+/**
+ * Host 端的四種訪問權限設置
+ */
+type Rules = { allowIPv4Local: boolean; allowIPv6Local: boolean; allowLAN: boolean; allowExternal: boolean };
 
 /**
  * 建立 Host 端的 Adapter (連接到本地的 TCP 伺服器)
@@ -15,6 +19,35 @@ function createHostAdapter(send: (packet: Buffer) => void) {
   const reassembler = createReassembler();
   const sockets = new SocketPairMap<net.Socket>();
   const socketPromises = new SocketPairMap<Promise<void>>();
+  const rules = { allowIPv4Local: true, allowIPv6Local: false, allowLAN: false, allowExternal: false };
+
+  /**
+   * 檢查 SocketPair 是否符合當前的訪問規則
+   */
+  const checkRules = (socketPair: SocketPair) => {
+    const ruleMap = {
+      ipv4local: { key: "allowIPv4Local", label: "IPv4 local" },
+      ipv6local: { key: "allowIPv6Local", label: "IPv6 local" },
+      lan: { key: "allowLAN", label: "LAN" },
+      external: { key: "allowExternal", label: "External" },
+    } as const;
+
+    const type = classifyAddress(socketPair.dstAddr);
+    const pairStr = stringifySocketPair(socketPair);
+
+    if (type === "invalid") {
+      reportWarn({ message: `Socket ${pairStr} has invalid IP address, rejecting CONNECT.` });
+      return false;
+    }
+
+    const rule = ruleMap[type];
+    if (rule && !rules[rule.key]) {
+      reportWarn({ message: `Socket ${pairStr} ${rule.label} connection not allowed by rules, rejecting CONNECT.` });
+      return false;
+    }
+
+    return true;
+  };
 
   /**
    * 處理來自 RTC 端的 CONNECT 封包，建立對應的 TCP socket 連線
@@ -24,6 +57,16 @@ function createHostAdapter(send: (packet: Buffer) => void) {
       reportWarn({
         message: `Socket ${stringifySocketPair(socketPair)} already exists, ignoring CONNECT request.`,
       });
+      for (const packet of chunker.generate(socketPair, PacketEvent.CLOSE, Buffer.alloc(0))) {
+        send(packet);
+      }
+      return;
+    }
+
+    if (!checkRules(socketPair)) {
+      for (const packet of chunker.generate(socketPair, PacketEvent.CLOSE, Buffer.alloc(0))) {
+        send(packet);
+      }
       return;
     }
 
@@ -135,17 +178,11 @@ function createHostAdapter(send: (packet: Buffer) => void) {
 
   // ------------------------------------------------------------------------------
 
-  // TODO: 管理動態 rules
-  const handleCreateRule = (_: unknown, pattern: string) => {
-    const id = crypto.randomUUID();
-
-    reportLog({ message: "Create rule - Not implemented yet" });
-    reportRules({ type: "add", id, pattern });
-  };
-
-  const handleRemoveRule = (_: unknown, id: string) => {
-    reportLog({ message: "Remove rule - Not implemented yet" });
-    reportRules({ type: "del", id });
+  const handleChangeRules = (_: unknown, configs: Rules) => {
+    Object.assign(rules, configs);
+    reportRules({ type: "set", rules: { ...rules } });
+    reportLog({ message: "Updated host access rules", data: { rules } });
+    return true;
   };
 
   // ------------------------------------------------------------------------------
@@ -162,7 +199,7 @@ function createHostAdapter(send: (packet: Buffer) => void) {
     }
   };
 
-  return { handlePacketFromRTC, handleClose, handleCreateRule, handleRemoveRule };
+  return { handlePacketFromRTC, handleClose, handleChangeRules };
 }
 
-export { createHostAdapter };
+export { createHostAdapter, type Rules };

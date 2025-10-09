@@ -1,6 +1,6 @@
 import { Box, Typography } from "@mui/material";
 import { centerTextSx } from "@/ui/theme";
-import { useLogs } from "@/ui/components/EventsList";
+import { useLogs } from "@/ui/events/EventsList";
 import type { ConnectionLogLevel } from "@/utils";
 
 const chipColors: Record<ConnectionLogLevel | "total", string> = {

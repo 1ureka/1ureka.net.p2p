@@ -9,8 +9,7 @@ const bindDataChannelTraffic = (dataChannel: RTCDataChannel) => {
   startTrafficMonitoring();
 
   // 監控傳入流量 (Ingress)
-  const originalOnMessage = dataChannel.onmessage;
-  dataChannel.onmessage = (event) => {
+  const handleIngress = (event: MessageEvent) => {
     try {
       const data = event.data;
       let bytes = 0;
@@ -23,19 +22,9 @@ const bindDataChannelTraffic = (dataChannel: RTCDataChannel) => {
         bytes = new Blob([data]).size;
       }
 
-      if (bytes > 0) {
-        reportIngress(bytes);
-      }
-
-      // 呼叫原始的 onmessage handler
-      if (originalOnMessage) {
-        originalOnMessage.call(dataChannel, event);
-      }
-    } catch (error) {
-      // 即使發生錯誤也繼續呼叫原始 handler
-      if (originalOnMessage) {
-        originalOnMessage.call(dataChannel, event);
-      }
+      if (bytes > 0) reportIngress(bytes);
+    } catch {
+      // 忽略統計錯誤，畢竟報告也無意義
     }
   };
 
@@ -62,21 +51,20 @@ const bindDataChannelTraffic = (dataChannel: RTCDataChannel) => {
       // 忽略統計錯誤，繼續發送
     }
 
-    // 呼叫原始的 send 方法
     return originalSend(data);
   };
 
-  // 清理函數
-  const cleanup = () => {
-    dataChannel.removeEventListener("close", cleanup);
-    dataChannel.removeEventListener("error", cleanup);
+  const handleClose = () => {
+    dataChannel.removeEventListener("message", handleIngress);
+    dataChannel.removeEventListener("close", handleClose);
+    dataChannel.removeEventListener("error", handleClose);
     dataChannel.send = originalSend;
-    dataChannel.onmessage = originalOnMessage;
     stopTrafficMonitoring();
   };
 
-  dataChannel.addEventListener("close", cleanup);
-  dataChannel.addEventListener("error", cleanup);
+  dataChannel.addEventListener("message", handleIngress);
+  dataChannel.addEventListener("close", handleClose);
+  dataChannel.addEventListener("error", handleClose);
 };
 
 export { bindDataChannelTraffic };

@@ -1,5 +1,6 @@
 import { IPCChannel } from "@/ipc";
 import type { SocketPair } from "@/adapter/ip";
+import type { Rules } from "@/adapter/adapter-host";
 
 const handleCreateMapping = async (map: SocketPair) => {
   const id = await window.electron.request(IPCChannel.AdapterCreateMapping, map);
@@ -10,13 +11,9 @@ const handleRemoveMapping = async (id: string) => {
   await window.electron.request(IPCChannel.AdapterRemoveMapping, id);
 };
 
-const handleCreateRule = async (pattern: string) => {
-  const id = await window.electron.request(IPCChannel.AdapterCreateRule, pattern);
-  if (!id) throw new Error("Failed to create rule");
-};
-
-const handleRemoveRule = async (id: string) => {
-  await window.electron.request(IPCChannel.AdapterRemoveRule, id);
+const handleChangeRules = async (rules: Rules) => {
+  const success = await window.electron.request(IPCChannel.AdapterChangeRules, rules);
+  if (!success) throw new Error("Failed to change rules");
 };
 
 const handleStartHostAdapter = async () => {
@@ -33,5 +30,5 @@ const handleStopAdapter = async () => {
   await window.electron.request(IPCChannel.AdapterStop);
 };
 
-export { handleCreateMapping, handleRemoveMapping, handleCreateRule, handleRemoveRule };
+export { handleCreateMapping, handleRemoveMapping, handleChangeRules };
 export { handleStartHostAdapter, handleStartClientAdapter, handleStopAdapter };

@@ -8,8 +8,8 @@ import type { ConnectionLogLevel } from "@/utils";
 import { centerTextSx } from "@/ui/theme";
 import { GithubButton } from "@/ui/components/Github";
 import { Card, CardHeader } from "@/ui/components/Card";
-import { EventsList, useLogs } from "@/ui/components/EventsList";
-import { EventsSummary } from "@/ui/components/EventsSummary";
+import { EventsList, useLogs } from "@/ui/events/EventsList";
+import { EventsSummary } from "@/ui/events/EventsSummary";
 
 const levels: ConnectionLogLevel[] = ["info", "warn", "error"];
 

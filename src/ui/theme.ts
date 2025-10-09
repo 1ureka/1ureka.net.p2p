@@ -20,6 +20,11 @@ export const theme = createTheme({
     fontSize: 14,
     h6: { lineHeight: 1 },
   },
+  components: {
+    MuiDivider: {
+      styleOverrides: { root: { borderWidth: "1px" } },
+    },
+  },
 });
 
 export const ellipsisSx = {

@@ -5,8 +5,8 @@ import { useTab } from "@/ui/tabs";
 import { centerTextSx } from "@/ui/theme";
 import { Card, CardHeader } from "@/ui/components/Card";
 import { GithubButton } from "@/ui/components/Github";
-import { EventsList, useLogs } from "@/ui/components/EventsList";
-import { EventsSummary } from "@/ui/components/EventsSummary";
+import { EventsList, useLogs } from "@/ui/events/EventsList";
+import { EventsSummary } from "@/ui/events/EventsSummary";
 
 const LinkButton = () => {
   const setTab = useTab((state) => state.setTab);
