@@ -150,5 +150,46 @@ class SocketPairSet extends AbstractSocketPairCollection {
   }
 }
 
-export { createAddressBuffer, parseAddressBuffer, stringifyAddress, stringifySocketPair };
+/**
+ * 檢查 IP 地址類型，用於 host adapter 的規則匹配
+ */
+function checkRules(addrStr: string): "ipv4local" | "ipv6local" | "lan" | "external" | "invalid" {
+  try {
+    const addr = ipaddr.process(addrStr);
+
+    if (addr.kind() === "ipv4") {
+      if (addr.match(ipaddr.parse("127.0.0.0"), 8)) {
+        return "ipv4local";
+      }
+
+      if (
+        addr.match(ipaddr.parse("10.0.0.0"), 8) ||
+        addr.match(ipaddr.parse("172.16.0.0"), 12) ||
+        addr.match(ipaddr.parse("192.168.0.0"), 16)
+      ) {
+        return "lan";
+      }
+
+      return "external";
+    }
+
+    if (addr.kind() === "ipv6") {
+      if (addr.range() === "loopback") {
+        return "ipv6local";
+      }
+
+      if (addr.match(ipaddr.parse("fc00::"), 7)) {
+        return "lan";
+      }
+
+      return "external";
+    }
+
+    return "invalid";
+  } catch {
+    return "invalid";
+  }
+}
+
+export { createAddressBuffer, parseAddressBuffer, stringifyAddress, stringifySocketPair, checkRules };
 export { SocketPair, SocketPairMap, SocketPairSet };
