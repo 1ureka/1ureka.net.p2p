@@ -26,9 +26,13 @@ const AdapterHeader = () => {
   const handleStart = async () => {
     try {
       setStartState({ loading: true, error: null });
-      if (role === "host") await handleStartHostAdapter();
-      if (role === "client") await handleStartClientAdapter();
-      throw new Error("Role is not set");
+      if (role === "host") {
+        await handleStartHostAdapter();
+      } else if (role === "client") {
+        await handleStartClientAdapter();
+      } else {
+        throw new Error("Role is not set");
+      }
     } catch (err) {
       setStartState({ loading: false, error: err instanceof Error ? err.message : "Unknown error occurred" });
     } finally {
