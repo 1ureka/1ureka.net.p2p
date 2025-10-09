@@ -158,13 +158,13 @@ function createClientAdapter(send: (packet: Buffer) => void) {
     };
 
     const serverErrorHandler = (error: Error) => {
-      reject(error);
-      reportError({ message: `Client Adapter server error on ${local}`, data: { error } });
-
       server.off("connection", serverConnectionHandler);
       server.off("listening", serverListeningHandler);
       server.off("error", serverErrorHandler);
       tryCatchSync(() => server.close());
+
+      reject(error);
+      reportError({ message: `Client Adapter server error on ${local}`, data: { error } });
     };
 
     server.on("connection", serverConnectionHandler);
