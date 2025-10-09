@@ -7,8 +7,6 @@
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",
-    "make": "electron-forge make",
-    "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx .",
     "test": "vitest run --config vitest.config.mjs",
     "clean": "node -e \"['out','.vite','dist'].forEach(d=>require('fs').rmSync(d,{recursive:true,force:true}))\""
@@ -21,15 +19,10 @@
   "license": "MIT",
   "devDependencies": {
     "@electron-forge/cli": "^7.9.0",
-    "@electron-forge/maker-deb": "^7.9.0",
-    "@electron-forge/maker-rpm": "^7.9.0",
-    "@electron-forge/maker-squirrel": "^7.9.0",
-    "@electron-forge/maker-zip": "^7.9.0",
     "@electron-forge/plugin-auto-unpack-natives": "^7.9.0",
     "@electron-forge/plugin-fuses": "^7.9.0",
     "@electron-forge/plugin-vite": "^7.9.0",
     "@electron/fuses": "^1.8.0",
-    "@types/electron-squirrel-startup": "^1.0.2",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
@@ -50,7 +43,6 @@
     "@mui/icons-material": "^7.3.2",
     "@mui/material": "^7.3.2",
     "@mui/x-charts": "^8.13.1",
-    "electron-squirrel-startup": "^1.0.1",
     "ipaddr.js": "^2.2.0",
     "motion": "^12.23.16",
     "react": "^19.1.1",

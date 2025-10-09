@@ -1,14 +1,10 @@
 import os from "node:os";
 import path from "node:path";
 import { inspect } from "node:util";
-import started from "electron-squirrel-startup";
 
 import { app, BrowserWindow, Menu, ipcMain } from "electron";
 import { createAdapterService } from "@/adapter/adapter-service";
 import { IPCChannel } from "@/ipc";
-
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
-if (started) app.quit();
 
 Menu.setApplicationMenu(null);
 declare module "electron" {
