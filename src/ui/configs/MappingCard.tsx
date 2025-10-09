@@ -4,7 +4,8 @@ import { Box, Typography } from "@mui/material";
 
 import { Card, CardHeader } from "@/ui/components/Card";
 import { GithubButton, GithubTooltip } from "@/ui/components/Github";
-import { ConfigsCardBody } from "@/ui/configs/ConfigsCardShared";
+import { ConfigsCardNoItemDisplay } from "@/ui/configs/ConfigsCardShared";
+import { ConfigsCardListItem, ConfigsCardList } from "@/ui/configs/ConfigsCardList";
 import { CreateMappingPopover } from "@/ui/configs/ConfigsPopover";
 
 import { useAdapter } from "@/adapter-state/store";
@@ -38,15 +39,29 @@ const MappingCardHeader = () => {
   );
 };
 
-const MappingCard = () => {
+const MappingCardBody = () => {
   const mappings = useAdapter((state) => state.mappings);
 
   return (
-    <Card sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
-      <MappingCardHeader />
-      <ConfigsCardBody items={mappings.map(({ id, mapping, createdAt }) => ({ id, content: mapping, createdAt }))} />
-    </Card>
+    <Box sx={{ flex: 1, overflow: "auto", minHeight: 0 }}>
+      {mappings.length > 0 ? (
+        <ConfigsCardList>
+          {mappings.map(({ id, mapping, createdAt }) => (
+            <ConfigsCardListItem key={id} id={id} content={mapping} createdAt={createdAt} />
+          ))}
+        </ConfigsCardList>
+      ) : (
+        <ConfigsCardNoItemDisplay />
+      )}
+    </Box>
   );
 };
+
+const MappingCard = () => (
+  <Card sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+    <MappingCardHeader />
+    <MappingCardBody />
+  </Card>
+);
 
 export { MappingCard };

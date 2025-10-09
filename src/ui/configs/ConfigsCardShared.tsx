@@ -1,6 +1,5 @@
 import InfoOutlineRoundedIcon from "@mui/icons-material/InfoOutlineRounded";
 import { Box, Typography } from "@mui/material";
-import { ConfigsCardList, ConfigsCardListItem } from "@/ui/configs/ConfigsCardList";
 import { useAdapter } from "@/adapter-state/store";
 
 const displayMap = {
@@ -34,22 +33,4 @@ const ConfigsCardNoItemDisplay = () => {
   );
 };
 
-type ConfigsCardBodyProps = {
-  items: { id: string; content: string; createdAt: number }[];
-};
-
-const ConfigsCardBody = ({ items }: ConfigsCardBodyProps) => (
-  <Box sx={{ flex: 1, overflow: "auto", minHeight: 0 }}>
-    {items.length > 0 ? (
-      <ConfigsCardList>
-        {items.map(({ id, content, createdAt }) => (
-          <ConfigsCardListItem key={id} id={id} content={content} createdAt={createdAt} />
-        ))}
-      </ConfigsCardList>
-    ) : (
-      <ConfigsCardNoItemDisplay />
-    )}
-  </Box>
-);
-
-export { ConfigsCardNoItemDisplay, ConfigsCardBody };
+export { ConfigsCardNoItemDisplay };
