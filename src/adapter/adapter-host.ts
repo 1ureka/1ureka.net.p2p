@@ -64,6 +64,9 @@ function createHostAdapter(send: (packet: Buffer) => void) {
     }
 
     if (!checkRules(socketPair)) {
+      for (const packet of chunker.generate(socketPair, PacketEvent.CLOSE, Buffer.alloc(0))) {
+        send(packet);
+      }
       return;
     }
 
