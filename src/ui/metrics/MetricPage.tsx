@@ -5,6 +5,7 @@ import { Box, Typography } from "@mui/material";
 import { centerTextSx } from "@/ui/theme";
 import { Card, CardHeader } from "@/ui/components/Card";
 import { TrafficCard } from "@/ui/metrics/MetricTraffic";
+import { SocketsCard } from "@/ui/metrics/MetricSockets";
 
 const containerSx = {
   gap: 2,
@@ -45,16 +46,7 @@ const MetricPage = memo(() => (
       </Box>
     </Card>
 
-    <Card sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
-      <CardHeader>
-        <Typography variant="subtitle1" component="h2" sx={centerTextSx}>
-          Connections
-        </Typography>
-      </CardHeader>
-
-      <Box>{/* TODO: sockets chart */}</Box>
-    </Card>
-
+    <SocketsCard />
     <TrafficCard />
   </Box>
 ));
