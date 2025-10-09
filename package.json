@@ -11,7 +11,28 @@
     "test": "vitest run --config vitest.config.mjs",
     "clean": "node -e \"['out','.vite','dist'].forEach(d=>require('fs').rmSync(d,{recursive:true,force:true}))\""
   },
-  "keywords": [],
+  "keywords": [
+    "webrtc",
+    "p2p",
+    "peer-to-peer",
+    "tcp",
+    "port-forwarding",
+    "nat-traversal",
+    "proxy",
+    "tunnel",
+    "electron",
+    "desktop-app",
+    "remote-access",
+    "network-sharing",
+    "datachannel",
+    "minecraft-server",
+    "local-server",
+    "reverse-proxy",
+    "vpn-alternative",
+    "no-central-server",
+    "end-to-end-encryption",
+    "cross-platform"
+  ],
   "author": {
     "name": "1ureka",
     "email": "summerheadquarters001@gmail.com"
