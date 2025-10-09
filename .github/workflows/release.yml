@@ -27,37 +27,22 @@ jobs:
       - name: Package app
         run: npm run package
 
-      - name: Find packaged folder
-        id: find_folder
+      - name: Verify package exists
         shell: pwsh
-        run: |
-          # 找到打包後的資料夾（Electron Forge 會在 out 目錄下創建）
-          $packagedFolder = Get-ChildItem -Path "out" -Directory | Select-Object -First 1
-          if ($packagedFolder) {
-            echo "folder_path=$($packagedFolder.FullName)" >> $env:GITHUB_OUTPUT
-            echo "folder_name=$($packagedFolder.Name)" >> $env:GITHUB_OUTPUT
-          } else {
-            Write-Error "No packaged folder found in out directory"
-            exit 1
-          }
+        run: if (!(Test-Path "out/1ureka.net.p2p-win32-x64")) { exit 1 }
 
       - name: Zip packaged folder
         id: zip
         shell: pwsh
         run: |
-          $folderPath = "${{ steps.find_folder.outputs.folder_path }}"
-          $folderName = "${{ steps.find_folder.outputs.folder_name }}"
-          $version = "${{ github.event.inputs.version }}"
-          $zipName = "$folderName-$version.zip"
-          Compress-Archive -Path $folderPath -DestinationPath "out\$zipName" -Force
-          echo "zip_path=out\$zipName" >> $env:GITHUB_OUTPUT
-          Write-Host "Created zip file: out\$zipName"
+          $zipPath = "out/1ureka.net.p2p-win32-x64-${{ github.event.inputs.version }}.zip"
+          Compress-Archive -Path "out/1ureka.net.p2p-win32-x64/*" -DestinationPath $zipPath -Force
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.inputs.version }}
           name: "Release ${{ github.event.inputs.version }}"
-          files: ${{ steps.zip.outputs.zip_path }}
+          files: out/1ureka.net.p2p-win32-x64-${{ github.event.inputs.version }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
