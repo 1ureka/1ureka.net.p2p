@@ -46,7 +46,7 @@ const listItemSx: BoxProps["sx"] = {
   transition: "background-color 0.3s ease",
 };
 
-const ConfigsCardListItem = ({ id, content, createdAt }: ConfigsCardListItemProps) => {
+const MappingCardListItem = ({ id, content, createdAt }: ConfigsCardListItemProps) => {
   const [loading, setLoading] = useState(false);
   const handleDelete = async () => {
     setLoading(true);
@@ -89,6 +89,6 @@ const listSx: BoxProps["sx"] = {
   "& > div:nth-of-type(2n)": { bgcolor: "background.paper", "& button": { bgcolor: "background.default" } },
 };
 
-const ConfigsCardList = ({ children }: { children: React.ReactNode }) => <Box sx={listSx}>{children}</Box>;
+const MappingCardList = ({ children }: { children: React.ReactNode }) => <Box sx={listSx}>{children}</Box>;
 
-export { ConfigsCardList, ConfigsCardListItem };
+export { MappingCardList, MappingCardListItem };

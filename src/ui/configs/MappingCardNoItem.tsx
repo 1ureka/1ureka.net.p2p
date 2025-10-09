@@ -13,7 +13,7 @@ const displayMap = {
   },
 };
 
-const ConfigsCardNoItemDisplay = () => {
+const MappingCardNoItemDisplay = () => {
   const instance = useAdapter((state) => state.instance);
   const { title, description } = displayMap[instance === null ? "stopped" : "empty"];
 
@@ -33,4 +33,4 @@ const ConfigsCardNoItemDisplay = () => {
   );
 };
 
-export { ConfigsCardNoItemDisplay };
+export { MappingCardNoItemDisplay };

@@ -4,9 +4,9 @@ import { Box, Typography } from "@mui/material";
 
 import { Card, CardHeader } from "@/ui/components/Card";
 import { GithubButton, GithubTooltip } from "@/ui/components/Github";
-import { ConfigsCardNoItemDisplay } from "@/ui/configs/ConfigsCardShared";
-import { ConfigsCardListItem, ConfigsCardList } from "@/ui/configs/ConfigsCardList";
-import { CreateMappingPopover } from "@/ui/configs/ConfigsPopover";
+import { MappingCardNoItemDisplay } from "@/ui/configs/MappingCardNoItem";
+import { MappingCardList, MappingCardListItem } from "@/ui/configs/MappingCardList";
+import { CreateMappingPopover } from "@/ui/configs/MappingPopover";
 
 import { useAdapter } from "@/adapter-state/store";
 import { useState } from "react";
@@ -45,13 +45,13 @@ const MappingCardBody = () => {
   return (
     <Box sx={{ flex: 1, overflow: "auto", minHeight: 0 }}>
       {mappings.length > 0 ? (
-        <ConfigsCardList>
+        <MappingCardList>
           {mappings.map(({ id, mapping, createdAt }) => (
-            <ConfigsCardListItem key={id} id={id} content={mapping} createdAt={createdAt} />
+            <MappingCardListItem key={id} id={id} content={mapping} createdAt={createdAt} />
           ))}
-        </ConfigsCardList>
+        </MappingCardList>
       ) : (
-        <ConfigsCardNoItemDisplay />
+        <MappingCardNoItemDisplay />
       )}
     </Box>
   );
