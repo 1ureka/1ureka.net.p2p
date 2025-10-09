@@ -24,6 +24,22 @@ const toIPv6 = (addr: ipaddr.IPv4 | ipaddr.IPv6): ipaddr.IPv6 => {
 };
 
 /**
+ * 將 IPv6 地址轉換為 IPv4 或 IPv6 地址，如果是 IPv4-mapped IPv6 則轉回 IPv4
+ */
+const fromIPv6 = (addr: ipaddr.IPv4 | ipaddr.IPv6): ipaddr.IPv4 | ipaddr.IPv6 => {
+  if (addr.kind() === "ipv4") {
+    return addr;
+  }
+
+  const ipv6Addr = addr as ipaddr.IPv6;
+  if (ipv6Addr.isIPv4MappedAddress()) {
+    return ipv6Addr.toIPv4Address();
+  }
+
+  return ipv6Addr;
+};
+
+/**
  * 將 IP 地址轉換為可讀字串，IPv4-mapped IPv6 會轉回 IPv4 字串
  */
 const stringifyAddress = (ip: string) => {
@@ -65,7 +81,7 @@ const createAddressBuffer = (ip: string): Buffer => {
  * 解析並轉換 Buffer 為可以丟給 net.connect 的 IP 字串
  */
 const parseAddressBuffer = (buffer: Buffer): string => {
-  return ipaddr.fromByteArray(Array.from(buffer)).toString();
+  return fromIPv6(ipaddr.fromByteArray(Array.from(buffer))).toString();
 };
 
 /**
