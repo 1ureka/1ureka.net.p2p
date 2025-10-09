@@ -53,6 +53,7 @@ const GithubTextField = styled(TextField)(({ theme }) => ({
     fontSize: "0.85rem",
     "& fieldset": { borderWidth: 2, fontSize: "0.85rem", borderColor: theme.palette.divider },
     "&:hover fieldset": { borderColor: theme.palette.text.disabled },
+    "&.Mui-disabled fieldset": { borderColor: theme.palette.divider },
     "&.Mui-focused fieldset": { borderColor: theme.palette.primary.main },
     "& input::placeholder": { color: "#6e7781", opacity: 1 },
   },
