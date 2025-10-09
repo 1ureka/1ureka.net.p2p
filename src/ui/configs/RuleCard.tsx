@@ -37,19 +37,19 @@ const RuleCard = () => {
   const instance = useAdapter((state) => state.instance);
   const disabled = instance === null;
 
-  // 注意: 由於是 IPC，因此很快，loading 只單純在 handler 避免重複而已，不會真的 disable UI
-  const [loading, setLoading] = useState(false);
+  // 注意: 由於是 IPC，因此很快，isChanging 只單純在 handler 避免重複而已，不會真的 disable UI
+  const [isChanging, setIsChanging] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleChange = async (rule: keyof Rules, value: boolean) => {
-    if (disabled || loading) return;
-    setLoading(true);
+    if (disabled || isChanging) return;
+    setIsChanging(true);
     try {
       await handleChangeRules({ ...rules, [rule]: value });
     } catch (error) {
       setError(error instanceof Error ? error.message : String(error));
     } finally {
-      setLoading(false);
+      setIsChanging(false);
     }
   };
 
