@@ -1,7 +1,7 @@
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import { Box, Divider, Typography } from "@mui/material";
 
-import { centerTextSx, generateColorMix } from "@/ui/theme";
+import { centerTextSx } from "@/ui/theme";
 import { Card, CardHeader } from "@/ui/components/Card";
 import { GithubButton, GithubTooltip } from "@/ui/components/Github";
 import { AdapterHeader, AdapterBody } from "@/ui/session/SectionAdapter";
@@ -20,24 +20,11 @@ const SessionCardLabel = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-const SessionCardSubHeader = ({ children }: { children: React.ReactNode }) => {
-  const bgcolor = ({ palette }: { palette: { background: { paper: string; default: string } } }) =>
-    generateColorMix(palette.background.paper, palette.background.default, 50);
-
-  return (
-    <Box sx={{ borderBottom: "2px solid", borderColor: "divider", bgcolor }}>
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: 40, pl: 2, pr: 1 }}>
-        {children}
-      </Box>
-    </Box>
-  );
-};
-
 const SessionCardSubBody = ({ children }: { children: React.ReactNode }) => (
   <Box sx={{ display: "grid", gridTemplateColumns: "0.3fr 1fr", gap: 1.5, p: 2, px: 3 }}>{children}</Box>
 );
 
-export { SessionCardLabel, SessionCardSubHeader, SessionCardSubBody };
+export { SessionCardLabel, SessionCardSubBody };
 
 // -------------------------------------------------------------------------------------------------
 
@@ -83,13 +70,21 @@ const SessionCardHeader = () => {
 const SessionCard = () => (
   <Card sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
     <SessionCardHeader />
+
     <AdapterHeader />
+    <Divider />
     <AdapterBody />
-    <Divider sx={{ borderWidth: 1, borderColor: "divider" }} />
+
+    <Divider />
+
     <TransportHeader />
+    <Divider />
     <TransportBody />
-    <Divider sx={{ borderWidth: 1, borderColor: "divider" }} />
+
+    <Divider />
+
     <TrafficHeader />
+    <Divider />
     <TrafficBody />
   </Card>
 );

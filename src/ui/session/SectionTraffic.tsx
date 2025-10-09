@@ -4,17 +4,19 @@ import { Box, Typography } from "@mui/material";
 import { useTab } from "@/ui/tabs";
 import { centerTextSx } from "@/ui/theme";
 import { GithubButton } from "@/ui/components/Github";
-import { SessionCardSubHeader } from "@/ui/session/SessionCard";
+import { CardSubHeader } from "@/ui/components/Card";
 import { SessionCardChart } from "@/ui/session/SessionCardChart";
 
 const TrafficHeader = () => {
   const setTab = useTab((state) => state.setTab);
 
   return (
-    <SessionCardSubHeader>
+    <CardSubHeader>
       <Typography variant="subtitle2" sx={{ color: "text.secondary", ...centerTextSx }}>
         Traffic
       </Typography>
+
+      <Box sx={{ flex: 1 }} />
 
       <GithubButton size="small" onClick={() => setTab("metrics")}>
         <Typography variant="body2" sx={centerTextSx}>
@@ -22,7 +24,7 @@ const TrafficHeader = () => {
         </Typography>
         <ReadMoreRoundedIcon fontSize="small" />
       </GithubButton>
-    </SessionCardSubHeader>
+    </CardSubHeader>
   );
 };
 

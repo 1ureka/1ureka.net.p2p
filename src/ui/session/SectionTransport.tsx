@@ -3,9 +3,10 @@ import { Box, Typography } from "@mui/material";
 
 import { centerTextSx, ellipsisSx } from "@/ui/theme";
 import { GithubIconButton, GithubTooltip } from "@/ui/components/Github";
+import { CardSubHeader } from "@/ui/components/Card";
 import { ConnectionIndicator } from "@/ui/session/SessionCardIndicator";
 import { SessionCardCopyButton } from "@/ui/session/SessionCardCopyBtn";
-import { SessionCardLabel, SessionCardSubHeader, SessionCardSubBody } from "@/ui/session/SessionCard";
+import { SessionCardLabel, SessionCardSubBody } from "@/ui/session/SessionCard";
 
 import { handleStop } from "@/transport-state/handlers";
 import { useSession } from "@/transport-state/store";
@@ -16,17 +17,19 @@ const TransportHeader = () => {
   const stopDisabled = ["disconnected", "joining", "aborting", "failed"].includes(status);
 
   return (
-    <SessionCardSubHeader>
+    <CardSubHeader>
       <Typography variant="subtitle2" sx={{ color: "text.secondary", ...centerTextSx }}>
         Transport
       </Typography>
+
+      <Box sx={{ flex: 1 }} />
 
       <GithubTooltip title={"Stop connection"}>
         <GithubIconButton disabled={stopDisabled} loading={stopLoading} onClick={() => handleStop()}>
           <StopRoundedIcon fontSize="small" />
         </GithubIconButton>
       </GithubTooltip>
-    </SessionCardSubHeader>
+    </CardSubHeader>
   );
 };
 

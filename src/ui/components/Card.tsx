@@ -1,4 +1,5 @@
 import { Box, Divider, type BoxProps } from "@mui/material";
+import { generateColorMix } from "@/ui/theme";
 
 const Card = ({ children, sx }: { children: React.ReactNode; sx?: BoxProps["sx"] }) => {
   return (
@@ -21,4 +22,15 @@ const CardHeader = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-export { Card, CardHeader };
+const CardSubHeader = ({ children, sx }: { children: React.ReactNode; sx?: BoxProps["sx"] }) => {
+  const bgcolor = ({ palette }: { palette: { background: { paper: string; default: string } } }) =>
+    generateColorMix(palette.background.paper, palette.background.default, 50);
+
+  return (
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1, minHeight: 40, pl: 2, pr: 1, bgcolor, ...sx }}>
+      {children}
+    </Box>
+  );
+};
+
+export { Card, CardHeader, CardSubHeader };

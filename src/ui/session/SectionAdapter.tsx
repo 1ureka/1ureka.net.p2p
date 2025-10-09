@@ -4,8 +4,9 @@ import { Box, Typography } from "@mui/material";
 
 import { centerTextSx, ellipsisSx } from "@/ui/theme";
 import { GithubIconButton, GithubTooltip } from "@/ui/components/Github";
+import { CardSubHeader } from "@/ui/components/Card";
 import { ConnectionIndicator } from "@/ui/session/SessionCardIndicator";
-import { SessionCardLabel, SessionCardSubHeader, SessionCardSubBody } from "@/ui/session/SessionCard";
+import { SessionCardLabel, SessionCardSubBody } from "@/ui/session/SessionCard";
 
 import { handleStartHostAdapter, handleStartClientAdapter, handleStopAdapter } from "@/adapter-state/handlers";
 import { useSession } from "@/transport-state/store";
@@ -47,10 +48,12 @@ const AdapterHeader = () => {
   };
 
   return (
-    <SessionCardSubHeader>
+    <CardSubHeader>
       <Typography variant="subtitle2" sx={{ color: "text.secondary", ...centerTextSx }}>
         Adapter
       </Typography>
+
+      <Box sx={{ flex: 1 }} />
 
       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
         <GithubTooltip title={"Start adapter"}>
@@ -65,14 +68,13 @@ const AdapterHeader = () => {
           </GithubIconButton>
         </GithubTooltip>
       </Box>
-    </SessionCardSubHeader>
+    </CardSubHeader>
   );
 };
 
 const AdapterBody = () => {
   const instance = useAdapter((state) => state.instance);
-  const mappings = useAdapter((state) => state.mappings);
-  const rules = useAdapter((state) => state.rules);
+  const sockets = useAdapter((state) => state.sockets);
   const status = instance ? "connected" : "failed";
 
   return (
@@ -80,9 +82,9 @@ const AdapterBody = () => {
       <SessionCardLabel>Status</SessionCardLabel>
       <ConnectionIndicator status={status} />
 
-      <SessionCardLabel>Configs</SessionCardLabel>
+      <SessionCardLabel>Connections</SessionCardLabel>
       <Typography variant="body2" sx={ellipsisSx}>
-        {instance ? (instance === "host" ? `${rules.length} rules` : `${mappings.length} mappings`) : "--"}
+        {instance ? `${sockets.length} logical sockets active` : "--"}
       </Typography>
     </SessionCardSubBody>
   );
