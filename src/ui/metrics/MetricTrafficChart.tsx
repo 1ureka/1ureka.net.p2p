@@ -9,6 +9,8 @@ const formatBytes = (bytes: number) => {
   else return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
+const uuid = crypto.randomUUID();
+
 const TrafficChart = ({ direction }: { direction: "egress" | "ingress" }) => {
   const points = useSession((state) => state.traffic);
   const color = direction === "egress" ? theme.palette.primary.main : theme.palette.success.main;
@@ -46,9 +48,9 @@ const TrafficChart = ({ direction }: { direction: "egress" | "ingress" }) => {
       yAxis={[yAxis]}
       series={[series]}
       grid={{ vertical: true, horizontal: true }}
-      sx={{ "& .MuiAreaElement-root": { fill: "url(#Gradient)" }, mb: -2 }}
+      sx={{ "& .MuiAreaElement-root": { fill: `url(#Gradient-${uuid}-${direction})` }, mb: -2 }}
     >
-      <linearGradient id="Gradient" x1="0%" y1="100%" x2="0%" y2="0%">
+      <linearGradient id={`Gradient-${uuid}-${direction}`} x1="0%" y1="100%" x2="0%" y2="0%">
         <stop offset="0%" stopColor={color} stopOpacity={0.3} />
         <stop offset="100%" stopColor={color} stopOpacity={0} />
       </linearGradient>
