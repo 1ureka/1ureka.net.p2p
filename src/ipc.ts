@@ -2,8 +2,7 @@
 
 enum IPCChannel {
   AdapterStartHost = "adapter.start.host",
-  AdapterCreateRule = "adapter.create.rule",
-  AdapterRemoveRule = "adapter.remove.rule",
+  AdapterChangeRules = "adapter.change.rules",
   AdapterStartClient = "adapter.start.client",
   AdapterCreateMapping = "adapter.create.mapping",
   AdapterRemoveMapping = "adapter.remove.mapping",
