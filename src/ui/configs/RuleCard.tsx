@@ -1,15 +1,13 @@
 import InfoOutlineRoundedIcon from "@mui/icons-material/InfoOutlineRounded";
-import HorizontalRuleRoundedIcon from "@mui/icons-material/HorizontalRuleRounded";
-import RadioButtonUncheckedRoundedIcon from "@mui/icons-material/RadioButtonUncheckedRounded";
 import { Box, Divider, Stack, Typography } from "@mui/material";
-import { GithubTooltip } from "@/ui/components/Github";
-import { Card, CardHeader } from "@/ui/components/Card";
+import { GithubSwitch, GithubTooltip } from "@/ui/components/Github";
+import { Card, CardHeader, CardSubHeader } from "@/ui/components/Card";
 
 import { centerTextSx, ellipsisSx } from "@/ui/theme";
 import { useAdapter } from "@/adapter-state/store";
 import { useState } from "react";
-import type { Rules } from "@/adapter/adapter-host";
 import { handleChangeRules } from "@/adapter-state/handlers";
+import type { Rules } from "@/adapter/adapter-host";
 
 const configs: ReadonlyArray<{ rule: keyof Rules; label: string; description: string }> = [
   {
@@ -37,13 +35,14 @@ const configs: ReadonlyArray<{ rule: keyof Rules; label: string; description: st
 const RuleCard = () => {
   const rules = useAdapter((state) => state.rules);
   const instance = useAdapter((state) => state.instance);
-
   const disabled = instance === null;
+
+  // 注意: 由於是 IPC，因此很快，loading 只單純在 handler 避免重複而已，不會真的 disable UI
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleChange = async (rule: keyof Rules, value: boolean) => {
-    if (disabled) return;
+    if (disabled || loading) return;
     setLoading(true);
     try {
       await handleChangeRules({ ...rules, [rule]: value });
@@ -52,6 +51,10 @@ const RuleCard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const createChangeHandler = (rule: keyof Rules) => () => {
+    handleChange(rule, !rules[rule]);
   };
 
   return (
@@ -76,7 +79,14 @@ const RuleCard = () => {
         </Box>
       </CardHeader>
 
-      {/* TODO: 呈現四個選項，disabled 時提示 actionDisabled ? "Start adapter first" : tooltip */}
+      {error && (
+        <CardSubHeader>
+          <Typography variant="body2" sx={{ color: "error.main" }}>
+            {error}
+          </Typography>
+        </CardSubHeader>
+      )}
+
       <Stack>
         {configs.map(({ rule, label, description }, i) => (
           <Box key={rule}>
@@ -90,44 +100,9 @@ const RuleCard = () => {
                 </Typography>
               </Box>
 
-              {/* TODO: switch */}
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Typography variant="caption" sx={centerTextSx}>
-                  On
-                </Typography>
-                <Box
-                  sx={{
-                    position: "relative",
-                    display: "flex",
-                    borderRadius: 1.5,
-                    transition: "background-color 0.2s",
-                    bgcolor: "primary.dark",
-                    outline: "2px solid",
-                    outlineColor: "transparent",
-                  }}
-                >
-                  <Box sx={{ display: "grid", placeItems: "center", p: 0.5 }}>
-                    <HorizontalRuleRoundedIcon
-                      sx={{ rotate: "90deg", fontSize: 16, scale: "1", transition: "scale 0.2s" }}
-                    />
-                  </Box>
-                  <Box sx={{ display: "grid", placeItems: "center", p: 0.5 }}>
-                    <RadioButtonUncheckedRoundedIcon sx={{ fontSize: 16, scale: "0", transition: "scale 0.2s" }} />
-                  </Box>
-
-                  <Box
-                    sx={{
-                      position: "absolute",
-                      inset: 0,
-                      left: "50%",
-                      m: "2px",
-                      borderRadius: 1.5,
-                      bgcolor: "text.primary",
-                      transition: "background-color 0.2s, left 0.2s",
-                    }}
-                  />
-                </Box>
-              </Box>
+              <GithubTooltip title={disabled ? "Start adapter first" : ""}>
+                <GithubSwitch checked={rules[rule]} onChange={createChangeHandler(rule)} disabled={disabled} />
+              </GithubTooltip>
             </Box>
             {i < configs.length - 1 && <Divider />}
           </Box>
