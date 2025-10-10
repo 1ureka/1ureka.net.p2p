@@ -1,4 +1,4 @@
-import DirectionsBoatRoundedIcon from "@mui/icons-material/DirectionsBoatRounded";
+import NatRoundedIcon from "@mui/icons-material/NatRounded";
 import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
 import { Box, BoxProps, Button, Tab, Tabs, Typography } from "@mui/material";
 import { centerTextSx } from "@/ui/theme";
@@ -9,7 +9,7 @@ import { IPCChannel } from "@/ipc";
 const HeaderTitle = () => {
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-      <DirectionsBoatRoundedIcon fontSize="large" color="primary" />
+      <NatRoundedIcon fontSize="large" color="primary" />
       <Typography variant="h5" component="h1" sx={centerTextSx}>
         1ureka.net.p2p
       </Typography>
