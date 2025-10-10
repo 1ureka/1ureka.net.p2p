@@ -46,25 +46,34 @@ export { reportLog, reportError, reportWarn };
 const createTrafficReporter = () => {
   const INTERVAL_MS = 1000; // 每秒回報一次
   const MAX_AGE_MS = 120000; // 保留 2 分鐘資料
+  const INTERVAL_FILTER_MS = 60000; // 每 60 秒過濾一次
 
   let accumulatedEgress = 0;
   let accumulatedIngress = 0;
   let intervalId: ReturnType<typeof setInterval> | null = null;
+  let lastFilter = 0;
 
   const startReporting = () => {
     if (intervalId !== null) return; // 已經在運行
 
     accumulatedEgress = 0;
     accumulatedIngress = 0;
+    lastFilter = Date.now();
 
     intervalId = setInterval(() => {
       const now = Date.now();
       const point: TrafficPoint = { timestamp: now, egress: accumulatedEgress, ingress: accumulatedIngress };
 
       useSession.setState((state) => {
-        const cutoffTime = now - MAX_AGE_MS;
-        const filtered = state.traffic.filter((p) => p.timestamp >= cutoffTime);
-        return { traffic: [...filtered, point] };
+        const shouldFilter = now - lastFilter >= INTERVAL_FILTER_MS; // prevent animation jitter
+        if (shouldFilter) {
+          lastFilter = now;
+          const cutoffTime = now - MAX_AGE_MS;
+          const filtered = state.traffic.filter((p) => p.timestamp >= cutoffTime);
+          return { traffic: [...filtered, point] };
+        }
+
+        return { traffic: [...state.traffic, point] };
       });
 
       // 重置累計值

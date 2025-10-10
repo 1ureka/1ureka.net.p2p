@@ -12,7 +12,9 @@ type SocketsPoint = {
 const useSocketPoints = create<{ points: SocketsPoint[] }>((set) => {
   const MAX_AGE_MS = 60000;
   const INTERVAL_MS = 1000;
+  const INTERVAL_FILTER_MS = 60000;
   let counts = 0;
+  let lastFilter = Date.now();
 
   useAdapter.subscribe((curr, prev) => {
     if (curr.sockets !== prev.sockets) {
@@ -25,9 +27,15 @@ const useSocketPoints = create<{ points: SocketsPoint[] }>((set) => {
     const point = { timestamp: now, count: counts };
 
     set((state) => {
-      const cutoffTime = now - MAX_AGE_MS;
-      const filtered = state.points.filter((p) => p.timestamp >= cutoffTime);
-      return { points: [...filtered, point] };
+      const shouldFilter = now - lastFilter >= INTERVAL_FILTER_MS; // prevent animation jitter
+      if (shouldFilter) {
+        lastFilter = now;
+        const cutoffTime = now - MAX_AGE_MS;
+        const filtered = state.points.filter((p) => p.timestamp >= cutoffTime);
+        return { points: [...filtered, point] };
+      }
+
+      return { points: [...state.points, point] };
     });
   }, INTERVAL_MS);
 
