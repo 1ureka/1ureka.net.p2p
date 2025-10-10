@@ -5,11 +5,11 @@ import { useAdapter } from "@/adapter-state/store";
 const displayMap = {
   stopped: {
     title: "Adapter not started",
-    description: "Start the adapter first to create port mappings and connect local and remote ports.",
+    description: "Start the adapter first to create port mappings and connect to peer services.",
   },
   empty: {
     title: "No mappings yet",
-    description: "You haven't added any port mappings yet. Create one to connect local and remote ports.",
+    description: "You haven't added any port mappings yet. Create one to connect to peer services.",
   },
 };
 

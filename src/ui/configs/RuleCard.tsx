@@ -25,11 +25,6 @@ const configs: ReadonlyArray<{ rule: keyof Rules; label: string; description: st
     label: "LAN Access",
     description: "Allow access devices in local network (NAS, databases, etc.)",
   },
-  {
-    rule: "allowExternal",
-    label: "External Access",
-    description: "Allow access public internet and external services",
-  },
 ];
 
 const RuleCard = () => {

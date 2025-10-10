@@ -29,13 +29,15 @@ function createClientAdapter(send: (packet: Buffer) => void) {
     };
 
     if (sockets.has(socketPair)) {
-      reportError({ message: `Socket ${stringifySocketPair(socketPair)} already exists, closing new connection.` });
+      reportError({
+        message: `Duplicate socket ${stringifySocketPair(socketPair)} detected. Rejecting new connection.`,
+      });
       socket.destroy();
       return;
     }
 
     sockets.set(socketPair, socket);
-    reportLog({ message: `New socket ${stringifySocketPair(socketPair)} connected.` });
+    reportLog({ message: `Socket ${stringifySocketPair(socketPair)} connected successfully.` });
     reportSockets({ type: "add", pair: socketPair });
 
     try {
@@ -44,8 +46,8 @@ function createClientAdapter(send: (packet: Buffer) => void) {
       }
     } catch (error) {
       reportError({
-        message: `Error generating CONNECT packet for socket ${stringifySocketPair(socketPair)}`,
-        data: { error },
+        message: `Failed to generate CONNECT packet for socket ${stringifySocketPair(socketPair)}.`,
+        data: error,
       });
       socket.destroy();
       return;
@@ -54,8 +56,8 @@ function createClientAdapter(send: (packet: Buffer) => void) {
     const handleErrorFromLocal = (error: Error) => {
       socket.destroy(); // 觸發 close 事件，close 事件會通知對端
       reportError({
-        message: `TCP socket for socket ${stringifySocketPair(socketPair)} encountered an error and closing`,
-        data: { error },
+        message: `Socket ${stringifySocketPair(socketPair)} encountered an error. Closing connection.`,
+        data: error,
       });
     };
 
@@ -66,8 +68,8 @@ function createClientAdapter(send: (packet: Buffer) => void) {
         }
       } catch (error) {
         reportError({
-          message: `Error generating DATA packets for socket ${stringifySocketPair(socketPair)}`,
-          data: { error },
+          message: `Failed to generate DATA packets for socket ${stringifySocketPair(socketPair)}.`,
+          data: error,
         });
       }
     };
@@ -79,8 +81,8 @@ function createClientAdapter(send: (packet: Buffer) => void) {
         }
       } catch (error) {
         reportError({
-          message: `Error generating CLOSE packet for socket ${stringifySocketPair(socketPair)}`,
-          data: { error },
+          message: `Failed to generate CLOSE packet for socket ${stringifySocketPair(socketPair)}.`,
+          data: error,
         });
       }
 
@@ -89,7 +91,7 @@ function createClientAdapter(send: (packet: Buffer) => void) {
       socket.off("data", handleDataFromLocal);
       sockets.delete(socketPair);
 
-      reportLog({ message: `TCP socket closed for socket ${stringifySocketPair(socketPair)}` });
+      reportLog({ message: `Socket ${stringifySocketPair(socketPair)} closed.` });
       reportSockets({ type: "del", pair: socketPair });
     };
 
@@ -103,17 +105,12 @@ function createClientAdapter(send: (packet: Buffer) => void) {
    */
   const handlePacketFromRTC = (_: unknown, buffer: Buffer) => {
     const handleDataFromRTC = (socketPair: SocketPair, data: Buffer) => {
-      const success = sockets.get(socketPair)?.write(data);
-      if (!success) {
-        return reportError({
-          message: `Socket ${stringifySocketPair(socketPair)} does not exist or is not writable, cannot process incoming packet.`,
-        });
-      }
+      sockets.get(socketPair)?.write(data);
     };
 
     const handleCloseFromRTC = (socketPair: SocketPair) => {
       sockets.get(socketPair)?.destroy();
-      reportLog({ message: `TCP socket closed by remote server for socket ${stringifySocketPair(socketPair)}` });
+      reportLog({ message: `Socket ${stringifySocketPair(socketPair)} closed by remote server.` });
     };
 
     try {
@@ -126,7 +123,7 @@ function createClientAdapter(send: (packet: Buffer) => void) {
         }
       }
     } catch (error) {
-      reportError({ message: "Error processing incoming RTC packet", data: { error } });
+      reportError({ message: "Failed to process incoming RTC packet.", data: error });
       return;
     }
   };
@@ -163,7 +160,7 @@ function createClientAdapter(send: (packet: Buffer) => void) {
       server.off("listening", serverListeningHandler);
 
       resolve(server);
-      reportLog({ message: `Client Adapter listening on ${local}, forwarding to ${remote}` });
+      reportLog({ message: `Client adapter listening on ${local}, forwarding to ${remote}.` });
     };
 
     const serverErrorHandler = (error: Error) => {
@@ -173,7 +170,7 @@ function createClientAdapter(send: (packet: Buffer) => void) {
       tryCatchSync(() => server.close());
 
       reject(error);
-      reportError({ message: `Client Adapter server error on ${local}`, data: { error } });
+      reportError({ message: `Client adapter failed to start on ${local}.`, data: error });
     };
 
     server.on("connection", serverConnectionHandler);
@@ -197,7 +194,7 @@ function createClientAdapter(send: (packet: Buffer) => void) {
       reportMappings({ type: "add", id, map: parsedMap });
       return id;
     } catch (error) {
-      reportError({ message: `Error creating mapping for ${stringifySocketPair(map)}`, data: error });
+      reportError({ message: `Failed to create mapping for ${stringifySocketPair(map)}.`, data: error });
     }
   };
 
@@ -209,7 +206,7 @@ function createClientAdapter(send: (packet: Buffer) => void) {
     const { promise, resolve } = defer<void>();
 
     if (!server) {
-      return reportError({ message: `Mapping with ID ${id} does not exist.` });
+      return reportError({ message: `Cannot remove mapping: ID ${id} not found.` });
     }
 
     const sockets = serverSockets.get(id);

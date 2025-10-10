@@ -42,7 +42,7 @@ export type ConnectionLogEntry = {
   module: string;
   message: string;
   timestamp: number;
-  data?: Record<string, unknown>;
+  data?: unknown;
 };
 
 // 合併連續重複的日誌條目

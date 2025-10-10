@@ -35,7 +35,7 @@ type Session = Omit<z.infer<typeof SessionSchema>, "status">;
 const createSession = async (): Promise<Session> => {
   const hostname = await window.electron.request(IPCChannel.OSInfo);
   if (typeof hostname !== "string" || hostname.trim().length === 0) {
-    throw new Error("Invalid hostname from IPC");
+    throw new Error("Invalid hostname received from IPC.");
   }
 
   const response = await fetch(`${API_BASE}/session`, {
@@ -45,7 +45,7 @@ const createSession = async (): Promise<Session> => {
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to create session, status code: ${response.status}`);
+    throw new Error(`Failed to create session. Server responded with status ${response.status}.`);
   }
 
   const session = SessionSchema.parse(await response.json());
@@ -59,7 +59,7 @@ const createSession = async (): Promise<Session> => {
 const joinSession = async (id: string): Promise<Session> => {
   const hostname = await window.electron.request(IPCChannel.OSInfo);
   if (typeof hostname !== "string" || hostname.trim().length === 0) {
-    throw new Error("Invalid hostname from IPC");
+    throw new Error("Invalid hostname received from IPC.");
   }
 
   const response = await fetch(`${API_BASE}/session/${id}`, {
@@ -69,7 +69,7 @@ const joinSession = async (id: string): Promise<Session> => {
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to join session, status code: ${response.status}`);
+    throw new Error(`Failed to join session. Server responded with status ${response.status}.`);
   }
 
   const session = SessionSchema.parse(await response.json());
@@ -86,7 +86,7 @@ async function* pollingSession(id: string, event: "join" | "offer" | "answer") {
 
     const response = await fetch(`${API_BASE}/session/${id}?for=${event}`);
     if (response.status === 404) {
-      throw new Error("Session has been deleted due to TTL");
+      throw new Error("Session expired and was deleted.");
     }
 
     const session = SessionSchema.parse(await response.json());
@@ -108,7 +108,7 @@ const sendSignal = async (id: string, data: z.infer<typeof SignalRequestSchema>)
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to send ${parsedData.type}, status code: ${response.status}`);
+    throw new Error(`Failed to send ${parsedData.type}. Server responded with status ${response.status}.`);
   }
 };
 

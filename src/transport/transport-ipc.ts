@@ -17,10 +17,10 @@ const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
       } else if (ArrayBuffer.isView(buffer)) {
         window.electron.send(IPCChannel.FromRTC, buffer);
       } else {
-        reportError({ message: "Received invalid data type from DataChannel" });
+        reportError({ message: "Invalid data type received from DataChannel." });
       }
     } catch (error) {
-      reportError({ message: "Failed to process data received from DataChannel", data: error });
+      reportError({ message: "Cannot process data from DataChannel.", data: error });
     }
   };
 
@@ -32,10 +32,10 @@ const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
       } else if (ArrayBuffer.isView(buffer)) {
         sender.push(buffer as ArrayBufferView<ArrayBuffer>);
       } else {
-        reportError({ message: "Received invalid data type from IPC" });
+        reportError({ message: "Invalid data type received from IPC." });
       }
     } catch (error) {
-      reportError({ message: "Failed to send data through DataChannel", data: error });
+      reportError({ message: "Cannot send data through DataChannel.", data: error });
     }
   };
 

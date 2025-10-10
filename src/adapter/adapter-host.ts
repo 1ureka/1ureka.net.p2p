@@ -7,7 +7,7 @@ import { SocketPairMap, stringifySocketPair, type SocketPair, classifyAddress } 
 /**
  * Host 端的四種訪問權限設置
  */
-type Rules = { allowIPv4Local: boolean; allowIPv6Local: boolean; allowLAN: boolean; allowExternal: boolean };
+type Rules = { allowIPv4Local: boolean; allowIPv6Local: boolean; allowLAN: boolean };
 
 /**
  * 建立 Host 端的 Adapter (連接到本地的 TCP 伺服器)
@@ -19,7 +19,7 @@ function createHostAdapter(send: (packet: Buffer) => void) {
   const reassembler = createReassembler();
   const sockets = new SocketPairMap<net.Socket>();
   const socketPromises = new SocketPairMap<Promise<void>>();
-  const rules = { allowIPv4Local: true, allowIPv6Local: false, allowLAN: false, allowExternal: false };
+  const rules = { allowIPv4Local: true, allowIPv6Local: false, allowLAN: false };
 
   /**
    * 檢查 SocketPair 是否符合當前的訪問規則
@@ -29,20 +29,24 @@ function createHostAdapter(send: (packet: Buffer) => void) {
       ipv4local: { key: "allowIPv4Local", label: "IPv4 local" },
       ipv6local: { key: "allowIPv6Local", label: "IPv6 local" },
       lan: { key: "allowLAN", label: "LAN" },
-      external: { key: "allowExternal", label: "External" },
     } as const;
 
     const type = classifyAddress(socketPair.dstAddr);
     const pairStr = stringifySocketPair(socketPair);
 
     if (type === "invalid") {
-      reportWarn({ message: `Socket ${pairStr} has invalid IP address, rejecting CONNECT.` });
+      reportWarn({ message: `Invalid IP address for socket ${pairStr}. Rejecting CONNECT request.` });
+      return false;
+    }
+
+    if (type === "external") {
+      reportWarn({ message: `External address detected for socket ${pairStr}. Rejecting CONNECT request.` });
       return false;
     }
 
     const rule = ruleMap[type];
     if (rule && !rules[rule.key]) {
-      reportWarn({ message: `Socket ${pairStr} ${rule.label} connection not allowed by rules, rejecting CONNECT.` });
+      reportWarn({ message: `${rule.label} connection not allowed for socket ${pairStr}. Rejecting CONNECT request.` });
       return false;
     }
 
@@ -55,7 +59,7 @@ function createHostAdapter(send: (packet: Buffer) => void) {
   const handleConnectFromRTC = (socketPair: SocketPair) => {
     if (sockets.has(socketPair)) {
       reportWarn({
-        message: `Socket ${stringifySocketPair(socketPair)} already exists, ignoring CONNECT request.`,
+        message: `Socket ${stringifySocketPair(socketPair)} already exists. Ignoring duplicate CONNECT request.`,
       });
       for (const packet of chunker.generate(socketPair, PacketEvent.CLOSE, Buffer.alloc(0))) {
         send(packet);
@@ -76,7 +80,7 @@ function createHostAdapter(send: (packet: Buffer) => void) {
       new Promise((res) => {
         socket.on("connect", () => {
           res();
-          reportLog({ message: `TCP socket connected for socket ${stringifySocketPair(socketPair)}` });
+          reportLog({ message: `Socket ${stringifySocketPair(socketPair)} connected successfully.` });
           reportSockets({ type: "add", pair: socketPair });
         });
       })
@@ -87,8 +91,8 @@ function createHostAdapter(send: (packet: Buffer) => void) {
     const handleErrorFromLocal = (error: Error) => {
       socket.destroy(); // 觸發 close 事件，close 事件會通知對端
       reportError({
-        message: `TCP socket for socket ${stringifySocketPair(socketPair)} encountered an error and closing`,
-        data: { error },
+        message: `Socket ${stringifySocketPair(socketPair)} encountered an error. Closing connection.`,
+        data: error,
       });
     };
 
@@ -99,8 +103,8 @@ function createHostAdapter(send: (packet: Buffer) => void) {
         }
       } catch (error) {
         reportError({
-          message: `Error processing data for socket ${stringifySocketPair(socketPair)}`,
-          data: { error },
+          message: `Failed to process data for socket ${stringifySocketPair(socketPair)}.`,
+          data: error,
         });
       }
     };
@@ -112,8 +116,8 @@ function createHostAdapter(send: (packet: Buffer) => void) {
         }
       } catch (error) {
         reportError({
-          message: `Error processing close for socket ${stringifySocketPair(socketPair)}`,
-          data: { error },
+          message: `Failed to process close event for socket ${stringifySocketPair(socketPair)}.`,
+          data: error,
         });
       }
 
@@ -123,7 +127,7 @@ function createHostAdapter(send: (packet: Buffer) => void) {
       sockets.delete(socketPair);
       socketPromises.delete(socketPair);
 
-      reportLog({ message: `TCP socket closed for socket ${stringifySocketPair(socketPair)}` });
+      reportLog({ message: `Socket ${stringifySocketPair(socketPair)} closed.` });
       reportSockets({ type: "del", pair: socketPair });
     };
 
@@ -140,14 +144,14 @@ function createHostAdapter(send: (packet: Buffer) => void) {
       const success = sockets.get(socketPair)?.write(data);
       if (!success) {
         return reportError({
-          message: `Socket ${stringifySocketPair(socketPair)} does not exist or is not writable, cannot process incoming packet.`,
+          message: `Cannot process incoming packet: socket ${stringifySocketPair(socketPair)} does not exist or is not writable.`,
         });
       }
     };
 
     const handleCloseFromRTC = (socketPair: SocketPair) => {
       sockets.get(socketPair)?.destroy();
-      reportLog({ message: `TCP socket closed by remote client for socket ${stringifySocketPair(socketPair)}` });
+      reportLog({ message: `Socket ${stringifySocketPair(socketPair)} closed by remote client.` });
     };
 
     try {
@@ -160,7 +164,7 @@ function createHostAdapter(send: (packet: Buffer) => void) {
 
           if (!promise) {
             const pairStr = stringifySocketPair(pair);
-            reportError({ message: `Socket ${pairStr} does not exist, cannot process incoming DATA packet.` });
+            reportError({ message: `Cannot process DATA packet: socket ${pairStr} not found.` });
           } else {
             // 利用 then 會順序執行的特性，保持 TCP 資料順序
             promise.then(() => handleDataFromRTC(pair, data));
@@ -171,7 +175,7 @@ function createHostAdapter(send: (packet: Buffer) => void) {
         }
       }
     } catch (error) {
-      reportError({ message: "Error processing incoming RTC packet", data: { error } });
+      reportError({ message: "Failed to process incoming RTC packet.", data: error });
       return;
     }
   };
@@ -181,7 +185,7 @@ function createHostAdapter(send: (packet: Buffer) => void) {
   const handleChangeRules = (_: unknown, configs: Rules) => {
     Object.assign(rules, configs);
     reportRules({ type: "set", rules: { ...rules } });
-    reportLog({ message: "Updated host access rules", data: { rules } });
+    reportLog({ message: "Host access rules updated successfully.", data: { rules } });
     return true;
   };
 
