@@ -20,6 +20,7 @@ enum IPCChannel {
   OSInfo = "utils.os.info",
   PrettyFormat = "utils.pretty.format",
   DeveloperTools = "utils.developer.tools",
+  OpenExternalLink = "utils.open.external.link",
 }
 
 export { IPCChannel };

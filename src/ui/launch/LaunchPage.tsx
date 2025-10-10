@@ -1,6 +1,7 @@
 import { Box, Typography } from "@mui/material";
 import { memo } from "react";
 import { CreateSessionCard, JoinSessionCard } from "@/ui/launch/LaunchCard";
+import { IPCChannel } from "@/ipc";
 
 const LaunchPage = memo(() => (
   <Box sx={{ display: "grid", placeItems: "center", gridTemplateRows: "1fr auto 1fr", flex: 1, gap: 5, py: 3 }}>
@@ -30,6 +31,12 @@ const LaunchPage = memo(() => (
           component="a"
           href="#"
           sx={{ color: "primary.main", textDecoration: "none", "&:hover": { textDecoration: "underline" } }}
+          onClick={() => {
+            window.electron.request(
+              IPCChannel.OpenExternalLink,
+              "https://github.com/1ureka/1ureka.net.p2p?tab=readme-ov-file#1urekanetp2p"
+            );
+          }}
         >
           usage guide
         </Typography>
