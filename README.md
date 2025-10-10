@@ -1,134 +1,133 @@
 # 1ureka.net.p2p
 
 > [!IMPORTANT]
-> **一個能讓你把任意 TCP 服務透過 WebRTC 分享給遠端的桌面工具。**
+> **Share any TCP service — from Minecraft to AI APIs — directly, securely, and without configuration.**
 
-我相信網路應該是自由的 ——
-不該因為沒有固定 IP、沒有設定 Port Forwarding，或是不想付費買代理服務、租用伺服器，就失去分享與連線的可能性。
+The internet should be free and accessible —
+you shouldn't lose the ability to share and connect just because you don't have a static IP, haven't set up port forwarding, or don't want to pay for proxy services or rent a server.
 
-## 你能用它做什麼？
+## What can you do with it?
 
-- 與朋友分享 **Minecraft Dedicated Server** 或任何基於 TCP 的遊戲伺服器。
-- 在外地筆電上**直接訪問家中電腦的開發網站**，例如正在測試的 **Vite / Next.js / Laravel** 專案。
-- 讓團隊**連進你電腦上運行的 Jupyter Notebook 或 Code Server**，一起撰寫、除錯、或分析程式。
-- 共享**本地 AI / LLM / Stable Diffusion API**，讓團隊能在遠端就使用你的本地大語言模型或圖片生成服務。
-- 連線至自架的**協作平台**（如 **Mattermost、Wiki.js、Penpot** 等），即時編輯與討論。
-- 從外部安全地**存取內網資源**，例如家中的 NAS、公司資料庫或內部網站。
+- Share your **Minecraft Dedicated Server** or any TCP-based game server with friends.
+- **Access your home development environment** from a remote laptop — whether it's a **Vite, Next.js, or Laravel** project you're testing.
+- Let your team **connect to Jupyter Notebook or Code Server** running on your machine to code, debug, or analyze together.
+- Share your **local AI, LLM, or Stable Diffusion API** so your team can use your language models or image generation services remotely.
+- Connect to your **self-hosted collaboration platforms** like **Mattermost, Wiki.js, or Penpot** for real-time editing and discussion.
+- Securely **access internal network resources** from outside — like your home NAS, company databases, or intranet sites.
 
-## 為什麼沒有流量限制或付費方案？
+## Why It’s Free — No Bandwidth Limits, No Paid Plans
 
-因為這不是商業代理服務，而是基於 **開放技術** 開發的工具：
+Because this isn't a commercial proxy service — it's a tool built on **open technologies**:
 
-- **Electron**：跨平台桌面環境，免安裝網路驅動或修改系統設定。
-- **WebRTC**：內建 NAT 穿透與端對端加密，確保傳輸安全並能直接連線。
-- **Node.js 的 `net` 模組**：負責 TCP socket 的建立與轉發，支援所有 TCP 協定。
+- **Electron**: Cross-platform desktop environment with no network drivers or system modifications required.
+- **WebRTC**: Built-in NAT traversal and end-to-end encryption for secure, direct peer-to-peer connections.
+- **Node.js `net` module**: Handles TCP socket creation and forwarding, supporting all TCP protocols.
 
-這些基礎技術本身就是自由、開放的，因此 **沒有額外流量限制，也不需要收費**。
+These technologies are free and open by nature, so **there are no bandwidth limits or fees**.
 
 ---
 
-# 如何使用？
+# How to Use
 
-## 網路需求
+## Network Requirements
 
-只要你的網路能正常進行 **線上遊戲** 或 **視訊通話**，就能使用本工具。
+If your network can handle **online gaming** or **video calls**, you're good to go.
 
-- **最常見且穩定的情況**
-  - 家用光纖或寬頻網路 (Wi-Fi)
-  - 手機行動熱點（4G / 5G）
-  - 學校或公司具備對外 IP 的網路
+- **Works best with:**
+  - Home fiber or broadband (Wi-Fi)
+  - Mobile hotspots (4G / 5G)
+  - School or corporate networks with public IPs
 
-- **可能較難使用的情況**
-  - 公用 Wi-Fi（咖啡廳、旅館等，通常會封鎖連線）
-  - 嚴格管制的公司防火牆
+- **May have trouble with:**
+  - Public Wi-Fi (cafes, hotels — often block connections)
+  - Strict corporate firewalls
 
-## 下載與啟動
+## Download & Launch
 
-1. 前往 [Releases 頁面](https://github.com/1ureka/1ureka.net.p2p/releases)下載最新的 **zip 壓縮檔**。
-2. 解壓縮後，資料夾內會包含一個 **可執行檔** (例如 Windows 是 `*.exe`)。
-3. 直接開啟該可執行檔就能啟動應用程式。
-   - **所有應用資料**都會存在於解壓縮後的資料夾中，不會寫入系統。
-   - 想要**移除應用**，只需刪除整個資料夾即可，無需額外清理。
+1. Go to the [Releases page](https://github.com/1ureka/1ureka.net.p2p/releases) and download the latest **zip file**.
+2. Extract it — you'll find an **executable** inside (e.g., `*.exe` on Windows).
+3. Run the executable to launch the app.
+   - **All app data** stays in the extracted folder — nothing is written to your system.
+   - To **uninstall**, just delete the folder. No cleanup needed.
 
-## 建立連線
+## Establishing a Connection
 
-如果你不知道該如何選擇，可以先看下方[應用場景](#應用場景)的說明。
+Not sure where to start? Check out the [Use Cases](#use-cases) section below.
 
-| 角色   | 建立 Session                                                                     | 管理方式                                                                               |
-| ------ | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| Host   | 啟動後由信令伺服器產生唯一 **Session ID**，將此 ID 分享給 Client，就能建立會話。 | **規則管理**：可動態設定存取範圍（見下表[「Host 規則說明」](#host-規則說明)）。        |
-| Client | 從 Host 取得 **Session ID**，送出加入請求並經 Host 同意後，Session 即建立完成。  | **映射表管理**：可動態新增/刪除映射表（見下表[「Client 映射說明」](#client-映射說明)） |
+| Role   | Session Setup                                                                                                      | Management                                                                                                    |
+| ------ | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| Host   | Once launched, the signaling server generates a unique **Session ID**. Share this ID with the Client.              | **Rule Management**: Dynamically configure access scope (see [Host Rules](#host-rules) below).                |
+| Client | Obtain the **Session ID** from the Host, send a join request, and wait for Host approval to establish the session. | **Mapping Management**: Dynamically add/remove port mappings (see [Client Mappings](#client-mappings) below). |
 
-### Host 規則說明
+### Host Rules
 
-Host 可透過下列選項控制哪些網路範圍能被 Client 存取，這四個選項將會在你創建會話後出現在畫面中：
+The Host can control which network ranges the Client can access using the following options (visible after session creation):
 
-| Boolean          | 實際匹配範圍                                    | 說明                               |
-| ---------------- | ----------------------------------------------- | ---------------------------------- |
-| `allowIPv4Local` | `127.0.0.0/8`                                   | 允許本機 TCP 服務                  |
-| `allowIPv6Local` | `::1`                                           | 允許 IPv6 本機服務                 |
-| `allowLAN`       | `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` | 允許區域網路、公司內網、NAS 等資源 |
+| Boolean          | Matches                                         | Description                              |
+| ---------------- | ----------------------------------------------- | ---------------------------------------- |
+| `allowIPv4Local` | `127.0.0.0/8`                                   | Allow localhost TCP services             |
+| `allowIPv6Local` | `::1`                                           | Allow IPv6 localhost services            |
+| `allowLAN`       | `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` | Allow LAN, corporate intranet, NAS, etc. |
 
 > [!TIP]
 >
-> - 預設僅啟用 `allowIPv4Local`。
-> - **中途更改規則不會影響已建立的連線**，僅影響之後新建立的連線。
+> - Only `allowIPv4Local` is enabled by default.
+> - **Changing rules mid-session won't affect existing connections** — only new ones.
 
-### Client 映射說明
+### Client Mappings
 
-Client 端可在會話建立後，透過「映射表」自訂要如何轉發本地 TCP 流量，映射在會話期間可隨時新增/刪除。
-每一條映射的格式為：
+After the session is established, the Client can define port mappings to control how local TCP traffic is forwarded. Mappings can be added or removed at any time during the session.
+
+Each mapping follows this format:
 
 ```
-<本地位址>:<本地端口> => <遠端位址>:<遠端端口>
+<local_address>:<local_port> => <remote_address>:<remote_port>
 ```
 
-左側是 Client 上的應用程式要連線的位址與端口，右側指定的目標則是你希望透過 Host 代為連線的目標。
+The left side is where your local app connects, and the right side is the target you want the Host to reach on your behalf.
 
-| 名稱     | 角色                    | 範例                        | 說明                                               |
-| -------- | ----------------------- | --------------------------- | -------------------------------------------------- |
-| 本地位址 | Client 本機監聽         | `127.0.0.1`                 | 一般建議使用本地環回位址，確保僅本機應用程式能連線 |
-| 本地端口 | Client 對外開放的端口   | `3000`                      | 自訂，不一定需要與遠端相同                         |
-| 遠端位址 | Host 端實際要連線的目標 | `127.0.0.1` / `192.168.x.x` | 仍可能因為 Host 的規則允許範圍而無法連線           |
-| 遠端端口 | Host 要連線服務的端口   | `25565`, `3000`, `443` 等   | 與目標服務實際設定一致                             |
+| Field          | Role                        | Example                     | Notes                                                             |
+| -------------- | --------------------------- | --------------------------- | ----------------------------------------------------------------- |
+| Local Address  | Client listens here         | `127.0.0.1`                 | Recommended to use loopback to ensure only local apps can connect |
+| Local Port     | Port exposed on Client      | `3000`                      | Can differ from remote port                                       |
+| Remote Address | Target Host will connect to | `127.0.0.1` / `192.168.x.x` | May still be blocked by Host rules                                |
+| Remote Port    | Port on the target service  | `25565`, `3000`, `443`, etc | Must match the actual port of the service                         |
 
 ---
 
-# 應用場景
+# Use Cases
 
-## 使用遠端的本機服務
+## Accessing Remote Localhost Services
 
-當 Host 允許 `allowIPv4Local` 或 `allowIPv6Local` 時，Client 可以直接使用 Host 分享出的本機 TCP 服務，
-就像在自己電腦上運行一樣。
+When the Host enables `allowIPv4Local` or `allowIPv6Local`, the Client can use the Host's local TCP services as if they were running on the Client's own machine.
 
-| 範例                                | 需啟用 Host 規則                          | Client 映射                          | 最終效果                                                                               |
-| ----------------------------------- | ----------------------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------- |
-| Minecraft Dedicated Server          | `allowIPv4Local`                          | `127.0.0.1:25565 => 127.0.0.1:25565` | Client 可直接進入 Host 的 Minecraft 伺服器遊玩。                                       |
-| Vite / Next.js / Laravel 開發伺服器 | `allowIPv6Local`（Vite 預設僅監聽 `::1`） | `127.0.0.1:5173 => ::1:5173`         | Client 可從瀏覽器開啟 `http://127.0.0.1:5173` 預覽 Host 的開發網站。                   |
-| Jupyter Notebook / Code Server      | `allowIPv4Local`                          | `127.0.0.1:8888 => 127.0.0.1:8888`   | Client 可遠端進入 Host 的 Notebook 或 VS Code 編輯器，進行共同開發或分析。             |
-| Ollama (LLM API Server, Docker)     | `allowIPv4Local`                          | `127.0.0.1:11434 => 127.0.0.1:11434` | Client 可直接呼叫 Host 的 Ollama LLM API，例如 `http://127.0.0.1:11434/api/generate`。 |
+| Example                             | Client Mapping                       | Result                                                                                   |
+| ----------------------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------- |
+| Minecraft Dedicated Server          | `127.0.0.1:25565 => 127.0.0.1:25565` | Client can join the Host's Minecraft server directly.                                    |
+| Vite / Next.js / Laravel Dev Server | `127.0.0.1:5173 => ::1:5173`         | Client can open `http://127.0.0.1:5173` in a browser to preview the Host's dev site.     |
+| Jupyter Notebook / Code Server      | `127.0.0.1:8888 => 127.0.0.1:8888`   | Client can remotely access the Host's Notebook or VS Code editor for collaborative work. |
+| Ollama (LLM API Server, Docker)     | `127.0.0.1:11434 => 127.0.0.1:11434` | Client can call the Host's Ollama LLM API at `http://127.0.0.1:11434/api/generate`.      |
 
-## 使用遠端的內網服務
+## Accessing Remote LAN Services
 
-若 Host 開啟了 `allowLAN`，
-Client 就能連線至 Host 所在區域網路中的其他裝置，例如 NAS、資料庫、伺服器等。
+If the Host enables `allowLAN`, the Client can connect to other devices on the Host's local network — like NAS, databases, or servers.
 
-| 範例                               | 需啟用 Host 規則 | Client 映射                           | 最終效果                                              |
-| ---------------------------------- | ---------------- | ------------------------------------- | ----------------------------------------------------- |
-| NAS / 資料庫                       | `allowLAN`       | `127.0.0.1:3306 => 192.168.1.50:3306` | Client 可在本地連上 Host 內網中的資料庫或檔案伺服器。 |
-| Nextcloud / OnlyOffice / Collabora | `allowLAN`       | `127.0.0.1:8080 => 192.168.1.20:8080` | Client 可透過本地連線使用 Host 區網內的協作文件服務。 |
+| Example                            | Client Mapping                        | Result                                                                 |
+| ---------------------------------- | ------------------------------------- | ---------------------------------------------------------------------- |
+| NAS / Database                     | `127.0.0.1:3306 => 192.168.1.50:3306` | Client can access the Host's internal database or file server locally. |
+| Nextcloud / OnlyOffice / Collabora | `127.0.0.1:8080 => 192.168.1.20:8080` | Client can use collaborative document services on the Host's LAN.      |
 
 ---
 
-# 問題回報與協助
+# Issues & Support
 
-如果您在使用過程中遇到任何問題或錯誤，歡迎前往 [GitHub Issues](https://github.com/1ureka/1ureka.net.p2p/issues) 提出回報。
+If you run into any problems or bugs, feel free to report them on [GitHub Issues](https://github.com/1ureka/1ureka.net.p2p/issues).
 
-在提交問題時，請盡可能提供以下資訊，這將有助於我們更快地協助您：
+When submitting an issue, please include as much of the following information as possible — it helps us help you faster:
 
-- **問題描述**：簡單說明發生了什麼狀況
-- **重現步驟**：如何觸發這個問題
-- **您的環境**：作業系統版本（Windows / macOS / Linux）
-- **錯誤訊息**：如有任何錯誤提示，請附上截圖或文字
+- **Problem description**: What went wrong?
+- **Steps to reproduce**: How can we trigger the issue?
+- **Your environment**: OS version (Windows / macOS / Linux)
+- **Error messages**: Screenshots or text logs, if available
 
-感謝您的回報，這將幫助我們持續改進這個工具！
+Thanks for reporting — it helps us make this tool better!
