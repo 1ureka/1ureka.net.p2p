@@ -9,40 +9,35 @@ type SocketsPoint = {
   count: number;
 };
 
-const HISTORY_DURATION = 60000; // 60 秒
+const useSocketPoints = create<{ points: SocketsPoint[] }>((set) => {
+  const MAX_AGE_MS = 60000;
+  const INTERVAL_MS = 1000;
+  let counts = 0;
 
-const useSocketsHistoryStore = create<{ history: SocketsPoint[] }>((set) => {
-  // 訂閱 adapter store 的 sockets 變化
-  useAdapter.subscribe((state) => {
-    const now = Date.now();
-    const newPoint = { timestamp: now, count: state.sockets.length };
-
-    set((prev) => {
-      const cutoff = now - HISTORY_DURATION;
-
-      // 找出所有在範圍內的資料點
-      const withinRange = prev.history.filter((p) => p.timestamp >= cutoff);
-
-      // 找出最接近 cutoff 但在範圍外的資料點（作為起始點）
-      const beforeRange = prev.history.filter((p) => p.timestamp < cutoff);
-      const anchorPoint = beforeRange.length > 0 ? beforeRange[beforeRange.length - 1] : null;
-
-      // 如果有錨點，將它加入作為起始點
-      if (anchorPoint && withinRange.length > 0) {
-        return { history: [anchorPoint, ...withinRange, newPoint] };
-      }
-
-      return { history: [...withinRange, newPoint] };
-    });
+  useAdapter.subscribe((curr, prev) => {
+    if (curr.sockets !== prev.sockets) {
+      counts = curr.sockets.length;
+    }
   });
 
-  return { history: [] };
+  setInterval(() => {
+    const now = Date.now();
+    const point = { timestamp: now, count: counts };
+
+    set((state) => {
+      const cutoffTime = now - MAX_AGE_MS;
+      const filtered = state.points.filter((p) => p.timestamp >= cutoffTime);
+      return { points: [...filtered, point] };
+    });
+  }, INTERVAL_MS);
+
+  return { points: [] };
 });
 
 const uuid = crypto.randomUUID();
 
 const SocketsChart = () => {
-  const points = useSocketsHistoryStore((state) => state.history);
+  const points = useSocketPoints((state) => state.points);
   const color = theme.palette.info.main;
   const now = Date.now();
 

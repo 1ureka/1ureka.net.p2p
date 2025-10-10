@@ -1,4 +1,5 @@
 import net from "net";
+import dns from "dns/promises";
 import crypto from "node:crypto";
 import { createReporter, reportSockets, reportMappings } from "@/adapter-state/report";
 import { PacketEvent } from "@/adapter/packet";
@@ -190,12 +191,13 @@ function createClientAdapter(send: (packet: Buffer) => void) {
   const handleCreateMapping = async (_: unknown, map: SocketPair) => {
     try {
       const id = crypto.randomUUID();
-      const server = await createMapping(id, map);
+      const parsedMap: SocketPair = { ...map, dstAddr: (await dns.lookup(map.dstAddr)).address };
+      const server = await createMapping(id, parsedMap);
       servers.set(id, server);
-      reportMappings({ type: "add", id, map });
+      reportMappings({ type: "add", id, map: parsedMap });
       return id;
     } catch (error) {
-      reportError({ message: "Error creating mapping", data: { error, map } });
+      reportError({ message: `Error creating mapping for ${stringifySocketPair(map)}`, data: error });
     }
   };
 

@@ -4,6 +4,7 @@ import { Box, BoxProps, Button, Tab, Tabs, Typography } from "@mui/material";
 import { centerTextSx } from "@/ui/theme";
 import { useTab, type TabEntry } from "@/ui/tabs";
 import { useSession } from "@/transport-state/store";
+import { IPCChannel } from "@/ipc";
 
 const HeaderTitle = () => {
   return (
@@ -17,9 +18,21 @@ const HeaderTitle = () => {
 };
 
 const HeaderLinks = () => {
+  const handleClick = () => {
+    window.electron.request(
+      IPCChannel.OpenExternalLink,
+      "https://github.com/1ureka/1ureka.net.p2p?tab=readme-ov-file#1urekanetp2p"
+    );
+  };
+
   return (
     <Box sx={{ color: "text.secondary", display: "flex", alignItems: "center", gap: 2 }}>
-      <Button color="inherit" sx={{ textTransform: "none", textWrap: "nowrap" }} startIcon={<HelpRoundedIcon />}>
+      <Button
+        color="inherit"
+        sx={{ textTransform: "none", textWrap: "nowrap" }}
+        startIcon={<HelpRoundedIcon />}
+        onClick={handleClick}
+      >
         help & support
       </Button>
     </Box>
