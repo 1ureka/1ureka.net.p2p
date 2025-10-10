@@ -25,6 +25,7 @@
 - **Git**: 用於版本控制
 
 檢查版本：
+
 ```bash
 node --version  # 應輸出 v22.x 或更高
 npm --version   # 應輸出 v11.x 或更高
@@ -45,14 +46,6 @@ cd 1ureka.net.p2p
 npm install
 ```
 
-這會安裝所有必要的依賴套件，包括：
-- **Electron**: 桌面應用框架
-- **React**: UI 框架
-- **Material-UI**: UI 元件庫
-- **Vite**: 開發伺服器與打包工具
-- **TypeScript**: 型別系統
-- **Vitest**: 測試框架
-
 #### 3. 啟動開發模式
 
 ```bash
@@ -60,6 +53,7 @@ npm start
 ```
 
 這會執行 `electron-forge start`，啟動以下服務：
+
 - Vite 開發伺服器（支援 HMR 熱重載）
 - Electron 主進程
 - Electron 渲染進程
@@ -143,51 +137,16 @@ npx vitest run src/adapter/adapter.test.ts
 
 #### 測試設計理念
 
-專案採用 **E2E 測試策略**，直接測試完整的資料流：
-
-```typescript
-// src/adapter/adapter.test.ts 範例
-it("[e2e] [echo] [client→server]", async () => {
-  const { hostAdapter, clientAdapter } = await createEnvironment();
-
-  // 建立真實的 TCP Echo Server
-  const echoServer = net.createServer((socket) =>
-    socket.on("data", (d) => socket.write(d))
-  );
-  await new Promise<void>((res) => echoServer.listen(0, res));
-  const echoPort = (echoServer.address() as any).port;
-
-  // 建立映射
-  await clientAdapter.handleCreateMapping(null, {
-    srcAddr: "127.0.0.1",
-    srcPort: 6000,
-    dstAddr: "127.0.0.1",
-    dstPort: echoPort,
-  });
-
-  // 測試 TCP 客戶端
-  const tcpClient = net.connect(6000, "127.0.0.1");
-  const result = await new Promise<string>((resolve, reject) => {
-    tcpClient.on("error", reject);
-    tcpClient.on("data", (data) => resolve(data.toString()));
-    tcpClient.write("hello");
-  });
-
-  expect(result).toBe("hello");
-
-  // 清理
-  tcpClient.destroy();
-  echoServer.close();
-  hostAdapter.handleClose();
-  clientAdapter.handleClose();
-});
-```
+專案採用 **E2E 測試策略**，直接測試完整的資料流
 
 **測試涵蓋範圍**：
+
 - Adapter 的封包編碼/解碼
 - Chunking/Reassembly 邏輯
 - 多個並行連線的正確性
 - 大量資料傳輸的穩定性
+- 無序環境的模擬
+- 多個映射存在的情境
 
 ### 打包與發布
 
@@ -198,6 +157,7 @@ npm run package
 ```
 
 這會使用 Electron Forge 打包應用，產生對應平台的可執行檔：
+
 - **Windows**: `.exe` 檔案
 - **macOS**: `.app` 檔案
 - **Linux**: AppImage 或 `.deb`
@@ -210,11 +170,25 @@ npm run package
 npm run clean
 ```
 
-這會刪除 `out/`, `.vite/`, `dist/` 等暫存目錄。
+這會刪除 `out/`, `.vite/`, `dist/` 等目錄。
 
 #### 發布流程
 
-<!-- TODO: 根據 .github/workflows/release.yml 更新此部分 -->
+專案使用 **GitHub Actions** 自動化發布流程，目前支援 Windows 平台：
+
+**觸發發布**：
+
+1. 前往 GitHub 專案頁面的 `Actions` 標籤
+2. 選擇 `Release (Windows)` workflow
+3. 點擊 `Run workflow`
+4. 輸入版本號（比如：`v1.0.0-alpha.n`）
+5. 確認執行
+
+**發布產物**：
+
+- 檔案名稱：`1ureka.net.p2p-win32-x64-{版本號}.zip`
+- 內容：Windows x64 可執行檔案與相關資源
+- 位置：GitHub Releases 頁面
 
 ### 貢獻流程
 
@@ -225,6 +199,7 @@ npm run clean
 5. 開啟 Pull Request
 
 **Pull Request 檢查清單**：
+
 - [ ] 通過所有測試 (`npm test`)
 - [ ] 通過 Linter 檢查 (`npm run lint`)
 - [ ] 本地打包成功 (`npm run package`)
