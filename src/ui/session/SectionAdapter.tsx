@@ -1,4 +1,3 @@
-import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import StopRoundedIcon from "@mui/icons-material/StopRounded";
 import { Box, Typography } from "@mui/material";
 
@@ -7,48 +6,23 @@ import { GithubIconButton, GithubTooltip } from "@/ui/components/Github";
 import { CardSubHeader } from "@/ui/components/Card";
 import { ConnectionIndicator } from "@/ui/session/SessionCardIndicator";
 import { SessionCardLabel, SessionCardSubBody } from "@/ui/session/SessionCard";
+import { ConfirmPopover } from "@/ui/session/ConfirmPopover";
 
-import { handleStartHostAdapter, handleStartClientAdapter, handleStopAdapter } from "@/adapter-state/handlers";
-import { useSession } from "@/transport-state/store";
+import { handleStopAdapter } from "@/adapter-state/handlers";
 import { useAdapter } from "@/adapter-state/store";
 import { useState } from "react";
 
 // TODO: error display
 const AdapterHeader = () => {
   const instance = useAdapter((state) => state.instance);
-  const role = useSession((state) => state.role);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
-  const [startState, setStartState] = useState<{ loading: boolean; error: string | null }>({
-    loading: false,
-    error: null,
-  });
-
-  const handleStart = async () => {
-    try {
-      setStartState({ loading: true, error: null });
-      if (role === "host") {
-        await handleStartHostAdapter();
-      } else if (role === "client") {
-        await handleStartClientAdapter();
-      } else {
-        throw new Error("Role is not set");
-      }
-    } catch (err) {
-      setStartState({ loading: false, error: err instanceof Error ? err.message : "Unknown error occurred" });
-    } finally {
-      setStartState({ loading: false, error: null });
-    }
+  const handleOpenPopover = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
   };
 
-  const [stopState, setStopState] = useState<{ loading: boolean }>({ loading: false });
-
-  const handleStop = async () => {
-    try {
-      setStopState({ loading: true });
-      await handleStopAdapter();
-    } finally {
-      setStopState({ loading: false });
-    }
+  const handleClosePopover = () => {
+    setAnchorEl(null);
   };
 
   return (
@@ -59,19 +33,19 @@ const AdapterHeader = () => {
 
       <Box sx={{ flex: 1 }} />
 
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-        <GithubTooltip title={"Start adapter"}>
-          <GithubIconButton disabled={instance !== null} loading={startState.loading} onClick={handleStart}>
-            <PlayArrowRoundedIcon fontSize="small" />
-          </GithubIconButton>
-        </GithubTooltip>
+      <GithubTooltip title={"Stop adapter"}>
+        <GithubIconButton disabled={instance === null || anchorEl !== null} onClick={handleOpenPopover}>
+          <StopRoundedIcon fontSize="small" />
+        </GithubIconButton>
+      </GithubTooltip>
 
-        <GithubTooltip title={"Stop adapter"}>
-          <GithubIconButton disabled={instance === null} loading={stopState.loading} onClick={handleStop}>
-            <StopRoundedIcon fontSize="small" />
-          </GithubIconButton>
-        </GithubTooltip>
-      </Box>
+      <ConfirmPopover
+        anchorEl={anchorEl}
+        onClose={handleClosePopover}
+        onConfirm={handleStopAdapter}
+        title="Stop Adapter"
+        message="This operation should only be done after confirming the session will be closed. To exit, both the Adapter and Transport must be shut down."
+      />
     </CardSubHeader>
   );
 };
