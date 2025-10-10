@@ -136,11 +136,12 @@ function createClientAdapter(send: (packet: Buffer) => void) {
    * 目前在該 Adapter 上建立的所有虛擬 TCP 伺服器 (key 為 uuid，value 為 net.Server 實例)
    */
   const servers: Map<string, net.Server> = new Map();
+  const serverSockets: Map<string, Set<net.Socket>> = new Map();
 
   /**
    * 動態在該 Adapter 上根據要求建立一個虛擬 TCP 伺服器，並將接收到的連線轉送到指定的目標地址與端口
    */
-  const createMapping = (map: SocketPair) => {
+  const createMapping = (id: string, map: SocketPair) => {
     const server = net.createServer();
     const { promise, resolve, reject } = defer<net.Server>();
 
@@ -148,23 +149,30 @@ function createClientAdapter(send: (packet: Buffer) => void) {
     const remote = `${map.dstAddr}:${map.dstPort}`;
 
     const serverConnectionHandler = (socket: net.Socket) => {
+      if (!serverSockets.has(id)) serverSockets.set(id, new Set());
+      const sockets = serverSockets.get(id)!; /* eslint-disable-line @typescript-eslint/no-non-null-assertion */
+      sockets.add(socket);
+      socket.once("close", () => sockets.delete(socket));
+
       reportLog({ message: `Accepted new TCP connection from ${socket.remoteAddress}:${socket.remotePort}` });
       handleConnectFromLocal(socket, map.dstAddr, map.dstPort);
     };
 
     const serverListeningHandler = () => {
+      server.off("listening", serverListeningHandler);
+
       resolve(server);
       reportLog({ message: `Client Adapter listening on ${local}, forwarding to ${remote}` });
     };
 
     const serverErrorHandler = (error: Error) => {
-      reject(error);
-      reportError({ message: `Client Adapter server error on ${local}`, data: { error } });
-
       server.off("connection", serverConnectionHandler);
       server.off("listening", serverListeningHandler);
       server.off("error", serverErrorHandler);
       tryCatchSync(() => server.close());
+
+      reject(error);
+      reportError({ message: `Client Adapter server error on ${local}`, data: { error } });
     };
 
     server.on("connection", serverConnectionHandler);
@@ -182,7 +190,7 @@ function createClientAdapter(send: (packet: Buffer) => void) {
   const handleCreateMapping = async (_: unknown, map: SocketPair) => {
     try {
       const id = crypto.randomUUID();
-      const server = await createMapping(map);
+      const server = await createMapping(id, map);
       servers.set(id, server);
       reportMappings({ type: "add", id, map });
       return id;
@@ -202,11 +210,17 @@ function createClientAdapter(send: (packet: Buffer) => void) {
       return reportError({ message: `Mapping with ID ${id} does not exist.` });
     }
 
+    const sockets = serverSockets.get(id);
+    if (sockets) {
+      for (const socket of sockets) socket.destroy();
+    }
+
     server.close(() => {
-      resolve();
       servers.delete(id);
+      serverSockets.delete(id);
       reportLog({ message: `Mapping with ID ${id} closed.` });
       reportMappings({ type: "del", id });
+      resolve();
     });
 
     return promise;

@@ -3,6 +3,7 @@ import { createPeerConnection } from "@/transport/transport-pc";
 import { bindDataChannelIPC } from "@/transport/transport-ipc";
 import { bindDataChannelTraffic } from "@/transport/transport-traffic";
 import { createSession, pollingSession, sendSignal } from "@/transport/session-utils";
+import { handleStartHostAdapter } from "@/adapter-state/handlers";
 
 const GATHER_CANDIDATE_TIMEOUT = 2000; // 收集 ice candidate 的最大等待時間（毫秒）
 const WAIT_DATA_CHANNEL_TIMEOUT = 5000; // 等待 DataChannel 開啟的最大時間（毫秒）
@@ -11,12 +12,21 @@ const WAIT_DATA_CHANNEL_TIMEOUT = 5000; // 等待 DataChannel 開啟的最大時
  * 啟動 P2P 會話連線，創建新會話
  */
 const createHostSession = async () => {
+  if (!reportStatus("joining")) return;
+
+  // 0. 啟動 adapter
+  try {
+    await handleStartHostAdapter();
+  } catch (error) {
+    reportError({ message: "Failed to start adapter", data: error });
+    reportStatus("failed");
+    return;
+  }
+
   let sessionId: string | null = null;
 
   // 1. 創建新會話
   try {
-    if (!reportStatus("joining")) return;
-
     if (getAborted()) throw new Error("Session creation aborted before starting");
     const { id } = await createSession();
     sessionId = id;

@@ -2,7 +2,7 @@ import type { XAxis, YAxis } from "@mui/x-charts/models";
 import { LineChart, type LineSeries } from "@mui/x-charts/LineChart";
 import { theme } from "@/ui/theme";
 import { useAdapter } from "@/adapter-state/store";
-import { useState, useEffect } from "react";
+import { create } from "zustand";
 
 type SocketsPoint = {
   timestamp: number;
@@ -11,40 +11,38 @@ type SocketsPoint = {
 
 const HISTORY_DURATION = 60000; // 60 秒
 
-const useSocketsHistory = () => {
-  const sockets = useAdapter((state) => state.sockets);
-  const [history, setHistory] = useState<SocketsPoint[]>([]);
-
-  useEffect(() => {
+const useSocketsHistoryStore = create<{ history: SocketsPoint[] }>((set) => {
+  // 訂閱 adapter store 的 sockets 變化
+  useAdapter.subscribe((state) => {
     const now = Date.now();
-    const newPoint = { timestamp: now, count: sockets.length };
+    const newPoint = { timestamp: now, count: state.sockets.length };
 
-    setHistory((prev) => {
+    set((prev) => {
       const cutoff = now - HISTORY_DURATION;
 
       // 找出所有在範圍內的資料點
-      const withinRange = prev.filter((p) => p.timestamp >= cutoff);
+      const withinRange = prev.history.filter((p) => p.timestamp >= cutoff);
 
       // 找出最接近 cutoff 但在範圍外的資料點（作為起始點）
-      const beforeRange = prev.filter((p) => p.timestamp < cutoff);
+      const beforeRange = prev.history.filter((p) => p.timestamp < cutoff);
       const anchorPoint = beforeRange.length > 0 ? beforeRange[beforeRange.length - 1] : null;
 
       // 如果有錨點，將它加入作為起始點
       if (anchorPoint && withinRange.length > 0) {
-        return [anchorPoint, ...withinRange, newPoint];
+        return { history: [anchorPoint, ...withinRange, newPoint] };
       }
 
-      return [...withinRange, newPoint];
+      return { history: [...withinRange, newPoint] };
     });
-  }, [sockets.length]);
+  });
 
-  return history;
-};
+  return { history: [] };
+});
 
 const uuid = crypto.randomUUID();
 
 const SocketsChart = () => {
-  const points = useSocketsHistory();
+  const points = useSocketsHistoryStore((state) => state.history);
   const color = theme.palette.info.main;
   const now = Date.now();
 
