@@ -1,6 +1,5 @@
 # 1ureka.net.p2p
 
-> [!IMPORTANT]
 > **Share any TCP service — from Minecraft to AI APIs — directly, securely, and without configuration.**
 
 The internet should be free and accessible —
