@@ -16,7 +16,7 @@ function createDataChannelSender(dataChannel: RTCDataChannel, threshold = 64 * 1
     draining = true;
 
     if (dataChannel.readyState !== "open") {
-      reportError({ message: "Received data when DataChannel is not open" });
+      reportError({ message: "Cannot send data: DataChannel is not open." });
       draining = false;
       return;
     }

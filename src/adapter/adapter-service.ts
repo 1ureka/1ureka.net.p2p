@@ -16,7 +16,7 @@ const createAdapterService = () => {
     const reporter = createReporter("Host");
 
     if (win.adapter) {
-      reporter.reportWarn({ message: "Adapter is already running, ignoring start request." });
+      reporter.reportWarn({ message: "Adapter already running. Ignoring duplicate start request." });
       return false;
     }
 
@@ -50,7 +50,7 @@ const createAdapterService = () => {
     const reporter = createReporter("Client");
 
     if (win.adapter) {
-      reporter.reportWarn({ message: "Adapter is already running, ignoring start request." });
+      reporter.reportWarn({ message: "Adapter already running. Ignoring duplicate start request." });
       return false;
     }
 

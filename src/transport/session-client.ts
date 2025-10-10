@@ -18,18 +18,18 @@ const createClientSession = async (sessionId: string) => {
   try {
     await handleStartClientAdapter();
   } catch (error) {
-    reportError({ message: "Failed to start adapter", data: error });
+    reportError({ message: "Failed to start adapter.", data: error });
     reportStatus("failed");
     return;
   }
 
   // 1. 加入既有會話
   try {
-    if (getAborted()) throw new Error("Session creation aborted before starting");
+    if (getAborted()) throw new Error("Session creation aborted.");
     await joinSession(sessionId);
-    if (getAborted()) throw new Error("Session aborted after joining session");
+    if (getAborted()) throw new Error("Session aborted after joining.");
   } catch (error) {
-    reportError({ message: "Failed to join session", data: error });
+    reportError({ message: "Failed to join session.", data: error });
     reportStatus("failed");
     return;
   }
@@ -44,20 +44,20 @@ const createClientSession = async (sessionId: string) => {
     reportStatus("signaling");
 
     for await (const { signal } of pollingSession(sessionId, "offer")) {
-      if (getAborted()) throw new Error("Session aborted while waiting for offer");
-      reportLog({ message: "Waiting for host's offer..." });
+      if (getAborted()) throw new Error("Session aborted while waiting for offer.");
+      reportLog({ message: "Waiting for offer from host..." });
       if (signal.offer) {
         await setRemote(signal.offer.sdp, signal.offer.candidate);
         break;
       }
     }
 
-    if (getAborted()) throw new Error("Session aborted after setting remote offer");
+    if (getAborted()) throw new Error("Session aborted after setting remote offer.");
     const { description, candidates } = await getLocal("createAnswer", GATHER_CANDIDATE_TIMEOUT);
     await sendSignal(sessionId, { type: "answer", sdp: description, candidate: candidates });
-    if (getAborted()) throw new Error("Session aborted after sending answer");
+    if (getAborted()) throw new Error("Session aborted after sending answer.");
   } catch (error) {
-    reportError({ message: "Error occurred during signaling exchange", data: error });
+    reportError({ message: "Failed to complete signaling exchange.", data: error });
     reportStatus("failed");
     close();
     return;
@@ -65,22 +65,22 @@ const createClientSession = async (sessionId: string) => {
 
   // 4. 等待 DataChannel 開啟
   try {
-    if (getAborted()) throw new Error("Session aborted before DataChannel establishment");
+    if (getAborted()) throw new Error("Session aborted before DataChannel establishment.");
     const dataChannel = await getDataChannel(WAIT_DATA_CHANNEL_TIMEOUT);
     bindDataChannelTraffic(dataChannel);
     bindDataChannelIPC(dataChannel);
-    if (getAborted()) throw new Error("Session aborted after DataChannel established");
+    if (getAborted()) throw new Error("Session aborted after DataChannel established.");
 
     reportStatus("connected");
-    reportLog({ message: "DataChannel established successfully" });
+    reportLog({ message: "DataChannel established successfully." });
 
     onceAborted(() => {
-      reportLog({ message: "Session aborted and connection closed" });
+      reportLog({ message: "Session aborted and connection closed." });
       reportStatus("failed");
       close();
     });
   } catch (error) {
-    reportError({ message: "Failed to open DataChannel", data: error });
+    reportError({ message: "Failed to establish DataChannel connection.", data: error });
     reportStatus("failed");
     close();
     return;
