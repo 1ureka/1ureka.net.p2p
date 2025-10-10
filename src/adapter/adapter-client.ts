@@ -194,7 +194,7 @@ function createClientAdapter(send: (packet: Buffer) => void) {
       const parsedMap: SocketPair = { ...map, dstAddr: (await dns.lookup(map.dstAddr)).address };
       const server = await createMapping(id, parsedMap);
       servers.set(id, server);
-      reportMappings({ type: "add", id, map });
+      reportMappings({ type: "add", id, map: parsedMap });
       return id;
     } catch (error) {
       reportError({ message: `Error creating mapping for ${stringifySocketPair(map)}`, data: error });
