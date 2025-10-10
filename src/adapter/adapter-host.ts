@@ -7,7 +7,7 @@ import { SocketPairMap, stringifySocketPair, type SocketPair, classifyAddress } 
 /**
  * Host 端的四種訪問權限設置
  */
-type Rules = { allowIPv4Local: boolean; allowIPv6Local: boolean; allowLAN: boolean; allowExternal: boolean };
+type Rules = { allowIPv4Local: boolean; allowIPv6Local: boolean; allowLAN: boolean };
 
 /**
  * 建立 Host 端的 Adapter (連接到本地的 TCP 伺服器)
@@ -19,7 +19,7 @@ function createHostAdapter(send: (packet: Buffer) => void) {
   const reassembler = createReassembler();
   const sockets = new SocketPairMap<net.Socket>();
   const socketPromises = new SocketPairMap<Promise<void>>();
-  const rules = { allowIPv4Local: true, allowIPv6Local: false, allowLAN: false, allowExternal: false };
+  const rules = { allowIPv4Local: true, allowIPv6Local: false, allowLAN: false };
 
   /**
    * 檢查 SocketPair 是否符合當前的訪問規則
@@ -29,7 +29,6 @@ function createHostAdapter(send: (packet: Buffer) => void) {
       ipv4local: { key: "allowIPv4Local", label: "IPv4 local" },
       ipv6local: { key: "allowIPv6Local", label: "IPv6 local" },
       lan: { key: "allowLAN", label: "LAN" },
-      external: { key: "allowExternal", label: "External" },
     } as const;
 
     const type = classifyAddress(socketPair.dstAddr);
@@ -37,6 +36,11 @@ function createHostAdapter(send: (packet: Buffer) => void) {
 
     if (type === "invalid") {
       reportWarn({ message: `Socket ${pairStr} has invalid IP address, rejecting CONNECT.` });
+      return false;
+    }
+
+    if (type === "external") {
+      reportWarn({ message: `Socket ${pairStr} is an external address, rejecting CONNECT.` });
       return false;
     }
 

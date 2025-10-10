@@ -31,7 +31,7 @@ type AdapterState = {
 const useAdapter = create<AdapterState>((set) => {
   const socketSet = new SocketPairSet();
   const mappingSet: Map<string, { map: SocketPair; createdAt: number }> = new Map();
-  const defaultRules: Rules = { allowIPv4Local: true, allowIPv6Local: false, allowLAN: false, allowExternal: false };
+  const defaultRules: Rules = { allowIPv4Local: true, allowIPv6Local: false, allowLAN: false };
 
   window.electron.on(IPCChannel.AdapterInstanceChange, ({ instance }: InstanceChangePayload) => {
     set({ instance });
