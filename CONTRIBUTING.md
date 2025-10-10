@@ -6,10 +6,206 @@
 
 ## 目錄
 
+- [開發指南](#開發指南)
 - [應用架構](#應用架構)
 - [模組協作模式](#模組協作模式)
 - [核心模組：Adapter](#核心模組adapter)
 - [核心模組：Transport](#核心模組transport)
+
+---
+
+## 開發指南
+
+### 開發環境需求
+
+開始開發前，請確保您的系統已安裝以下工具：
+
+- **Node.js**: v22.x 或以上版本（建議使用 LTS 版本）
+- **npm**: v11.x 或以上版本（隨 Node.js 一同安裝）
+- **Git**: 用於版本控制
+
+檢查版本：
+
+```bash
+node --version  # 應輸出 v22.x 或更高
+npm --version   # 應輸出 v11.x 或更高
+```
+
+### 專案設定
+
+#### 1. 複製專案
+
+```bash
+git clone https://github.com/1ureka/1ureka.net.p2p.git
+cd 1ureka.net.p2p
+```
+
+#### 2. 安裝依賴套件
+
+```bash
+npm install
+```
+
+#### 3. 啟動開發模式
+
+```bash
+npm start
+```
+
+這會執行 `electron-forge start`，啟動以下服務：
+
+- Vite 開發伺服器（支援 HMR 熱重載）
+- Electron 主進程
+- Electron 渲染進程
+
+應用程式視窗會自動開啟，且修改程式碼後會自動重新載入。
+
+### 專案結構
+
+```
+1ureka.net.p2p/
+├── src/                          # 原始碼目錄
+│   ├── main.ts                   # Electron 主進程入口
+│   ├── preload.ts                # Preload Script（安全橋接層）
+│   ├── ipc.ts                    # IPC 頻道定義
+│   ├── utils.ts                  # 共用工具函數
+│   │
+│   ├── adapter/                  # Adapter 模組（主進程）
+│   │   ├── adapter-host.ts       # Host 角色實作
+│   │   ├── adapter-client.ts     # Client 角色實作
+│   │   ├── adapter-service.ts    # Adapter 服務管理
+│   │   ├── packet.ts             # 封包編碼/解碼
+│   │   ├── framing.ts            # Chunking/Reassembly
+│   │   ├── ip.ts                 # IP 處理與 Socket Pair
+│   │   └── adapter.test.ts       # E2E 測試
+│   │
+│   ├── adapter-state/            # Adapter 狀態管理
+│   │   ├── store.ts              # Zustand Store
+│   │   ├── report.ts             # 狀態回報函數
+│   │   └── handlers.ts           # IPC 處理器
+│   │
+│   ├── transport/                # Transport 模組（渲染進程）
+│   │   ├── transport-pc.ts       # WebRTC PeerConnection 封裝
+│   │   ├── transport-ipc.ts      # 插件: DataChannel ⇆ IPC 綁定
+│   │   ├── transport-traffic.ts  # 插件: 流量監控綁定
+│   │   ├── transport-sender.ts   # 可靠傳輸層
+│   │   ├── session-host.ts       # Host Session 流程
+│   │   ├── session-client.ts     # Client Session 流程
+│   │   └── session-utils.ts      # 信令 API 與工具
+│   │
+│   ├── transport-state/          # Transport 狀態管理
+│   │   ├── store.ts              # Zustand Store（含狀態機）
+│   │   ├── report.ts             # 狀態回報函數
+│   │   └── handlers.ts           # 使用者意圖處理器
+│   │
+│   └── ui/                       # UI 元件（渲染進程）
+│       ├── renderer.tsx          # React 入口
+│       ├── renderer.css          # 全域樣式
+│       ├── tabs.ts               # 分頁狀態管理
+│       ├── theme.ts              # Material-UI 主題
+│       ├── components/           # 共用元件
+│       ├── configs/              # 配置頁面元件
+│       ├── events/               # 事件日誌頁面
+│       ├── launch/               # 啟動頁面
+│       ├── metrics/              # 監控頁面
+│       └── session/              # 會話卡片元件
+│
+├── forge.config.ts               # Electron Forge 配置
+├── vite.main.config.ts           # Vite 主進程配置
+├── vite.preload.config.ts        # Vite Preload 配置
+├── vite.renderer.config.mjs      # Vite 渲染進程配置
+├── vitest.config.mjs             # Vitest 測試配置
+├── tsconfig.json                 # TypeScript 配置
+├── package.json                  # 專案依賴與腳本
+├── README.md                     # 使用者指南
+└── CONTRIBUTING.md               # 開發者指南（本文件）
+```
+
+### 測試
+
+#### 執行所有測試
+
+```bash
+npm test
+```
+
+#### 執行單一測試檔案
+
+```bash
+npx vitest run src/adapter/adapter.test.ts
+```
+
+#### 測試設計理念
+
+專案採用 **E2E 測試策略**，直接測試完整的資料流
+
+**測試涵蓋範圍**：
+
+- Adapter 的封包編碼/解碼
+- Chunking/Reassembly 邏輯
+- 多個並行連線的正確性
+- 大量資料傳輸的穩定性
+- 無序環境的模擬
+- 多個映射存在的情境
+
+### 打包與發布
+
+#### 本地打包
+
+```bash
+npm run package
+```
+
+這會使用 Electron Forge 打包應用，產生對應平台的可執行檔：
+
+- **Windows**: `.exe` 檔案
+- **macOS**: `.app` 檔案
+- **Linux**: AppImage 或 `.deb`
+
+打包結果位於 `out/` 目錄。
+
+#### 清理建置檔案
+
+```bash
+npm run clean
+```
+
+這會刪除 `out/`, `.vite/`, `dist/` 等目錄。
+
+#### 發布流程
+
+專案使用 **GitHub Actions** 自動化發布流程，目前支援 Windows 平台：
+
+**觸發發布**：
+
+1. 前往 GitHub 專案頁面的 `Actions` 標籤
+2. 選擇 `Release (Windows)` workflow
+3. 點擊 `Run workflow`
+4. 輸入版本號（比如：`v1.0.0-alpha.n`）
+5. 確認執行
+
+**發布產物**：
+
+- 檔案名稱：`1ureka.net.p2p-win32-x64-{版本號}.zip`
+- 內容：Windows x64 可執行檔案與相關資源
+- 位置：GitHub Releases 頁面
+
+### 貢獻流程
+
+1. Fork 本專案到您的帳號
+2. 建立功能分支 (`git checkout -b feature/amazing-feature`)
+3. 提交變更 (`git commit -m 'Add some amazing feature'`)
+4. 推送到分支 (`git push origin feature/amazing-feature`)
+5. 開啟 Pull Request
+
+**Pull Request 檢查清單**：
+
+- [ ] 通過所有測試 (`npm test`)
+- [ ] 通過 Linter 檢查 (`npm run lint`)
+- [ ] 本地打包成功 (`npm run package`)
+- [ ] 更新相關文件（若涉及 API 變更）
+- [ ] 撰寫清晰的 commit message
+- [ ] 在 PR 描述中說明變更動機與影響範圍
 
 ---
 
@@ -187,7 +383,7 @@ const handleStartHostAdapter = async () => {
 };
 ```
 
-### 額外範例：Http 的實作 (雙進程)
+### 額外範例：Http 的實作 (與該專案無關，只是示範)
 
 ```typescript
 // store.ts
@@ -639,224 +835,6 @@ const reportStatus = (status: ConnectionStatus): boolean => {
                      ┌──────────────┐
                      │ disconnected │
                      └──────────────┘
-```
-
-#### 流程實作
-
-**Host Session**
-
-```typescript
-const createHostSession = async () => {
-  // 1. joining: 創建會話
-  if (!reportStatus("joining")) return;
-  const { id } = await createSession();
-
-  // 2. waiting: 等待 Client 加入
-  reportStatus("waiting");
-  for await (const session of pollingSession(id, "join")) {
-    if (session.status === "joined") break;
-  }
-
-  // 3. signaling: 交換信令
-  reportStatus("signaling");
-  const { description, candidates } = await getLocal("createOffer", 2000);
-  await sendSignal(id, { type: "offer", sdp: description, candidate: candidates });
-
-  for await (const { signal } of pollingSession(id, "answer")) {
-    if (signal.answer) {
-      await setRemote(signal.answer.sdp, signal.answer.candidate);
-      break;
-    }
-  }
-
-  // 4. connected: DataChannel 開啟
-  const dataChannel = await getDataChannel(5000);
-  bindDataChannelTraffic(dataChannel);
-  bindDataChannelIPC(dataChannel);
-  reportStatus("connected");
-
-  // 5. 監聽中止事件
-  onceAborted(() => {
-    reportStatus("failed");
-    close();
-  });
-};
-```
-
-**Client Session**
-
-```typescript
-const createClientSession = async (sessionId: string) => {
-  // 1. joining: 加入會話
-  if (!reportStatus("joining")) return;
-  await joinSession(sessionId);
-
-  // 2. waiting: （Client 不需等待）
-  reportStatus("waiting");
-
-  // 3. signaling: 交換信令
-  reportStatus("signaling");
-  for await (const { signal } of pollingSession(sessionId, "offer")) {
-    if (signal.offer) {
-      await setRemote(signal.offer.sdp, signal.offer.candidate);
-      break;
-    }
-  }
-
-  const { description, candidates } = await getLocal("createAnswer", 2000);
-  await sendSignal(sessionId, { type: "answer", sdp: description, candidate: candidates });
-
-  // 4. connected: DataChannel 開啟
-  const dataChannel = await getDataChannel(5000);
-  bindDataChannelTraffic(dataChannel);
-  bindDataChannelIPC(dataChannel);
-  reportStatus("connected");
-
-  // 5. 監聽中止事件
-  onceAborted(() => {
-    reportStatus("failed");
-    close();
-  });
-};
-```
-
-#### 中止機制
-
-```typescript
-// handlers.ts：使用者中止
-const handleStop = () => {
-  if (!reportStatus("aborting")) return;
-  reportWarn({ message: "Stop requested by user" });
-};
-
-// report.ts：提供中止檢查
-const getAborted = () => useSession.getState().status === "aborting";
-
-// 在流程中檢查
-if (getAborted()) throw new Error("Session aborted");
-```
-
-### UI 如何根據狀態機衍伸狀態
-
-UI 元件根據狀態機的當前狀態，衍伸出對應的顯示邏輯與互動行為。
-
-#### App.tsx：頁面切換
-
-```tsx
-const Pages = () => {
-  const status = useSession((state) => state.status);
-  const tab = useTab((state) => state.tab);
-
-  // 根據狀態決定是否顯示 LaunchPage 或 OverviewPage
-  const overviewType = ["disconnected", "joining"].includes(status) ? null : "session";
-
-  return (
-    <AnimatePresence mode="wait">
-      {tab === "overview" && overviewType === null && <LaunchPage />}
-      {tab === "overview" && overviewType !== null && <OverviewPage />}
-      {/* ... */}
-    </AnimatePresence>
-  );
-};
-```
-
-#### Header.tsx：Tab 啟用/停用
-
-```tsx
-const HeaderTabs = () => {
-  const status = useSession((state) => state.status);
-
-  const tabs: TabEntry[] = [
-    { label: "Overview", value: "overview", disabled: false },
-    { label: "Events", value: "events", disabled: ["disconnected", "joining"].includes(status) },
-    { label: "Metrics", value: "metrics", disabled: ["disconnected", "joining"].includes(status) },
-  ];
-
-  return <Tabs>{/* ... */}</Tabs>;
-};
-```
-
-#### LaunchCard.tsx：按鈕狀態
-
-```tsx
-const CreateSessionCard = () => {
-  const status = useSession((state) => state.status);
-
-  // 根據狀態決定按鈕是否可用/載入中
-  const disabled = status !== "disconnected";
-  const loading = status === "joining";
-
-  return (
-    <GithubButton disabled={disabled} loading={loading} onClick={handleCreateSession}>
-      Create
-    </GithubButton>
-  );
-};
-```
-
-#### SessionCard.tsx：連線指示器與操作
-
-```tsx
-const TransportBody = () => {
-  const status = useSession((state) => state.status);
-
-  return (
-    <>
-      <SessionCardLabel>Status</SessionCardLabel>
-      {/* 根據狀態顯示不同的指示器 */}
-      <ConnectionIndicator status={status} />
-    </>
-  );
-};
-
-const TransportHeader = () => {
-  const status = useSession((state) => state.status);
-
-  // 根據狀態決定停止按鈕的狀態
-  const stopLoading = status === "aborting";
-  const stopDisabled = ["disconnected", "joining", "aborting", "failed"].includes(status);
-
-  return (
-    <GithubIconButton disabled={stopDisabled} loading={stopLoading} onClick={handleStop}>
-      <StopRoundedIcon />
-    </GithubIconButton>
-  );
-};
-```
-
-#### SessionCardIndicator.tsx：視覺回饋
-
-```tsx
-const ConnectionIndicator = ({ status }: { status: ConnectionStatus }) => {
-  // 狀態 → 顏色映射
-  const statusColors: Record<ConnectionStatus, string> = {
-    disconnected: "error.main",
-    joining: "warning.main",
-    waiting: "warning.main",
-    signaling: "warning.main",
-    connected: "success.main",
-    aborting: "warning.main",
-    failed: "error.main",
-  };
-
-  // 狀態 → 文字映射
-  const statusLabels: Record<ConnectionStatus, string> = {
-    disconnected: "Disconnected",
-    joining: "Joining...",
-    waiting: "Waiting...",
-    signaling: "Signaling...",
-    connected: "Connected",
-    aborting: "Aborting...",
-    failed: "Failed",
-  };
-
-  return (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-      <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: statusColors[status] }} />
-      <Typography variant="body2">{statusLabels[status]}</Typography>
-    </Box>
-  );
-};
 ```
 
 ---
