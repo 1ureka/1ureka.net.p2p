@@ -10,8 +10,7 @@ const LaunchPage = memo(() => (
         Share TCP Services Over P2P
       </Typography>
       <Typography variant="body2" sx={{ color: "text.secondary", maxWidth: 600 }}>
-        Connect directly with others without port forwarding, fixed IPs, or proxy services. Choose your role to get
-        started.
+        Share local TCP services directly with peers without port forwarding, fixed IPs, or relay servers.
       </Typography>
     </Box>
 

@@ -18,7 +18,6 @@
     "tcp",
     "port-forwarding",
     "nat-traversal",
-    "proxy",
     "tunnel",
     "electron",
     "desktop-app",
@@ -27,8 +26,6 @@
     "datachannel",
     "minecraft-server",
     "local-server",
-    "reverse-proxy",
-    "vpn-alternative",
     "no-central-server",
     "end-to-end-encryption",
     "cross-platform"
