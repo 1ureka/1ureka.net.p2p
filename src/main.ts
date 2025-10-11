@@ -46,7 +46,7 @@ export const getWindow = () => {
 // -----------------------------------------------------------------------------------------
 
 const handleReady = () => {
-  createWindow();
+  if (BrowserWindow.getAllWindows().length === 0) createWindow();
   createAdapterService();
 
   ipcMain.handle(IPCChannel.OSInfo, () => {
