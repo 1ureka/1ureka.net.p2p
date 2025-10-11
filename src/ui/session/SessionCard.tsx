@@ -16,22 +16,6 @@ import { useSession } from "@/transport-state/store";
 import { useAdapter } from "@/adapter-state/store";
 import { useState } from "react";
 
-const SessionCardLabel = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <Typography variant="body2" sx={{ color: "text.secondary", textWrap: "nowrap" }}>
-      {children}
-    </Typography>
-  );
-};
-
-const SessionCardSubBody = ({ children }: { children: React.ReactNode }) => (
-  <Box sx={{ display: "grid", gridTemplateColumns: "0.3fr 1fr", gap: 1.5, p: 2, px: 3 }}>{children}</Box>
-);
-
-export { SessionCardLabel, SessionCardSubBody };
-
-// -------------------------------------------------------------------------------------------------
-
 const SessionCardHeader = () => {
   const role = useSession((state) => state.role);
   const status = useSession((state) => state.status);

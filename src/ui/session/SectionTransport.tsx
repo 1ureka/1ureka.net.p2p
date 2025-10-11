@@ -2,43 +2,46 @@ import { Box, Divider, Typography } from "@mui/material";
 import { CardSubHeader } from "@/ui/components/Card";
 import { ConnectionIndicator } from "@/ui/session/SessionCardIndicator";
 import { SessionCardCopyButton } from "@/ui/session/SessionCardCopyBtn";
-import { SessionCardLabel, SessionCardSubBody } from "@/ui/session/SessionCard";
 
-import { useSession } from "@/transport-state/store";
 import { centerTextSx, ellipsisSx } from "@/ui/theme";
+import { useSession } from "@/transport-state/store";
+
+const Label = ({ children }: { children: React.ReactNode }) => (
+  <Typography variant="body2" sx={{ color: "text.secondary", textWrap: "nowrap" }}>
+    {children}
+  </Typography>
+);
+
+const Value = ({ children }: { children: React.ReactNode }) => (
+  <Typography variant="body2" sx={ellipsisSx}>
+    {children}
+  </Typography>
+);
 
 const TransportBody = () => {
   const session = useSession((state) => state.session);
   const status = useSession((state) => state.status);
 
   return (
-    <SessionCardSubBody>
-      <SessionCardLabel>Status</SessionCardLabel>
+    <Box sx={{ display: "grid", gridTemplateColumns: "0.3fr 1fr", gap: 1.5, p: 2, px: 3 }}>
+      <Label>Status</Label>
       <ConnectionIndicator status={status} />
 
-      <SessionCardLabel>Host</SessionCardLabel>
-      <Typography variant="body2" sx={ellipsisSx}>
-        {session.host || "--"}
-      </Typography>
+      <Label>Host</Label>
+      <Value>{session.host || "--"}</Value>
 
-      <SessionCardLabel>Client</SessionCardLabel>
-      <Typography variant="body2" sx={ellipsisSx}>
-        {session.client || "--"}
-      </Typography>
+      <Label>Client</Label>
+      <Value>{session.client || "--"}</Value>
 
-      <SessionCardLabel>Session ID</SessionCardLabel>
+      <Label>Session ID</Label>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-        <Typography variant="body2" sx={ellipsisSx}>
-          {session.id || "--"}
-        </Typography>
+        <Value>{session.id || "--"}</Value>
         <SessionCardCopyButton />
       </Box>
 
-      <SessionCardLabel>Created at</SessionCardLabel>
-      <Typography variant="body2" sx={ellipsisSx}>
-        {new Date(session.createdAt).toLocaleString()}
-      </Typography>
-    </SessionCardSubBody>
+      <Label>Created at</Label>
+      <Value>{new Date(session.createdAt).toLocaleString()}</Value>
+    </Box>
   );
 };
 
