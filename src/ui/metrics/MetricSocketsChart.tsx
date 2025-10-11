@@ -73,7 +73,6 @@ const SocketsChart = () => {
     width: 20,
     min: 0,
     max: getDataMax(points),
-    tickNumber: 6,
   };
 
   const series: LineSeries = {
