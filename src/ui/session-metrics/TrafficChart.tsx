@@ -44,7 +44,7 @@ const series2: LineSeries = {
   valueFormatter: formatBytes,
 };
 
-const SessionCardChart = () => {
+const TrafficChart = () => {
   const points = useSession((state) => state.traffic);
   const now = Date.now();
 
@@ -84,4 +84,4 @@ const SessionCardChart = () => {
   );
 };
 
-export { SessionCardChart };
+export { TrafficChart };

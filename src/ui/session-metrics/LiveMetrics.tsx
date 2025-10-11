@@ -1,19 +1,19 @@
 import ReadMoreRoundedIcon from "@mui/icons-material/ReadMoreRounded";
-import { Box, Typography } from "@mui/material";
+import { Box, Divider, Typography } from "@mui/material";
 
 import { useTab } from "@/ui/tabs";
 import { centerTextSx } from "@/ui/theme";
 import { GithubButton } from "@/ui/components/Github";
 import { CardSubHeader } from "@/ui/components/Card";
-import { SessionCardChart } from "@/ui/session/SessionCardChart";
+import { TrafficChart } from "@/ui/session-metrics/TrafficChart";
 
-const TrafficHeader = () => {
+const LiveMetricsHeader = () => {
   const setTab = useTab((state) => state.setTab);
 
   return (
     <CardSubHeader>
       <Typography variant="subtitle2" sx={{ color: "text.secondary", ...centerTextSx }}>
-        Traffic
+        Live Metrics
       </Typography>
 
       <Box sx={{ flex: 1 }} />
@@ -28,12 +28,14 @@ const TrafficHeader = () => {
   );
 };
 
-const TrafficBody = () => {
-  return (
+const LiveMetrics = () => (
+  <>
+    <LiveMetricsHeader />
+    <Divider />
     <Box sx={{ flex: 1, minHeight: 0, overflow: "auto", mb: -2 }}>
-      <SessionCardChart />
+      <TrafficChart />
     </Box>
-  );
-};
+  </>
+);
 
-export { TrafficHeader, TrafficBody };
+export { LiveMetrics };

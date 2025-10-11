@@ -8,7 +8,7 @@ import { GithubIconButton, GithubTooltip } from "@/ui/components/Github";
 
 import { AdapterSection } from "@/ui/session/SectionAdapter";
 import { TransportSection } from "@/ui/session/SectionTransport";
-import { TrafficHeader, TrafficBody } from "@/ui/session/SectionTraffic";
+import { LiveMetrics } from "@/ui/session-metrics/LiveMetrics";
 import { ConfirmPopover } from "@/ui/session/ConfirmPopover";
 
 import { handleStop, handleLeave } from "@/transport-state/handlers";
@@ -84,9 +84,7 @@ const SessionCard = () => (
     <Divider />
     <TransportSection />
     <Divider />
-    <TrafficHeader />
-    <Divider />
-    <TrafficBody />
+    <LiveMetrics />
   </Card>
 );
 
