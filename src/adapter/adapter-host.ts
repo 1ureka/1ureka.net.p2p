@@ -89,7 +89,7 @@ function createHostAdapter(send: (packet: Buffer) => void) {
 
     const handleErrorFromLocal = (error: Error) => {
       socket.destroy(); // 觸發 close 事件，close 事件會通知對端
-      reportError({
+      reportWarn({
         message: `Socket ${stringifySocketPair(socketPair)} encountered an error. Closing connection.`,
         data: error,
       });
@@ -156,7 +156,7 @@ function createHostAdapter(send: (packet: Buffer) => void) {
 
           if (!promise) {
             const pairStr = stringifySocketPair(pair);
-            reportError({ message: `Cannot process DATA packet: socket ${pairStr} not found.` });
+            reportWarn({ message: `Cannot process DATA packet: socket ${pairStr} not found.` });
           } else {
             // 利用 then 會順序執行的特性，保持 TCP 資料順序
             promise.then(() => handleDataFromRTC(pair, data));

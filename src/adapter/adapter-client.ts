@@ -11,7 +11,7 @@ import { defer, tryCatchSync } from "@/utils";
  * 建立 Client 端的 Adapter (建立虛擬 TCP 伺服器讓本地的 TCP 客戶端連接)
  */
 function createClientAdapter(send: (packet: Buffer) => void) {
-  const { reportLog, reportError } = createReporter("Client");
+  const { reportLog, reportError, reportWarn } = createReporter("Client");
 
   const chunker = createChunker();
   const reassembler = createReassembler();
@@ -54,7 +54,7 @@ function createClientAdapter(send: (packet: Buffer) => void) {
 
     const handleErrorFromLocal = (error: Error) => {
       socket.destroy(); // 觸發 close 事件，close 事件會通知對端
-      reportError({
+      reportWarn({
         message: `Socket ${stringifySocketPair(socketPair)} encountered an error. Closing connection.`,
         data: error,
       });
