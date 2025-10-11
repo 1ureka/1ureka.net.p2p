@@ -34,6 +34,20 @@ export function defer<T>() {
   return { promise, resolve, reject };
 }
 
+export const formatBytes = (bytes: number) => {
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  let value = bytes;
+  let unitIndex = 0;
+
+  while (value >= 90 && unitIndex < units.length - 1) {
+    value = value / 1024;
+    unitIndex++;
+  }
+
+  // 保留一位小數
+  return `${value.toFixed(1)} ${units[unitIndex]}`;
+};
+
 export type ConnectionLogLevel = "info" | "warn" | "error";
 export type ConnectionLogFormattedEntry = Omit<ConnectionLogEntry, "data"> & { data?: string };
 export type ConnectionLogEntry = {
