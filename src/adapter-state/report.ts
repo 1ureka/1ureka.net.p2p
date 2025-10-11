@@ -15,9 +15,13 @@ const getReportMethods = (level: "info" | "warn" | "error") => {
 };
 
 const getTrendIcon = (current: number, last: number): string => {
-  if (current > last) return "🔺";
-  if (current < last) return "🔻";
-  return ""; // 數字相同，無符號
+  if (current > last) return "^";
+  if (current < last) return "v";
+  return "-";
+};
+
+const padNumber = (num: number, width: number = 4): string => {
+  return num.toString().padStart(width, " ");
 };
 
 const reportInstance = (props: InstanceChangePayload) => {
@@ -25,11 +29,7 @@ const reportInstance = (props: InstanceChangePayload) => {
   win.webContents.send(IPCChannel.AdapterInstanceChange, props);
 };
 
-/**
- * Socket 狀態監控回報機制
- * 內部匯聚機制：隨時可以呼叫 reportSockets，但會每 5 秒匯聚一次並輸出摘要日誌
- */
-const createReportSockets = () => {
+const createSocketsReporter = () => {
   const INTERVAL_MS = 5000;
 
   let activeCount = 0;
@@ -50,8 +50,8 @@ const createReportSockets = () => {
     intervalId = setInterval(() => {
       if (activeCount === 0 && closedCount === 0) return;
 
-      const activeMessage = `${getTrendIcon(activeCount, lastActiveCount)} ${activeCount} active`;
-      const closedMessage = `${getTrendIcon(closedCount, lastClosedCount)} ${closedCount} closed`;
+      const activeMessage = `${getTrendIcon(activeCount, lastActiveCount)}${padNumber(activeCount)} active`;
+      const closedMessage = `${getTrendIcon(closedCount, lastClosedCount)}${padNumber(closedCount)} closed`;
 
       reportLog({ message: `Adapter operation report: ${activeMessage} | ${closedMessage} sockets` });
       lastActiveCount = activeCount;
@@ -86,7 +86,7 @@ const createReportSockets = () => {
   return { reportSockets, startSummary, stopSummary };
 };
 
-const { reportSockets, startSummary, stopSummary } = createReportSockets();
+const { reportSockets, startSummary, stopSummary } = createSocketsReporter();
 
 const reportMappings = (props: MappingChangePayload) => {
   const win = getWindow();
