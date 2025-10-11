@@ -1,6 +1,6 @@
 import { ipcMain } from "electron";
 import { getWindow } from "@/main";
-import { createReporter, reportClose, reportInstance } from "@/adapter-state/report";
+import { createReporter, reportClose, reportInstance, startSummary } from "@/adapter-state/report";
 import { createHostAdapter } from "@/adapter/adapter-host";
 import { createClientAdapter } from "@/adapter/adapter-client";
 import { IPCChannel } from "@/ipc";
@@ -14,6 +14,7 @@ const createAdapterService = () => {
 
   ipcMain.handle(IPCChannel.AdapterStartHost, () => {
     const reporter = createReporter("Host");
+    startSummary();
 
     if (win.adapter) {
       reporter.reportWarn({ message: "Adapter already running. Ignoring duplicate start request." });
@@ -48,6 +49,7 @@ const createAdapterService = () => {
 
   ipcMain.handle(IPCChannel.AdapterStartClient, () => {
     const reporter = createReporter("Client");
+    startSummary();
 
     if (win.adapter) {
       reporter.reportWarn({ message: "Adapter already running. Ignoring duplicate start request." });
