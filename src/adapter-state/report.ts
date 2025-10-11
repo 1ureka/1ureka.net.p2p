@@ -48,6 +48,8 @@ const createReportSockets = () => {
     lastClosedCount = 0;
 
     intervalId = setInterval(() => {
+      if (activeCount === 0 && closedCount === 0) return;
+
       const activeMessage = `${getTrendIcon(activeCount, lastActiveCount)} ${activeCount} active`;
       const closedMessage = `${getTrendIcon(closedCount, lastClosedCount)} ${closedCount} closed`;
 
