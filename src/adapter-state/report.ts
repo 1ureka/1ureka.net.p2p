@@ -14,79 +14,15 @@ const getReportMethods = (level: "info" | "warn" | "error") => {
   return console.error;
 };
 
-const getTrendIcon = (current: number, last: number): string => {
-  if (current > last) return "^";
-  if (current < last) return "v";
-  return "-";
-};
-
-const padNumber = (num: number, width: number = 4): string => {
-  return num.toString().padStart(width, " ");
-};
-
 const reportInstance = (props: InstanceChangePayload) => {
   const win = getWindow();
   win.webContents.send(IPCChannel.AdapterInstanceChange, props);
 };
 
-const createSocketsReporter = () => {
-  const INTERVAL_MS = 5000;
-
-  let activeCount = 0;
-  let closedCount = 0;
-  let lastActiveCount = 0;
-  let lastClosedCount = 0;
-  let intervalId: ReturnType<typeof setInterval> | null = null;
-
-  const startSummary = () => {
-    if (intervalId !== null) return;
-    const { reportLog } = createReporter("Adapter");
-
-    activeCount = 0;
-    closedCount = 0;
-    lastActiveCount = 0;
-    lastClosedCount = 0;
-
-    intervalId = setInterval(() => {
-      if (activeCount === 0 && closedCount === 0) return;
-
-      const activeMessage = `${getTrendIcon(activeCount, lastActiveCount)}${padNumber(activeCount)} active`;
-      const closedMessage = `${getTrendIcon(closedCount, lastClosedCount)}${padNumber(closedCount)} closed`;
-
-      reportLog({ message: `Adapter operation report: ${activeMessage} | ${closedMessage} sockets` });
-      lastActiveCount = activeCount;
-      lastClosedCount = closedCount;
-    }, INTERVAL_MS);
-  };
-
-  const stopSummary = () => {
-    if (intervalId !== null) {
-      clearInterval(intervalId);
-      intervalId = null;
-    }
-
-    activeCount = 0;
-    closedCount = 0;
-    lastActiveCount = 0;
-    lastClosedCount = 0;
-  };
-
-  const reportSockets = (props: SocketChangePayload) => {
-    const win = getWindow();
-    win.webContents.send(IPCChannel.AdapterSocketChange, props);
-
-    if (props.type === "add") {
-      activeCount++;
-    } else if (props.type === "del") {
-      activeCount--;
-      closedCount++;
-    }
-  };
-
-  return { reportSockets, startSummary, stopSummary };
+const reportSockets = (props: SocketChangePayload) => {
+  const win = getWindow();
+  win.webContents.send(IPCChannel.AdapterSocketChange, props);
 };
-
-const { reportSockets, startSummary, stopSummary } = createSocketsReporter();
 
 const reportMappings = (props: MappingChangePayload) => {
   const win = getWindow();
@@ -132,7 +68,6 @@ const reportClose = () => {
   reportSockets({ type: "clear" });
   reportMappings({ type: "clear" });
   reportRules({ type: "clear" });
-  stopSummary();
 };
 
-export { createReporter, reportClose, reportInstance, reportMappings, reportRules, reportSockets, startSummary };
+export { createReporter, reportClose, reportInstance, reportMappings, reportRules, reportSockets };
