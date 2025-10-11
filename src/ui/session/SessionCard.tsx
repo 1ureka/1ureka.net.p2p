@@ -5,8 +5,9 @@ import { Box, Divider, Typography } from "@mui/material";
 import { centerTextSx } from "@/ui/theme";
 import { Card, CardHeader } from "@/ui/components/Card";
 import { GithubIconButton, GithubTooltip } from "@/ui/components/Github";
-import { AdapterHeader, AdapterBody } from "@/ui/session/SectionAdapter";
-import { TransportHeader, TransportBody } from "@/ui/session/SectionTransport";
+
+import { AdapterSection } from "@/ui/session/SectionAdapter";
+import { TransportSection } from "@/ui/session/SectionTransport";
 import { TrafficHeader, TrafficBody } from "@/ui/session/SectionTraffic";
 import { ConfirmPopover } from "@/ui/session/ConfirmPopover";
 
@@ -95,19 +96,10 @@ const SessionCardHeader = () => {
 const SessionCard = () => (
   <Card sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
     <SessionCardHeader />
-
-    <AdapterHeader />
+    <AdapterSection />
     <Divider />
-    <AdapterBody />
-
+    <TransportSection />
     <Divider />
-
-    <TransportHeader />
-    <Divider />
-    <TransportBody />
-
-    <Divider />
-
     <TrafficHeader />
     <Divider />
     <TrafficBody />

@@ -1,21 +1,10 @@
-import { Typography } from "@mui/material";
-
-import { centerTextSx, ellipsisSx } from "@/ui/theme";
+import { Divider, Typography } from "@mui/material";
 import { CardSubHeader } from "@/ui/components/Card";
 import { ConnectionIndicator } from "@/ui/session/SessionCardIndicator";
 import { SessionCardLabel, SessionCardSubBody } from "@/ui/session/SessionCard";
 
+import { centerTextSx, ellipsisSx } from "@/ui/theme";
 import { useAdapter } from "@/adapter-state/store";
-
-const AdapterHeader = () => {
-  return (
-    <CardSubHeader>
-      <Typography variant="subtitle2" sx={{ color: "text.secondary", ...centerTextSx }}>
-        Adapter
-      </Typography>
-    </CardSubHeader>
-  );
-};
 
 const AdapterBody = () => {
   const instance = useAdapter((state) => state.instance);
@@ -35,4 +24,16 @@ const AdapterBody = () => {
   );
 };
 
-export { AdapterHeader, AdapterBody };
+const AdapterSection = () => (
+  <>
+    <CardSubHeader>
+      <Typography variant="subtitle2" sx={{ color: "text.secondary", ...centerTextSx }}>
+        Adapter
+      </Typography>
+    </CardSubHeader>
+    <Divider />
+    <AdapterBody />
+  </>
+);
+
+export { AdapterSection };

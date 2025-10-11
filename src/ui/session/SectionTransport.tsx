@@ -1,22 +1,11 @@
-import { Box, Typography } from "@mui/material";
-
-import { centerTextSx, ellipsisSx } from "@/ui/theme";
+import { Box, Divider, Typography } from "@mui/material";
 import { CardSubHeader } from "@/ui/components/Card";
 import { ConnectionIndicator } from "@/ui/session/SessionCardIndicator";
 import { SessionCardCopyButton } from "@/ui/session/SessionCardCopyBtn";
 import { SessionCardLabel, SessionCardSubBody } from "@/ui/session/SessionCard";
 
 import { useSession } from "@/transport-state/store";
-
-const TransportHeader = () => {
-  return (
-    <CardSubHeader>
-      <Typography variant="subtitle2" sx={{ color: "text.secondary", ...centerTextSx }}>
-        Transport
-      </Typography>
-    </CardSubHeader>
-  );
-};
+import { centerTextSx, ellipsisSx } from "@/ui/theme";
 
 const TransportBody = () => {
   const session = useSession((state) => state.session);
@@ -53,4 +42,16 @@ const TransportBody = () => {
   );
 };
 
-export { TransportHeader, TransportBody };
+const TransportSection = () => (
+  <>
+    <CardSubHeader>
+      <Typography variant="subtitle2" sx={{ color: "text.secondary", ...centerTextSx }}>
+        Transport
+      </Typography>
+    </CardSubHeader>
+    <Divider />
+    <TransportBody />
+  </>
+);
+
+export { TransportSection };
