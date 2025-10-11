@@ -42,6 +42,14 @@ const useSocketPoints = create<{ points: SocketsPoint[] }>((set) => {
   return { points: [] };
 });
 
+const getDataMax = (points: SocketsPoint[]) => {
+  const candidates = [10, 25, 50, 100, 500, 1000];
+  if (points.length === 0) return candidates[0];
+  const dataMax = Math.max(...points.map((p) => p.count));
+  const target = Math.max(1, dataMax);
+  return candidates.find((c) => c >= target) ?? candidates[candidates.length - 1];
+};
+
 const uuid = crypto.randomUUID();
 
 const SocketsChart = () => {
@@ -62,6 +70,10 @@ const SocketsChart = () => {
 
   const yAxis: YAxis<"linear"> = {
     dataKey: "count",
+    width: 20,
+    min: 0,
+    max: getDataMax(points),
+    tickNumber: 6,
   };
 
   const series: LineSeries = {
