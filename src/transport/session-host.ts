@@ -3,7 +3,7 @@ import { createPeerConnection } from "@/transport/transport-pc";
 import { bindDataChannelIPC } from "@/transport/transport-ipc";
 import { bindDataChannelTraffic } from "@/transport/transport-traffic";
 import { createSession, pollingSession, sendSignal } from "@/transport/session-utils";
-import { handleStartHostAdapter } from "@/adapter-state/handlers";
+import { handleStartHostAdapter, handleStopAdapter } from "@/adapter-state/handlers";
 
 const GATHER_CANDIDATE_TIMEOUT = 2000; // 收集 ice candidate 的最大等待時間（毫秒）
 const WAIT_DATA_CHANNEL_TIMEOUT = 5000; // 等待 DataChannel 開啟的最大時間（毫秒）
@@ -32,6 +32,7 @@ const createHostSession = async () => {
     sessionId = id;
     if (getAborted()) throw new Error("Session aborted after creation.");
   } catch (error) {
+    await handleStopAdapter();
     reportError({ message: "Failed to create session.", data: error });
     reportStatus("failed");
     return;
@@ -47,6 +48,7 @@ const createHostSession = async () => {
       if (session.status === "joined") break;
     }
   } catch (error) {
+    await handleStopAdapter();
     reportError({ message: "Error while waiting for client to join session.", data: error });
     reportStatus("failed");
     return;
@@ -72,6 +74,7 @@ const createHostSession = async () => {
       }
     }
   } catch (error) {
+    await handleStopAdapter();
     reportError({ message: "Failed to complete signaling exchange.", data: error });
     reportStatus("failed");
     close();
@@ -86,7 +89,8 @@ const createHostSession = async () => {
     bindDataChannelIPC(dataChannel);
     if (getAborted()) throw new Error("Session aborted after DataChannel established.");
 
-    onceAborted(() => {
+    onceAborted(async () => {
+      await handleStopAdapter();
       reportLog({ message: "Session aborted and connection closed." });
       reportStatus("failed");
       close();
@@ -95,6 +99,7 @@ const createHostSession = async () => {
     reportLog({ message: "DataChannel established successfully." });
     reportStatus("connected");
   } catch (error) {
+    await handleStopAdapter();
     reportError({ message: "Failed to establish DataChannel connection.", data: error });
     reportStatus("failed");
     close();
