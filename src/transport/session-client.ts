@@ -71,14 +71,14 @@ const createClientSession = async (sessionId: string) => {
     bindDataChannelIPC(dataChannel);
     if (getAborted()) throw new Error("Session aborted after DataChannel established.");
 
-    reportStatus("connected");
-    reportLog({ message: "DataChannel established successfully." });
-
     onceAborted(() => {
       reportLog({ message: "Session aborted and connection closed." });
       reportStatus("failed");
       close();
     });
+
+    reportLog({ message: "DataChannel established successfully." });
+    reportStatus("connected");
   } catch (error) {
     reportError({ message: "Failed to establish DataChannel connection.", data: error });
     reportStatus("failed");
