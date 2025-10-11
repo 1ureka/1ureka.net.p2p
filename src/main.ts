@@ -2,7 +2,7 @@ import os from "node:os";
 import path from "node:path";
 import { inspect } from "node:util";
 
-import { app, BrowserWindow, Menu, ipcMain, shell } from "electron";
+import { app, BrowserWindow, Menu, ipcMain } from "electron";
 import { createAdapterService } from "@/adapter/adapter-service";
 import { IPCChannel } from "@/ipc";
 
@@ -62,10 +62,6 @@ const handleReady = () => {
 
   ipcMain.handle(IPCChannel.PrettyFormat, async (_, data: unknown) => {
     return inspect(data, { depth: 3, colors: false });
-  });
-
-  ipcMain.handle(IPCChannel.OpenExternalLink, async (_, url: string) => {
-    await shell.openExternal(url);
   });
 };
 
