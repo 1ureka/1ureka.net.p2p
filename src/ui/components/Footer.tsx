@@ -27,7 +27,7 @@ const Footer = () => {
       </GithubButton>
 
       <Typography variant="body2" sx={{ color: "text.secondary", textAlign: "right", ...centerTextSx }}>
-        v1.0.0-alpha.8
+        v1.0.0-alpha.9
       </Typography>
     </Box>
   );

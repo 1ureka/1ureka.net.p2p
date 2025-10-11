@@ -80,7 +80,6 @@ function createHostAdapter(send: (packet: Buffer) => void) {
       new Promise((res) => {
         socket.on("connect", () => {
           res();
-          reportLog({ message: `Socket ${stringifySocketPair(socketPair)} connected successfully.` });
           reportSockets({ type: "add", pair: socketPair });
         });
       })
@@ -127,7 +126,6 @@ function createHostAdapter(send: (packet: Buffer) => void) {
       sockets.delete(socketPair);
       socketPromises.delete(socketPair);
 
-      reportLog({ message: `Socket ${stringifySocketPair(socketPair)} closed.` });
       reportSockets({ type: "del", pair: socketPair });
     };
 
@@ -141,17 +139,11 @@ function createHostAdapter(send: (packet: Buffer) => void) {
    */
   const handlePacketFromRTC = (_: unknown, buffer: Buffer) => {
     const handleDataFromRTC = (socketPair: SocketPair, data: Buffer) => {
-      const success = sockets.get(socketPair)?.write(data);
-      if (!success) {
-        return reportError({
-          message: `Cannot process incoming packet: socket ${stringifySocketPair(socketPair)} does not exist or is not writable.`,
-        });
-      }
+      sockets.get(socketPair)?.write(data);
     };
 
     const handleCloseFromRTC = (socketPair: SocketPair) => {
       sockets.get(socketPair)?.destroy();
-      reportLog({ message: `Socket ${stringifySocketPair(socketPair)} closed by remote client.` });
     };
 
     try {

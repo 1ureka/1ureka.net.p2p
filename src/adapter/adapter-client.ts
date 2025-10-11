@@ -37,7 +37,6 @@ function createClientAdapter(send: (packet: Buffer) => void) {
     }
 
     sockets.set(socketPair, socket);
-    reportLog({ message: `Socket ${stringifySocketPair(socketPair)} connected successfully.` });
     reportSockets({ type: "add", pair: socketPair });
 
     try {
@@ -91,7 +90,6 @@ function createClientAdapter(send: (packet: Buffer) => void) {
       socket.off("data", handleDataFromLocal);
       sockets.delete(socketPair);
 
-      reportLog({ message: `Socket ${stringifySocketPair(socketPair)} closed.` });
       reportSockets({ type: "del", pair: socketPair });
     };
 
@@ -110,7 +108,6 @@ function createClientAdapter(send: (packet: Buffer) => void) {
 
     const handleCloseFromRTC = (socketPair: SocketPair) => {
       sockets.get(socketPair)?.destroy();
-      reportLog({ message: `Socket ${stringifySocketPair(socketPair)} closed by remote server.` });
     };
 
     try {
@@ -151,8 +148,6 @@ function createClientAdapter(send: (packet: Buffer) => void) {
       const sockets = serverSockets.get(id)!; /* eslint-disable-line @typescript-eslint/no-non-null-assertion */
       sockets.add(socket);
       socket.once("close", () => sockets.delete(socket));
-
-      reportLog({ message: `Accepted new TCP connection from ${socket.remoteAddress}:${socket.remotePort}` });
       handleConnectFromLocal(socket, map.dstAddr, map.dstPort);
     };
 

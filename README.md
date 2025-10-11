@@ -118,6 +118,20 @@ If the Host enables `allowLAN`, the Client can connect to other devices on the H
 
 ---
 
+# Testing & Quality Assurance
+
+This project has been validated with real-world use cases including:
+
+- Web development servers with HMR (Vite)
+- AI/LLM streaming APIs (Ollama)
+- Database connections (PostgreSQL)
+- Remote IDE (VS Code Code Server)
+- Cross-region gaming (Minecraft with large modpacks)
+
+For detailed testing scenarios and results, see [TESTING.md](TESTING.md).
+
+---
+
 # Issues & Support
 
 If you run into any problems or bugs, feel free to report them on [GitHub Issues](https://github.com/1ureka/1ureka.net.p2p/issues).

@@ -2,12 +2,7 @@ import type { XAxis, YAxis } from "@mui/x-charts/models";
 import { LineChart, type LineSeries } from "@mui/x-charts/LineChart";
 import { theme } from "@/ui/theme";
 import { useSession } from "@/transport-state/store";
-
-const formatBytes = (bytes: number) => {
-  if (bytes < 1024) return `${bytes} B`;
-  else if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  else return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-};
+import { formatBytes } from "@/utils";
 
 const uuid = crypto.randomUUID();
 
@@ -27,8 +22,13 @@ const TrafficChart = ({ direction }: { direction: "egress" | "ingress" }) => {
     valueFormatter: formatElapsed,
   };
 
-  const yAxis: YAxis<"linear"> = {
+  const yAxis: YAxis<"symlog"> = {
     dataKey: direction,
+    scaleType: "symlog",
+    width: 48,
+    min: 0,
+    max: 100 * 1024 * 1024,
+    tickInterval: [10, 1 * 1024, 1 * 1024 * 1024, 100 * 1024 * 1024],
     valueFormatter: formatBytes,
   };
 

@@ -40,7 +40,7 @@ const useAdapter = create<AdapterState>((set) => {
   window.electron.on(IPCChannel.AdapterLogsChange, ({ type, entry }: LogsChangePayload) => {
     set((state) => {
       if (type === "add" && entry) {
-        return { history: [...state.history, entry].slice(-500) };
+        return { history: [...state.history, entry].slice(-250) };
       }
       if (type === "clear") {
         return { history: [] };
