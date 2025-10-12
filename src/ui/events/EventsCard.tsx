@@ -1,43 +1,52 @@
-import ReadMoreRoundedIcon from "@mui/icons-material/ReadMoreRounded";
+import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
+import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import { Box, Typography } from "@mui/material";
-import { useTab } from "@/ui/tabs";
+import { useState } from "react";
 
-import { centerTextSx } from "@/ui/theme";
 import { Card, CardHeader } from "@/ui/components/Card";
-import { GithubButton } from "@/ui/components/Github";
+import { GithubButton, GithubTooltip } from "@/ui/components/Github";
 import { EventsList, useLogs } from "@/ui/events/EventsList";
 import { EventsSummary } from "@/ui/events/EventsSummary";
+import { EventsFilterPopover, useFilters } from "@/ui/events/EventsFilterPopover";
 
-const LinkButton = () => {
-  const setTab = useTab((state) => state.setTab);
+const EventsCardHeader = () => {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  const handleOpenPopover = (e: React.MouseEvent<HTMLElement>) => setAnchorEl(e.currentTarget);
+  const handleClosePopover = () => setAnchorEl(null);
+
   return (
-    <GithubButton onClick={() => setTab("events")} size="small">
-      <Typography variant="body2" sx={centerTextSx}>
-        Details
+    <CardHeader>
+      <Typography variant="subtitle1" component="h2">
+        Events
       </Typography>
-      <ReadMoreRoundedIcon fontSize="small" />
-    </GithubButton>
+
+      <Box sx={{ flex: 1 }} />
+
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+        <EventsSummary />
+
+        <GithubTooltip title="Filter events">
+          <GithubButton size="small" onClick={handleOpenPopover}>
+            <FilterListRoundedIcon fontSize="small" sx={{ mx: 0.5 }} />
+            <ExpandMoreRoundedIcon fontSize="small" />
+          </GithubButton>
+        </GithubTooltip>
+      </Box>
+
+      <EventsFilterPopover anchorEl={anchorEl} onClose={handleClosePopover} />
+    </CardHeader>
   );
 };
 
-const EventsCardHeader = () => (
-  <CardHeader>
-    <Typography variant="subtitle1" component="h2">
-      Events
-    </Typography>
-
-    <Box sx={{ flex: 1 }} />
-
-    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, color: "text.secondary" }}>
-      <LinkButton />
-      <EventsSummary display={{ info: false, warn: true, error: true, total: false }} />
-    </Box>
-  </CardHeader>
-);
-
 const EventsCardBody = () => {
-  const logs = useLogs();
-  return <EventsList logs={logs} hasFilters={false} />;
+  const allLogs = useLogs();
+  const filters = useFilters((state) => state.filters);
+
+  const filteredLogs = allLogs.filter((log) => filters.includes(log.level));
+  const hasFilters = filters.length < 3;
+
+  return <EventsList logs={filteredLogs} hasFilters={hasFilters} />;
 };
 
 const EventsCard = () => (

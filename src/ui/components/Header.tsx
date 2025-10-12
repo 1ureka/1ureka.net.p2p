@@ -1,89 +1,74 @@
 import NatRoundedIcon from "@mui/icons-material/NatRounded";
 import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
-import { Box, BoxProps, Button, Tab, Tabs, Typography } from "@mui/material";
+import DeveloperModeRoundedIcon from "@mui/icons-material/DeveloperModeRounded";
+
+import { Box, Button, Typography, useMediaQuery } from "@mui/material";
 import { centerTextSx } from "@/ui/theme";
-import { useTab, type TabEntry } from "@/ui/tabs";
-import { useSession } from "@/transport-state/store";
 import { useState } from "react";
 import { UrlDialog } from "@/ui/components/UrlDialog";
+import { GithubTooltip } from "@/ui/components/Github";
+import { IPCChannel } from "@/ipc";
 
 const HeaderTitle = () => {
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
       <NatRoundedIcon fontSize="large" color="primary" />
-      <Typography variant="h5" component="h1" sx={centerTextSx}>
-        1ureka.net.p2p
-      </Typography>
+      <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+        <Typography variant="h5" component="h1" sx={centerTextSx}>
+          1ureka.net.p2p
+        </Typography>
+        <Typography
+          variant="body2"
+          sx={{ display: { xs: "none", md: "block" }, color: "text.secondary", textAlign: "right", ...centerTextSx }}
+        >
+          v1.0.0-alpha.10
+        </Typography>
+      </Box>
     </Box>
   );
 };
 
 const HeaderLinks = () => {
+  const isSm = useMediaQuery((theme) => theme.breakpoints.up("sm"));
   const [dialogOpen, setDialogOpen] = useState(false);
   const helpUrl = "https://github.com/1ureka/1ureka.net.p2p?tab=readme-ov-file#1urekanetp2p";
 
   return (
     <>
-      <Box sx={{ color: "text.secondary", display: "flex", alignItems: "center", gap: 2 }}>
-        <Button
-          color="inherit"
-          sx={{ textTransform: "none", textWrap: "nowrap" }}
-          startIcon={<HelpRoundedIcon />}
-          onClick={() => setDialogOpen(true)}
-        >
-          help & support
-        </Button>
+      <Box sx={{ color: "text.secondary", display: "flex", alignItems: "center", gap: 1 }}>
+        {isSm ? (
+          <Button
+            color="inherit"
+            sx={{ textTransform: "none", textWrap: "nowrap" }}
+            startIcon={<HelpRoundedIcon />}
+            onClick={() => setDialogOpen(true)}
+          >
+            help & support
+          </Button>
+        ) : (
+          <GithubTooltip title="Help & support">
+            <Button color="inherit" sx={{ minWidth: 0 }} onClick={() => setDialogOpen(true)}>
+              <HelpRoundedIcon fontSize="small" />
+            </Button>
+          </GithubTooltip>
+        )}
+
+        <GithubTooltip title="Open developer tools">
+          <Button color="inherit" sx={{ minWidth: 0 }} onClick={() => window.electron.send(IPCChannel.DeveloperTools)}>
+            <DeveloperModeRoundedIcon fontSize="small" />
+          </Button>
+        </GithubTooltip>
       </Box>
       <UrlDialog open={dialogOpen} url={helpUrl} onClose={() => setDialogOpen(false)} />
     </>
   );
 };
 
-const HeaderTabs = () => {
-  const status = useSession((state) => state.status);
-  const { tab, setTab } = useTab();
-
-  const tabs: TabEntry[] = [
-    { label: "Overview", value: "overview", disabled: false },
-    { label: "Events", value: "events", disabled: ["disconnected", "joining"].includes(status) },
-    { label: "Metrics", value: "metrics", disabled: ["disconnected", "joining"].includes(status) },
-  ];
-
-  return (
-    <Tabs
-      value={tab}
-      onChange={(_, v) => setTab(v)}
-      slotProps={{ indicator: { children: <span className="MuiTabs-indicatorSpan" /> } }}
-      sx={{
-        mt: 2.5,
-        "& .MuiTabs-indicator": { display: "flex", justifyContent: "center", bgcolor: "transparent" },
-        "& .MuiTabs-indicatorSpan": { maxWidth: 40, width: 1, bgcolor: "primary.main" },
-        "& .MuiTab-root": { textTransform: "none", "&:not(.Mui-selected):hover": { color: "text.primary" } },
-      }}
-    >
-      {tabs.map(({ label, value, disabled }) => (
-        <Tab key={value} label={label} value={value} disabled={disabled} />
-      ))}
-    </Tabs>
-  );
-};
-
-const headerInnerSx: BoxProps["sx"] = {
-  display: "grid",
-  alignItems: "center",
-  gap: 3,
-  gridTemplateColumns: "minmax(min-content, 1fr) minmax(min-content, auto) minmax(min-content, 1fr)",
-  "& > div:nth-of-type(1)": { justifySelf: "start" },
-  "& > div:nth-of-type(2)": { justifySelf: "center" },
-  "& > div:nth-of-type(3)": { justifySelf: "end" },
-};
-
 const Header = () => {
   return (
     <Box sx={{ px: 4, bgcolor: "background.header", borderBottom: "2px solid", borderColor: "divider" }}>
-      <Box sx={headerInnerSx}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2, justifyContent: "space-between", height: 64 }}>
         <HeaderTitle />
-        <HeaderTabs />
         <HeaderLinks />
       </Box>
     </Box>

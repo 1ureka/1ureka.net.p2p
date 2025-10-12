@@ -21,7 +21,6 @@ const createWindow = () => {
   if (mainWindow) return;
 
   mainWindow = new BrowserWindow({
-    minWidth: 850,
     width: 1250,
     height: 850,
     webPreferences: { preload: path.join(__dirname, "preload.js") },
@@ -46,7 +45,7 @@ export const getWindow = () => {
 // -----------------------------------------------------------------------------------------
 
 const handleReady = () => {
-  createWindow();
+  if (BrowserWindow.getAllWindows().length === 0) createWindow();
   createAdapterService();
 
   ipcMain.handle(IPCChannel.OSInfo, () => {

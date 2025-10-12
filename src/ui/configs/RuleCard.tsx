@@ -60,7 +60,7 @@ const RuleCard = () => {
             Rules
           </Typography>
 
-          <GithubTooltip title="Rules only affect new connections. Existing connections remain unaffected when rules are changed during an active session.">
+          <GithubTooltip title="Existing connections remain unaffected when rules are changed during an active session.">
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, cursor: "help", color: "text.secondary" }}>
               <Typography
                 variant="body2"
@@ -95,7 +95,7 @@ const RuleCard = () => {
                 </Typography>
               </Box>
 
-              <GithubTooltip title={disabled ? "Start adapter first" : ""}>
+              <GithubTooltip title={disabled ? "Adapter is not running" : ""}>
                 <GithubSwitch checked={rules[rule]} onChange={createChangeHandler(rule)} disabled={disabled} />
               </GithubTooltip>
             </Box>

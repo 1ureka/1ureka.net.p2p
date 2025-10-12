@@ -1,5 +1,6 @@
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
+import SummarizeRoundedIcon from "@mui/icons-material/SummarizeRounded";
 import { Box, Typography } from "@mui/material";
 
 import { Card, CardHeader } from "@/ui/components/Card";
@@ -8,10 +9,39 @@ import { MappingCardNoItemDisplay } from "@/ui/configs/MappingCardNoItem";
 import { MappingCardList, MappingCardListItem } from "@/ui/configs/MappingCardList";
 import { CreateMappingPopover } from "@/ui/configs/MappingPopover";
 
+import { centerTextSx } from "@/ui/theme";
 import { useAdapter } from "@/adapter-state/store";
 import { useState } from "react";
 
+const StatChip = ({ value }: { value: number }) => {
+  const color = "text.secondary";
+  const Icon = SummarizeRoundedIcon;
+
+  return (
+    <Box sx={{ borderRadius: 1, outline: "2px solid", outlineColor: "divider", overflow: "hidden" }}>
+      <GithubTooltip title={"Total mapping count"}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            p: 0.5,
+            cursor: "help",
+            "&:hover": { bgcolor: "action.hover" },
+          }}
+        >
+          <Icon fontSize="small" sx={{ color }} />
+          <Typography variant="body2" sx={{ color, ...centerTextSx }}>
+            {value}
+          </Typography>
+        </Box>
+      </GithubTooltip>
+    </Box>
+  );
+};
+
 const MappingCardHeader = () => {
+  const mappings = useAdapter((state) => state.mappings);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const instance = useAdapter((state) => state.instance);
   const addDisabled = instance === null;
@@ -27,12 +57,16 @@ const MappingCardHeader = () => {
 
       <Box sx={{ flex: 1 }} />
 
-      <GithubTooltip title={addDisabled ? "Start adapter first" : "Add a new mapping"}>
-        <GithubButton size="small" disabled={addDisabled} onClick={handleOpen}>
-          <AddRoundedIcon fontSize="small" sx={{ mx: 0.5 }} />
-          <ExpandMoreRoundedIcon fontSize="small" />
-        </GithubButton>
-      </GithubTooltip>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+        <StatChip value={mappings.length} />
+
+        <GithubTooltip title={addDisabled ? "Adapter is not running" : "Add a new mapping"}>
+          <GithubButton size="small" disabled={addDisabled} onClick={handleOpen}>
+            <AddRoundedIcon fontSize="small" sx={{ mx: 0.5 }} />
+            <ExpandMoreRoundedIcon fontSize="small" />
+          </GithubButton>
+        </GithubTooltip>
+      </Box>
 
       <CreateMappingPopover anchorEl={anchorEl} onClose={handleClose} />
     </CardHeader>

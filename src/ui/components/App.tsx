@@ -1,15 +1,10 @@
 import { Box, Stack } from "@mui/material";
 import { motion, AnimatePresence } from "motion/react";
 import { useSession } from "@/transport-state/store";
-import { useTab } from "@/ui/tabs";
 import { memo } from "react";
 
 import { Header } from "@/ui/components/Header";
-import { Footer } from "@/ui/components/Footer";
 import { LaunchPage } from "@/ui/launch/LaunchPage";
-import { EventsPage } from "@/ui/events/EventsPage";
-import { MetricPage } from "@/ui/metrics/MetricPage";
-
 import { SessionCard } from "@/ui/session/SessionCard";
 import { ConfigsCard } from "@/ui/configs/ConfigsCard";
 import { EventsCard } from "@/ui/events/EventsCard";
@@ -38,29 +33,18 @@ const PageWrapperProps = {
 
 const Pages = () => {
   const status = useSession((state) => state.status);
-  const tab = useTab((state) => state.tab);
-  const overviewType = ["disconnected", "joining"].includes(status) ? null : "session";
+  const sessionActive = !["disconnected", "joining"].includes(status);
 
   return (
     <AnimatePresence mode="wait">
-      {tab === "overview" && overviewType === null && (
+      {!sessionActive && (
         <Stack key="overview-null" {...PageWrapperProps}>
           <LaunchPage />
         </Stack>
       )}
-      {tab === "overview" && overviewType !== null && (
+      {sessionActive && (
         <Stack key="overview-session" {...PageWrapperProps}>
           <OverviewPage />
-        </Stack>
-      )}
-      {tab === "events" && (
-        <Stack key="events" {...PageWrapperProps}>
-          <EventsPage />
-        </Stack>
-      )}
-      {tab === "metrics" && (
-        <Stack key="metrics" {...PageWrapperProps}>
-          <MetricPage />
         </Stack>
       )}
     </AnimatePresence>
@@ -68,10 +52,9 @@ const Pages = () => {
 };
 
 const App = () => (
-  <Stack sx={{ height: "100dvh" }}>
+  <Stack sx={{ height: "100dvh", overflow: "hidden" }}>
     <Header />
     <Pages />
-    <Footer />
   </Stack>
 );
 

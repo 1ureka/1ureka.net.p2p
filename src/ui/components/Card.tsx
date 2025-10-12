@@ -27,9 +27,12 @@ const CardSubHeader = ({ children, sx }: { children: React.ReactNode; sx?: BoxPr
     generateColorMix(palette.background.paper, palette.background.default, 50);
 
   return (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 1, minHeight: 40, pl: 2, pr: 1, bgcolor, ...sx }}>
-      {children}
-    </Box>
+    <>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, minHeight: 40, pl: 2, pr: 1, bgcolor, ...sx }}>
+        {children}
+      </Box>
+      <Divider />
+    </>
   );
 };
 

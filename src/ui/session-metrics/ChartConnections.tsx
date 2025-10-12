@@ -4,22 +4,17 @@ import { theme } from "@/ui/theme";
 import { useAdapter } from "@/adapter-state/store";
 import { create } from "zustand";
 
-type SocketsPoint = {
-  timestamp: number;
-  count: number;
-};
+const MAX_AGE_MS = 60000;
+const INTERVAL_MS = 1000;
+const INTERVAL_FILTER_MS = 60000;
+type SocketsPoint = { timestamp: number; count: number };
 
 const useSocketPoints = create<{ points: SocketsPoint[] }>((set) => {
-  const MAX_AGE_MS = 60000;
-  const INTERVAL_MS = 1000;
-  const INTERVAL_FILTER_MS = 60000;
   let counts = 0;
   let lastFilter = Date.now();
 
   useAdapter.subscribe((curr, prev) => {
-    if (curr.sockets !== prev.sockets) {
-      counts = curr.sockets.length;
-    }
+    if (curr.sockets !== prev.sockets) counts = curr.sockets.length;
   });
 
   setInterval(() => {
@@ -28,6 +23,7 @@ const useSocketPoints = create<{ points: SocketsPoint[] }>((set) => {
 
     set((state) => {
       const shouldFilter = now - lastFilter >= INTERVAL_FILTER_MS; // prevent animation jitter
+
       if (shouldFilter) {
         lastFilter = now;
         const cutoffTime = now - MAX_AGE_MS;
@@ -42,17 +38,7 @@ const useSocketPoints = create<{ points: SocketsPoint[] }>((set) => {
   return { points: [] };
 });
 
-const getDataMax = (points: SocketsPoint[]) => {
-  const candidates = [10, 25, 50, 100, 500, 1000];
-  if (points.length === 0) return candidates[0];
-  const dataMax = Math.max(...points.map((p) => p.count));
-  const target = Math.max(1, dataMax);
-  return candidates.find((c) => c >= target) ?? candidates[candidates.length - 1];
-};
-
-const uuid = crypto.randomUUID();
-
-const SocketsChart = () => {
+const ConnectionsChart = () => {
   const points = useSocketPoints((state) => state.points);
   const color = theme.palette.info.main;
   const now = Date.now();
@@ -69,18 +55,23 @@ const SocketsChart = () => {
   };
 
   const yAxis: YAxis<"linear"> = {
+    scaleType: "linear",
     dataKey: "count",
-    width: 20,
+    width: 32,
     min: 0,
-    max: getDataMax(points),
+    max: 20,
   };
 
   const series: LineSeries = {
+    id: "connections",
+    label: (location) => (location === "legend" ? "Sockets" : "Connections"),
     dataKey: "count",
     showMark: false,
     area: true,
     curve: "linear",
     color,
+    valueFormatter: (value) => `${value} sockets`,
+    labelMarkType: "square",
   };
 
   return (
@@ -90,14 +81,23 @@ const SocketsChart = () => {
       yAxis={[yAxis]}
       series={[series]}
       grid={{ vertical: true, horizontal: true }}
-      sx={{ "& .MuiAreaElement-root": { fill: `url(#Gradient-${uuid}-sockets)` }, mb: -2 }}
+      slotProps={{
+        legend: {
+          direction: "vertical",
+          sx: { gap: 3.5, ml: 0, ".MuiChartsLegend-series": { flexDirection: "column" } },
+        },
+      }}
+      sx={{
+        ml: -1.5,
+        '& .MuiAreaElement-root[data-series="connections"]': { fill: "url(#GradientConnections)" },
+      }}
     >
-      <linearGradient id={`Gradient-${uuid}-sockets`} x1="0%" y1="100%" x2="0%" y2="0%">
-        <stop offset="0%" stopColor={color} stopOpacity={0.3} />
-        <stop offset="100%" stopColor={color} stopOpacity={0} />
+      <linearGradient id="GradientConnections" x1="0%" y1="100%" x2="0%" y2="0%">
+        <stop offset="0%" stopColor={theme.palette.info.main} stopOpacity={0.3} />
+        <stop offset="100%" stopColor={theme.palette.info.main} stopOpacity={0} />
       </linearGradient>
     </LineChart>
   );
 };
 
-export { SocketsChart };
+export { ConnectionsChart };
