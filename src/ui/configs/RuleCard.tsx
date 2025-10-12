@@ -13,17 +13,17 @@ const configs: ReadonlyArray<{ rule: keyof Rules; label: string; description: st
   {
     rule: "allowIPv4Local",
     label: "Local IPv4 Access",
-    description: "Allow access localhost TCP services (127.0.0.0/8)",
+    description: "Allow access to localhost TCP services (127.0.0.0/8)",
   },
   {
     rule: "allowIPv6Local",
     label: "Local IPv6 Access",
-    description: "Allow access IPv6 localhost services (::1)",
+    description: "Allow access to IPv6 localhost services (::1)",
   },
   {
     rule: "allowLAN",
     label: "LAN Access",
-    description: "Allow access devices in local network (NAS, databases, etc.)",
+    description: "Allow access to devices in local network (NAS, databases, etc.)",
   },
 ];
 
@@ -60,13 +60,13 @@ const RuleCard = () => {
             Rules
           </Typography>
 
-          <GithubTooltip title="Existing connections remain unaffected when rules are changed during an active session.">
+          <GithubTooltip title="Changes apply to future connections only. Current connections will not be affected.">
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, cursor: "help", color: "text.secondary" }}>
               <Typography
                 variant="body2"
                 sx={{ color: "text.secondary", "div:hover > &": { textDecoration: "underline" }, ...centerTextSx }}
               >
-                affects new connections only
+                applies only to new connections
               </Typography>
               <InfoOutlineRoundedIcon fontSize="small" color="inherit" />
             </Box>

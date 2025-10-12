@@ -28,7 +28,7 @@ const CreateSessionCard = () => {
 
       <Box sx={{ px: 3, py: 1.5 }}>
         <Typography variant="body2" sx={{ color: "text.secondary" }}>
-          Share local TCP services with others. A unique Session ID will be generated for Clients to join.
+          Share local TCP services with a Client. A unique Session ID will be generated for Clients to join.
         </Typography>
 
         <Box sx={{ my: 1.5 }}>
