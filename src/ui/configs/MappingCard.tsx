@@ -19,7 +19,7 @@ const StatChip = ({ value }: { value: number }) => {
 
   return (
     <Box sx={{ borderRadius: 1, outline: "2px solid", outlineColor: "divider", overflow: "hidden" }}>
-      <GithubTooltip title={"total mapping count"}>
+      <GithubTooltip title={"Total mapping count"}>
         <Box
           sx={{
             display: "flex",
