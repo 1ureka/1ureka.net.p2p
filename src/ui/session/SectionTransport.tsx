@@ -36,11 +36,11 @@ const TransportBody = () => {
       <Label>Session ID</Label>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
         <Value>{session.id || "--"}</Value>
-        <SessionCardCopyButton />
+        {session.id && <SessionCardCopyButton />}
       </Box>
 
       <Label>Created at</Label>
-      <Value>{new Date(session.createdAt).toLocaleString()}</Value>
+      <Value>{session.createdAt ? new Date(session.createdAt).toLocaleString() : "--"}</Value>
     </Box>
   );
 };
