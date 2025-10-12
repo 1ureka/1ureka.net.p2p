@@ -44,9 +44,9 @@ export { reportLog, reportError, reportWarn };
  * 內部匯聚機制：隨時可以呼叫 reportTraffic，但最終會每秒匯聚一次，並只保留 2 分鐘的資料
  */
 const createTrafficReporter = () => {
-  const INTERVAL_MS = 1000; // 每秒回報一次
-  const MAX_AGE_MS = 120000; // 保留 2 分鐘資料
-  const INTERVAL_FILTER_MS = 60000; // 每 60 秒過濾一次
+  const MAX_AGE_MS = 120000;
+  const INTERVAL_MS = 1000;
+  const INTERVAL_FILTER_MS = 60000;
 
   let accumulatedEgress = 0;
   let accumulatedIngress = 0;
@@ -66,6 +66,7 @@ const createTrafficReporter = () => {
 
       useSession.setState((state) => {
         const shouldFilter = now - lastFilter >= INTERVAL_FILTER_MS; // prevent animation jitter
+
         if (shouldFilter) {
           lastFilter = now;
           const cutoffTime = now - MAX_AGE_MS;

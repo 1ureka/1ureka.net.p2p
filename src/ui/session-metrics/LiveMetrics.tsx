@@ -6,7 +6,8 @@ import { centerTextSx } from "@/ui/theme";
 import { GithubButton, GithubTooltip } from "@/ui/components/Github";
 import { CardSubHeader } from "@/ui/components/Card";
 
-import { TrafficChart } from "@/ui/session-metrics/TrafficChart";
+import { TrafficChart } from "@/ui/session-metrics/ChartTraffic";
+import { ConnectionsChart } from "@/ui/session-metrics/ChartConnections";
 import { LiveMetricsPopover } from "@/ui/session-metrics/LiveMetricsPopover";
 
 type MetricType = "connections" | "traffic";
@@ -41,7 +42,7 @@ const LiveMetrics = () => {
 
       <Box sx={{ flex: 1, minHeight: 0, overflow: "auto", mb: -2 }}>
         {metric === "traffic" && <TrafficChart />}
-        {metric === "connections" && <TrafficChart />}
+        {metric === "connections" && <ConnectionsChart />}
       </Box>
 
       <LiveMetricsPopover anchorEl={anchorEl} onClose={handleClosePopover} value={metric} onChange={setMetric} />
