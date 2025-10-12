@@ -26,13 +26,9 @@ const SessionCardHeader = () => {
   const leaveDisabled = status !== "failed" || instance !== null;
 
   const getStopTooltip = () => {
-    if (stopDisabled) return "Connection is already stopped";
-    if (stopLoading) return "Stopping connection...";
-    return "Stop connection";
-  };
-  const getLeaveTooltip = () => {
-    if (leaveDisabled) return "Stop connection first";
-    return "Leave session";
+    if (stopDisabled) return "Session is already stopped";
+    if (stopLoading) return "Stopping session...";
+    return "Stop current session";
   };
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -59,19 +55,32 @@ const SessionCardHeader = () => {
           </GithubIconButton>
         </GithubTooltip>
 
-        <GithubTooltip title={getLeaveTooltip()}>
-          <GithubIconButton disabled={leaveDisabled} onClick={handleLeave}>
-            <LogoutRoundedIcon fontSize="small" />
-          </GithubIconButton>
-        </GithubTooltip>
+        {leaveDisabled ? (
+          <GithubTooltip key="stop-session-first" title="Stop session first">
+            <GithubIconButton disabled={leaveDisabled}>
+              <LogoutRoundedIcon fontSize="small" />
+            </GithubIconButton>
+          </GithubTooltip>
+        ) : (
+          <GithubTooltip
+            key="leave-session"
+            open
+            arrow
+            title="Your session has stopped. Leave to retry or start a new session."
+          >
+            <GithubIconButton onClick={handleLeave}>
+              <LogoutRoundedIcon fontSize="small" />
+            </GithubIconButton>
+          </GithubTooltip>
+        )}
       </Box>
 
       <ConfirmPopover
         anchorEl={anchorEl}
         onClose={handleClosePopover}
         onConfirm={async () => handleStop()}
-        title="Stop connection?"
-        message="This connection will be permanently stopped. You can join or create a new session later if needed."
+        title="Stop session?"
+        message="This will stop the current connection and end the session. You can create or join a new session afterwards."
       />
     </CardHeader>
   );

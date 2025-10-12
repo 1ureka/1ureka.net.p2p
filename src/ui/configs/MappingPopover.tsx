@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Popover, Box, Typography, Checkbox, FormControlLabel, type PaperProps } from "@mui/material";
 import AddBoxRoundedIcon from "@mui/icons-material/AddBoxRounded";
 
-import { GithubTextField, GithubButton } from "@/ui/components/Github";
+import { GithubTextField, GithubButton, GithubTooltip } from "@/ui/components/Github";
 import { centerTextSx, ellipsisSx } from "@/ui/theme";
 import { handleCreateMapping } from "@/adapter-state/handlers";
 import type { SocketPair } from "@/adapter/ip";
@@ -112,7 +112,7 @@ const CreateMappingPopover = ({ anchorEl, onClose }: ConfigsCardPopoverProps) =>
     >
       <Box sx={{ p: 2, borderBottom: 2, borderColor: "divider" }}>
         <Typography variant="subtitle2" sx={{ ...centerTextSx }}>
-          Add New Mapping
+          Add new mapping
         </Typography>
       </Box>
 
@@ -187,22 +187,25 @@ const CreateMappingPopover = ({ anchorEl, onClose }: ConfigsCardPopoverProps) =>
       </Box>
 
       <Box sx={actionAreaSx}>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={autoMirror}
-              onChange={(e) => setAutoMirror(e.target.checked)}
-              size="small"
-              disabled={loading}
-            />
-          }
-          label={
-            <Typography variant="caption" sx={{ color: "text.secondary", ...centerTextSx }}>
-              Auto mirror
-            </Typography>
-          }
-          sx={{ m: 0 }}
-        />
+        <GithubTooltip title="Automatically use the same address and port for destination">
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={autoMirror}
+                onChange={(e) => setAutoMirror(e.target.checked)}
+                size="small"
+                disabled={loading}
+              />
+            }
+            label={
+              <Typography variant="caption" sx={{ color: "text.secondary", ...centerTextSx }}>
+                Auto mirror
+              </Typography>
+            }
+            sx={{ m: 0 }}
+          />
+        </GithubTooltip>
+
         <GithubButton size="small" onClick={handleSubmit} loading={loading}>
           <AddBoxRoundedIcon fontSize="small" />
           <Typography variant="caption" sx={centerTextSx}>

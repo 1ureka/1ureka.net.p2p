@@ -39,6 +39,7 @@ const listItemSx: BoxProps["sx"] = {
   gridTemplateColumns: "1fr auto",
   gridAutoRows: "auto",
   gap: 0.5,
+  rowGap: 1,
   p: 1.5,
   borderBottom: "2px solid",
   borderColor: "divider",
@@ -63,7 +64,9 @@ const MappingCardListItem = ({ id, content, createdAt }: ConfigsCardListItemProp
     >
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "text.secondary" }}>
         <SignpostRoundedIcon color="inherit" fontSize="small" />
-        <Typography variant="body2">mapping #{id}</Typography>
+        <Typography variant="body2" sx={ellipsisSx}>
+          mapping #{id}
+        </Typography>
       </Box>
 
       <GithubTooltip title={"Remove mapping"}>
@@ -76,9 +79,14 @@ const MappingCardListItem = ({ id, content, createdAt }: ConfigsCardListItemProp
         {content}
       </Typography>
 
-      <Typography variant="body2" sx={{ color: "text.secondary", pr: 1, ...ellipsisSx }}>
-        <ElapsedDisplay createdAt={createdAt} />
-      </Typography>
+      <GithubTooltip title="Elapsed time since created">
+        <Typography
+          variant="body2"
+          sx={{ color: "text.secondary", "&:hover": { textDecoration: "underline" }, ...ellipsisSx }}
+        >
+          <ElapsedDisplay createdAt={createdAt} />
+        </Typography>
+      </GithubTooltip>
     </Box>
   );
 };

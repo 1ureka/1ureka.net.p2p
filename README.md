@@ -122,13 +122,11 @@ If the Host enables `allowLAN`, the Client can connect to other devices on the H
 
 This project has been validated with real-world use cases including:
 
+- Cross-region gaming (Minecraft with large modpacks)
 - Web development servers with HMR (Vite)
 - AI/LLM streaming APIs (Ollama)
-- Database connections (PostgreSQL)
+- Database connections (PostgreSQL with Adminer)
 - Remote IDE (VS Code Code Server)
-- Cross-region gaming (Minecraft with large modpacks)
-
-For detailed testing scenarios and results, see [TESTING.md](TESTING.md).
 
 ---
 

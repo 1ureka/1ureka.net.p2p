@@ -4,7 +4,7 @@
 
 ---
 
-## Table of Contents
+# Table of Contents
 
 - [Development Guide](#development-guide)
 - [Application Architecture](#application-architecture)
@@ -14,9 +14,9 @@
 
 ---
 
-## Development Guide
+# Development Guide
 
-### Prerequisites
+## Prerequisites
 
 Before you begin, ensure your system has the following tools installed:
 
@@ -24,22 +24,22 @@ Before you begin, ensure your system has the following tools installed:
 - **npm**: v11.x or later (bundled with Node.js)
 - **Git**: For version control
 
-### Getting Started
+## Getting Started
 
-#### 1. Clone the Repository
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/1ureka/1ureka.net.p2p.git
 cd 1ureka.net.p2p
 ```
 
-#### 2. Install Dependencies
+### 2. Install Dependencies
 
 ```bash
 npm install
 ```
 
-#### 3. Start Development Server
+### 3. Start Development Server
 
 ```bash
 npm start
@@ -51,82 +51,7 @@ This runs `electron-forge start`, which launches:
 - Electron main process
 - Electron renderer process
 
-### Project Structure
-
-```
-1ureka.net.p2p/
-├── src/                          # Source code directory
-│   ├── main.ts                   # Electron main process entry
-│   ├── preload.ts                # Preload script (secure bridge)
-│   ├── ipc.ts                    # IPC channel definitions
-│   ├── utils.ts                  # Shared utility functions
-│   │
-│   ├── adapter/                  # Adapter module (main process)
-│   │   ├── adapter-host.ts       # Host role implementation
-│   │   ├── adapter-client.ts     # Client role implementation
-│   │   ├── adapter-service.ts    # Adapter service manager
-│   │   ├── packet.ts             # Packet encoding/decoding
-│   │   ├── framing.ts            # Chunking/Reassembly logic
-│   │   ├── ip.ts                 # IP handling & Socket Pairs
-│   │   └── adapter.test.ts       # E2E tests
-│   │
-│   ├── adapter-state/            # Adapter state management
-│   │   ├── store.ts              # Zustand store
-│   │   ├── report.ts             # State reporting functions
-│   │   └── handlers.ts           # IPC handlers
-│   │
-│   ├── transport/                # Transport module (renderer process)
-│   │   ├── transport-pc.ts       # WebRTC PeerConnection wrapper
-│   │   ├── transport-ipc.ts      # Plugin: DataChannel ⇆ IPC binding
-│   │   ├── transport-traffic.ts  # Plugin: Traffic monitoring
-│   │   ├── transport-sender.ts   # Reliable transport layer
-│   │   ├── session-host.ts       # Host session workflow
-│   │   ├── session-client.ts     # Client session workflow
-│   │   └── session-utils.ts      # Signaling API & utilities
-│   │
-│   ├── transport-state/          # Transport state management
-│   │   ├── store.ts              # Zustand store (with FSM)
-│   │   ├── report.ts             # State reporting functions
-│   │   └── handlers.ts           # User intent handlers
-│   │
-│   └── ui/                       # UI components (renderer process)
-│       ├── renderer.tsx          # React entry point
-│       ├── renderer.css          # Global styles
-│       ├── tabs.ts               # Tab state management
-│       ├── theme.ts              # Material-UI theme
-│       ├── components/           # Shared components
-│       ├── configs/              # Configuration page
-│       ├── events/               # Event log page
-│       ├── launch/               # Launch page
-│       ├── metrics/              # Metrics page
-│       └── session/              # Session card components
-│
-├── forge.config.ts               # Electron Forge configuration
-├── vite.main.config.ts           # Vite config for main process
-├── vite.preload.config.ts        # Vite config for preload
-├── vite.renderer.config.mjs      # Vite config for renderer
-├── vitest.config.mjs             # Vitest test configuration
-├── tsconfig.json                 # TypeScript configuration
-├── package.json                  # Dependencies & scripts
-├── README.md                     # User guide
-└── CONTRIBUTING.md               # Developer guide (this file)
-```
-
-### Testing
-
-#### Run All Tests
-
-```bash
-npm test
-```
-
-#### Run a Specific Test File
-
-```bash
-npx vitest run src/adapter/adapter.test.ts
-```
-
-#### Testing Philosophy
+## Testing
 
 The project uses an **end-to-end testing strategy**, validating complete data flows through the system.
 
@@ -139,23 +64,29 @@ The project uses an **end-to-end testing strategy**, validating complete data fl
 - Out-of-order delivery simulation
 - Scenarios with multiple mappings
 
-### Building & Releasing
+### Run All Tests
 
-#### Local Build
+```bash
+npm test
+```
+
+### Run a Specific Test File
+
+```bash
+npx vitest run src/adapter/adapter.test.ts
+```
+
+## Building & Releasing
+
+### Local Build
 
 ```bash
 npm run package
 ```
 
-This uses Electron Forge to package the application for your platform:
+This uses Electron Forge to package the application to a portable executable folder in the `out/` directory.
 
-- **Windows**: `.exe` installer
-- **macOS**: `.app` bundle
-- **Linux**: AppImage or `.deb` package
-
-Build output is located in the `out/` directory.
-
-#### Clean Build Artifacts
+### Clean Build Artifacts
 
 ```bash
 npm run clean
@@ -163,7 +94,7 @@ npm run clean
 
 This removes `out/`, `.vite/`, `dist/` directories.
 
-#### Release Workflow
+### Release Workflow
 
 The project uses **GitHub Actions** for automated releases. Currently supports Windows platform:
 
@@ -181,17 +112,9 @@ The project uses **GitHub Actions** for automated releases. Currently supports W
 - Contents: Windows x64 executable and related resources
 - Location: GitHub Releases page
 
-### Contribution Workflow
-
-1. Fork the repository to your account
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
 ---
 
-## Application Architecture
+# Application Architecture
 
 The project is built on **Electron**, leveraging its dual-process architecture to layer network processing:
 
@@ -213,7 +136,7 @@ The project is built on **Electron**, leveraging its dual-process architecture t
                          (Electron)
 ```
 
-### Why Two Processes?
+## Why Two Processes?
 
 This isn't just an Electron requirement—it's a deliberate design choice based on **separation of concerns**:
 
@@ -235,11 +158,11 @@ This isn't just an Electron requirement—it's a deliberate design choice based 
 
 ---
 
-## Module Collaboration Pattern
+# Module Collaboration Pattern
 
 The project follows a **declarative, unidirectional data flow** architecture, ensuring clarity and traceability in state management.
 
-### Core Concepts
+## Core Concepts
 
 Every module (Adapter, Transport) follows this structure:
 
@@ -250,7 +173,7 @@ module-state/
  ┗ handlers.ts    External → Internal intent processing
 ```
 
-### 1. Store (Declare the Source)
+### 1. Store (Declare Where is the Source)
 
 - **Role**: The single source of truth for module state.
 - **Characteristics**:
@@ -275,31 +198,23 @@ module-state/
   - Coordinate execution of internal module logic.
   - Can also report execution results back via report.
 
-### Example: Transport Implementation (Single Process)
+## Examples
+
+### Transport Implementation (Single Process)
 
 ```typescript
 // store.ts (Renderer Process)
-type SessionState = {
-  role: "host" | "client";
-  status: ConnectionStatus;
-  history: ConnectionLogFormattedEntry[];
-  session: Session;
-  traffic: ReadonlyArray<TrafficPoint>;
-};
-
 const useSession = create<SessionState>(() => ({
   role: "host",
   status: "disconnected",
   history: [],
-  session: { id: "", host: "", client: "", createdAt: "", signal: {} },
-  traffic: [],
+  // ... initialization or declare where is the source
 }));
 
 // report.ts (Renderer Process)
 const reportStatus = (status: ConnectionStatus): boolean => {
   const { status: current } = useSession.getState();
 
-  // Validate state transition
   if (!validTransitions[current].includes(status)) {
     reportError({ message: `Invalid transition from ${current} to ${status}` });
     return false;
@@ -312,30 +227,21 @@ const reportStatus = (status: ConnectionStatus): boolean => {
 // handlers.ts (Renderer Process)
 const handleCreateSession = () => {
   reportRole("host");
-  createHostSession(); // Triggers core logic, which can report state via report
+  createHostSession(); // Triggers core logic, which will report other states via report.ts
 };
 
-// User intent: Abort connection
 const handleStop = () => {
   if (!reportStatus("aborting")) return; // Validate transition; success affects logic listening to this state
   reportWarn({ message: "Stop requested by user" });
 };
 ```
 
-### Example: Adapter Implementation (Dual Process)
+### Adapter Implementation (Dual Process)
 
 ```typescript
 // store.ts (Renderer Process)
-type AdapterState = {
-  instance: "host" | "client" | null;
-  history: ConnectionLogFormattedEntry[];
-  sockets: SocketPair[];
-  mappings: { id: string; mapping: string; createdAt: number }[];
-  rules: { id: string; pattern: string; createdAt: number }[];
-};
-
 const useAdapter = create<AdapterState>((set) => {
-  // Subscribe to IPC events from main process
+  // declare where is the source, in this case, IPC from main process
   window.electron.on(IPCChannel.AdapterInstanceChange, ({ instance }) => {
     set({ instance });
   });
@@ -349,11 +255,9 @@ const reportInstance = (props: InstanceChangePayload) => {
   win.webContents.send(IPCChannel.AdapterInstanceChange, props);
 };
 
-// Simplified core logic
+// core.ts (Main Process)
 ipcMain.handle(IPCChannel.AdapterStartHost, () => {
-  // Execute internal logic
   startAdapterService("host");
-  // Report state via report
   reportInstance({ instance: "host" });
 });
 
@@ -365,17 +269,11 @@ const handleStartHostAdapter = async () => {
 };
 ```
 
-### Bonus Example: HTTP Implementation (For Illustration Only)
+### HTTP Implementation (For Illustration Only)
 
 ```typescript
 // store.ts
-type HttpState = {
-  posts: ReadonlyArray<PostEntry>;
-  postsLoading: boolean;
-  postsError: string | null;
-};
-
-const usePostsStore = create<HttpState>(() => ({
+const usePostsStore = create<PostsState>(() => ({
   posts: [],
   postsLoading: false,
   postsError: null,
@@ -386,20 +284,18 @@ const reportPosts = (data: any) => {
   const posts = PostEntrySchema.array().parse(data);
   usePostsStore.setState({ posts, postsLoading: false, postsError: null });
 };
-
 const reportPostsError = (error: Error) => {
   usePostsStore.setState({ postsLoading: false, postsError: error.message });
 };
-
 const reportPostsLoading = () => {
   usePostsStore.setState({ postsLoading: true, postsError: null });
 };
 
-// handlers.ts
-const handleLoadPosts = async () => {
+// core.ts
+const fetchPosts = async () => {
   reportPostsLoading();
   try {
-    const response = await fetch("https://jsonplaceholder.typicode.com/posts");
+    const response = await fetch("https://example.com/posts");
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const data = await response.json();
     reportPosts(data);
@@ -407,9 +303,14 @@ const handleLoadPosts = async () => {
     reportPostsError(error as Error);
   }
 };
+
+// handlers.ts
+const handleLoadPosts = async () => {
+  await fetchPosts();
+};
 ```
 
-### Advantages
+## Advantages
 
 1. **Unidirectional Data Flow**: State changes follow a clear path, making debugging and tracing straightforward.
 2. **Separation of Concerns**: State storage, event propagation, and intent handling each have distinct responsibilities.
@@ -436,32 +337,29 @@ useEffect(() => {
 
 After: UI as a pure function
 
-```typescript
+```tsx
 import { usePostsStore } from "@/modules/posts/store";
-import { postsHandlers } from "@/modules/posts/handlers";
+import { handleLoadPosts } from "@/modules/posts/handlers";
 
 export function PostList() {
-  const { posts, loading, error } = usePostsStore();
+  const { posts, postsLoading, postsError } = usePostsStore();
 
-  if (!posts && !loading && !error)
-    return <PostsButton onClick={postsHandlers.handleLoadPosts} />;
-  if (loading)
-    return <Spinner />;
-  if (error)
-    return <ErrorBox message={error} onRetry={postsHandlers.handleLoadPosts} />;
+  if (!posts && !postsLoading && !postsError) return <PostsButton onClick={handleLoadPosts} />;
+  if (postsLoading) return <Spinner />;
+  if (postsError) return <ErrorBox message={postsError} onRetry={handleLoadPosts} />;
   return <PostCards posts={posts} />;
 }
 ```
 
 ---
 
-## Core Module: Adapter
+# Core Module: Adapter
 
 The Adapter is the **heart of protocol translation**, converting TCP connections into packets suitable for transmission over WebRTC DataChannel.
 
-### Why Do We Need an Adapter?
+## Why Do We Need an Adapter?
 
-#### The Nature of TCP
+### The Nature of TCP
 
 - **TCP is a bidirectional stream protocol**, where each connection is an independent socket.
 - Applications can open multiple TCP sockets simultaneously, even to the same service.
@@ -470,7 +368,7 @@ The Adapter is the **heart of protocol translation**, converting TCP connections
   - Database connection pools maintain multiple connections to the same database.
   - Vite dev servers handle short-lived static asset requests alongside long-lived HMR connections.
 
-#### WebRTC DataChannel Limitations
+### WebRTC DataChannel Limitations
 
 - DataChannel is built on **SCTP over DTLS over UDP**, making it fundamentally **message-oriented**.
 - Each DataChannel maps to a single SCTP stream, with size limits on individual messages.
@@ -480,11 +378,11 @@ The Adapter is the **heart of protocol translation**, converting TCP connections
 
 **The Adapter's role** is to turn a DataChannel into a "virtual wire" capable of carrying multiple TCP sockets.
 
-### Logical Sockets
+## Logical Sockets
 
 The Adapter uses **Socket Pairs as identifiers** combined with event packets to multiplex multiple logical TCP connections over a single DataChannel.
 
-#### Socket Pair as Identifier
+### Socket Pair as Identifier
 
 ```typescript
 type SocketPair = {
@@ -499,7 +397,7 @@ type SocketPair = {
 - `srcAddr/srcPort` ensures uniqueness for each connection, while `dstAddr/dstPort` lets the host identify the target service.
 - All `CONNECT`, `DATA`, and `CLOSE` packets related to this connection use the same identifier.
 
-#### Lifecycle
+### Lifecycle
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
@@ -513,34 +411,34 @@ type SocketPair = {
 └──────────────────────────────────────────────────────────────┘
 ```
 
-### Protocol Design
+## Protocol Design
 
 The project implements a custom application-layer protocol for multiplexing TCP connections over DataChannel.
 
-#### Packet Structure
+### Packet Structure
 
-| Offset  | Size | Field        | Type      | Description                                    |
-| ------- | ---- | ------------ | --------- | ---------------------------------------------- |
-| [0]     | 1    | event        | Uint8     | Event type (`CONNECT`, `DATA`, `CLOSE`)        |
-| [1–16]  | 16   | src_addr     | Uint8[16] | Source IP (IPv4 mapped to IPv6 format)         |
-| [17–18] | 2    | src_port     | Uint16    | Source port                                    |
-| [19–34] | 16   | dst_addr     | Uint8[16] | Destination IP (IPv4 mapped to IPv6 format)    |
-| [35–36] | 2    | dst_port     | Uint16    | Destination port                               |
-| [37–38] | 2    | stream_seq   | Uint16    | Stream sequence (for circular allocation)      |
-| [39–40] | 2    | chunk_index  | Uint16    | Index of this chunk in the stream              |
-| [41–42] | 2    | total_chunks | Uint16    | Total chunks in this stream                    |
-| [43– ]  | N    | payload      | Uint8[]   | Actual TCP data                                |
+| Offset  | Size | Field        | Type      | Description                                 |
+| ------- | ---- | ------------ | --------- | ------------------------------------------- |
+| [0]     | 1    | event        | Uint8     | Event type (`CONNECT`, `DATA`, `CLOSE`)     |
+| [1–16]  | 16   | src_addr     | Uint8[16] | Source IP (IPv4 mapped to IPv6 format)      |
+| [17–18] | 2    | src_port     | Uint16    | Source port                                 |
+| [19–34] | 16   | dst_addr     | Uint8[16] | Destination IP (IPv4 mapped to IPv6 format) |
+| [35–36] | 2    | dst_port     | Uint16    | Destination port                            |
+| [37–38] | 2    | stream_seq   | Uint16    | Stream sequence (for circular allocation)   |
+| [39–40] | 2    | chunk_index  | Uint16    | Index of this chunk in the stream           |
+| [41–42] | 2    | total_chunks | Uint16    | Total chunks in this stream                 |
+| [43– ]  | N    | payload      | Uint8[]   | Actual TCP data                             |
 
-#### Circular Allocation
+### Circular Allocation
 
 - `stream_seq` **must be implemented with circular reuse**.
 - Max value is 65535; when reached, wraps back to 0.
 - Incomplete `stream_seq` values must not be overwritten—implementations should ensure safe recycling.
 - This allows up to 65535 concurrent incomplete messages.
 
-### Role Implementations
+## Role Implementations
 
-#### Host Adapter
+### Host Adapter
 
 - **Responsibility**: Accept connection requests from client, create corresponding local TCP sockets.
 - **Workflow**:
@@ -550,7 +448,7 @@ The project implements a custom application-layer protocol for multiplexing TCP 
   4. Forward `DATA` packets → TCP socket ⇆ DataChannel.
   5. Handle `CLOSE` packet → Release resources.
 
-#### Client Adapter
+### Client Adapter
 
 - **Responsibility**: Create virtual TCP server, intercept local application connection requests.
 - **Workflow**:
@@ -559,25 +457,15 @@ The project implements a custom application-layer protocol for multiplexing TCP 
   3. Forward `DATA` packets → TCP socket ⇆ DataChannel.
   4. Handle `CLOSE` packet → Release resources.
 
-### Data Flow
-
-During a complete connection, data flows through different modules in sequence:
-
-| Stage       | Local App     | Client Adapter                     | DataChannel | Host Adapter                       | Local Service  |
-| ----------- | ------------- | ---------------------------------- | ----------- | ---------------------------------- | -------------- |
-| **CONNECT** | Initiate      | Generate Socket Pair → Pack packet | →           | Validate rules → Create TCP socket | Accept/Reject  |
-| **DATA**    | Send/Receive  | Chunker ⇆ Reassembler              | ⇆           | Chunker ⇆ Reassembler              | Send/Receive   |
-| **CLOSE**   | Close         | Release → Send CLOSE               | ⇆           | Release → Send CLOSE               | Close          |
-
 ---
 
-## Core Module: Transport
+# Core Module: Transport
 
 The Transport module is the **foundation of P2P connectivity**, built on WebRTC to establish and maintain peer-to-peer connections.
 
-### Why WebRTC?
+## Why WebRTC?
 
-While Node.js/Electron can establish direct TCP/UDP connections, this often fails behind **NAT/firewalls**.
+While Node.js/Electron can establish direct TCP/UDP connections, this often fails behind **NAT / firewalls**.
 
 WebRTC advantages:
 
@@ -592,165 +480,108 @@ However, WebRTC's API can be cumbersome:
 
 The project wraps this complexity in a simplified API, ensuring clean lifecycle management.
 
-### API Design
+## Encapsulation & Extensibility
 
-The project uses a **Vanilla ICE flow**, binding RTCPeerConnection and RTCDataChannel to the same lifecycle.
+### Simple API Surface
+
+The project uses a **Vanilla ICE flow**, binding RTCPeerConnection and RTCDataChannel to the same lifecycle:
 
 ```typescript
 const { getDataChannel, getLocal, setRemote, close } = createPeerConnection();
 ```
 
-> [!TIP]
-> This wrapper initializes both **RTCDataChannel** and **ICE Candidate gathering** upfront.
-> Upper layers just focus on role-specific workflows (Host/Client).
-
 **Why this design?**
 
 - The project doesn't need multiple DataChannels or media streams.
 - It only needs **one reliable data channel** to carry TCP packets.
+- Initialization happens upfront, so upper layers can focus on role-specific workflows.
 
-### Plugin-Based Binding
+### Plugin-Based Extension
 
-To avoid tight coupling with WebRTC APIs, the project uses a "plugin-based binding" approach, abstracting common operations into independent plugins.
-
-#### Design Spec
-
-Each `bindDataChannelX` function must follow:
-
-- **Self-Contained**: Calling it completes the entire registration; no external cleanup needed.
-- **Scope of Responsibility**:
-  - `register`: Attach event listeners, apply monkey patches, etc.
-  - `unregister`: Automatically remove listeners and release resources on `onclose`/`onerror`.
-- **Framework Guarantee**: Core manages the main connection lifecycle; plugins only handle their own additions.
-
-Think of it like **Blender's addon system**: each plugin has `register/unregister`, and the app doesn't need to know how to clean up.
-
-#### Example: DataChannel ⇆ IPC Binding
+To avoid tight coupling with WebRTC APIs, the project uses a **plugin-based binding** approach:
 
 ```typescript
-const bindDataChannelIPC = (dataChannel: RTCDataChannel) => {
-  const sender = createDataChannelSender(dataChannel);
-
-  // register: DataChannel → IPC
-  dataChannel.onmessage = (event) => {
-    window.electron.send(IPCChannel.DataChannelReceive, event.data);
-  };
-
-  // register: IPC → DataChannel
-  const handleIPCMessage = (buffer: ArrayBuffer) => {
-    sender.send(buffer);
-  };
-  window.electron.on(IPCChannel.DataChannelSend, handleIPCMessage);
-
-  // unregister: Auto cleanup
-  const cleanup = () => {
-    window.electron.off(IPCChannel.DataChannelSend, handleIPCMessage);
-    sender.close();
-  };
-  dataChannel.onclose = cleanup;
-  dataChannel.onerror = cleanup;
-};
+const dataChannel = await getDataChannel(timeout);
+bindDataChannelIPC(dataChannel); // Bridge to main process
+bindDataChannelTraffic(dataChannel); // Monitor bandwidth
 ```
 
-#### Example: DataChannel Traffic Monitoring
+**Plugin Contract**:
 
-```typescript
-const bindDataChannelTraffic = (dataChannel: RTCDataChannel) => {
-  // register: Monitor incoming traffic
-  dataChannel.onmessage = (e) => {
-    const bytes = new Blob([e.data]).size;
-    reportTraffic(bytes);
-  };
+- **Self-Contained**: Each plugin manages its own lifecycle—registration and cleanup.
+- **Auto-Cleanup**: Plugins listen to `onclose`/`onerror` events to automatically unregister.
+- **No Framework Burden**: The core framework doesn't need to know about plugin internals.
 
-  // register: Monkey patch send to monitor outgoing traffic
-  const originalSend = dataChannel.send.bind(dataChannel);
-  dataChannel.send = (data) => {
-    const bytes = new Blob([data]).size;
-    reportTraffic(bytes);
-    originalSend(data);
-  };
+This design is inspired by **Blender's addon system**: plugins have `register/unregister`, and the host app doesn't manage their cleanup.
 
-  // unregister: Restore original method
-  const cleanup = () => {
-    dataChannel.send = originalSend;
-  };
-  dataChannel.onclose = cleanup;
-  dataChannel.onerror = cleanup;
-};
-```
-
-### Signaling
+## Signaling Strategy
 
 To establish a P2P connection, both peers must exchange connection information (SDP descriptions and ICE candidates).
 
-The project uses a **session-based HTTP signaling server**.
+The project uses a **session-based HTTP signaling server** with long polling:
 
-#### Session Lifecycle
+### Signaling Flow
 
 ```
-1. Host creates session
-   POST /session
-   ← { id: "abc123..." }
-
-2. Client joins session
-   POST /session/abc123
-   ← { status: "joined" }
-
-3. Host sends offer
-   PUT /session/abc123/signal
-   Body: { type: "offer", sdp: "...", candidate: [...] }
-
-4. Client polls for offer
-   GET /session/abc123?for=offer
-   ← { signal: { offer: { sdp: "...", candidate: [...] } } }
-
-5. Client sends answer
-   PUT /session/abc123/signal
-   Body: { type: "answer", sdp: "...", candidate: [...] }
-
-6. Host polls for answer
-   GET /session/abc123?for=answer
-   ← { signal: { answer: { sdp: "...", candidate: [...] } } }
-
-7. WebRTC connection established
+1. Host creates session          →   Receives Session ID
+2. Host waits for client to join →   Long polling for join event
+2. Client joins with ID          →   Waits for WebRTC negotiation
+3. Both exchange SDP & ICE       →   Long polling for peer signals
+4. WebRTC connection opens       →   Signaling complete
 ```
 
-#### Long Polling
+### Design Decisions
 
-```typescript
-// Long poll for peer signal; server timeout: 5s, client retry: 100ms
-for await (const { signal } of pollingSession(id, "offer")) {
-  if (signal.offer) {
-    await setRemote(signal.offer.sdp, signal.offer.candidate);
-    break;
-  }
-}
+- **Long Polling**: Client polls for peer signals with server-side timeout (5s) and client-side retry (100ms).
+- **Stateless Design**: Server stores no sensitive data — only helps exchange public connection info.
+- **Single-Use Sessions**: Each Session ID is valid for one connection only; must create new session after disconnect.
+- **Auto Cleanup**: Redis TTL automatically cleans up expired sessions.
+
+## Lifecycle Management
+
+The Transport module uses a **finite state machine (FSM)** to manage connection lifecycle:
+
+```mermaid
+stateDiagram-v2
+    [*] --> disconnected
+    disconnected --> joining
+
+    joining --> waiting
+    joining --> failed
+    joining --> aborting
+
+    waiting --> signaling
+    waiting --> failed
+    waiting --> aborting
+
+    signaling --> connected
+    signaling --> failed
+    signaling --> aborting
+
+    connected --> failed
+    connected --> aborting
+
+    aborting --> failed
+
+    failed --> disconnected
 ```
 
-#### Security & Limitations
+**Key States**:
 
-- **Redis TTL**: Server automatically cleans up expired sessions, preventing resource leaks.
-- **Stateless Design**: Signaling server stores no sensitive data—only helps exchange public connection info.
-- **Single-Use**: Each Session ID is valid for one connection only; must create a new session after disconnect.
+- **disconnected**: Initial state, no connection.
+- **joining**: Creating or joining a session.
+- **waiting**: Host waiting for client to join.
+- **signaling**: Exchanging SDP and ICE candidates via signaling server.
+- **connected**: DataChannel successfully opened, ready for data transfer.
+- **aborting**: User requested stop, cleaning up resources.
+- **failed**: Connection failed or stopped, ready to retry.
 
-### State Machine
+> [!TIP]
+> For Client, Waiting state still occurs but only momentarily to ensure proper state transition.
 
-The Transport module uses a **finite state machine (FSM)** to manage connection lifecycle, ensuring valid transitions and traceability.
+**State Validation**:
 
-#### State Definitions
-
-```typescript
-type ConnectionStatus =
-  | "disconnected" // Not connected
-  | "joining"      // Creating/joining session
-  | "waiting"      // Waiting for peer to join
-  | "signaling"    // Exchanging signaling
-  | "connected"    // Connection established
-  | "aborting"     // Aborting connection
-  | "failed";      // Connection failed
-```
-
-#### Transition Rules
+The FSM enforces valid state transitions to prevent invalid operations:
 
 ```typescript
 const validTransitions: Record<ConnectionStatus, ConnectionStatus[]> = {
@@ -764,64 +595,29 @@ const validTransitions: Record<ConnectionStatus, ConnectionStatus[]> = {
 };
 ```
 
-#### Transition Validation
+Any invalid transition is rejected and logged for debugging.
 
-```typescript
-const reportStatus = (status: ConnectionStatus): boolean => {
-  const { status: current } = useSession.getState();
+## Session Concept
 
-  // Check if transition is valid
-  if (!validTransitions[current].includes(status)) {
-    reportError({ message: `Invalid transition from ${current} to ${status}` });
-    return false;
-  }
-
-  useSession.setState({ status });
-  return true;
-};
-```
-
-#### State Flow Diagram
+In this project, a **Session** represents the **complete P2P connection entity**, including both Transport and Adapter:
 
 ```
-┌──────────────┐
-│ disconnected │ ← Initial state
-└──────┬───────┘
-       │ handleCreateSession / handleJoinSession
-       ▼
-┌──────────────┐
-│   joining    │ ← Creating/joining session
-└──────┬───────┘
-       │ (Host only)
-       ▼
-┌──────────────┐
-│   waiting    │ ← Waiting for peer
-└──────┬───────┘
-       │
-       ▼
-┌──────────────┐
-│  signaling   │ ← Exchanging SDP & ICE candidates
-└──────┬───────┘
-       │
-       ▼
-┌──────────────┐
-│  connected   │ ← DataChannel opened successfully
-└──────┬───────┘
-       │
-       ▼
-┌──────────────┐     ┌───────────┐
-│   aborting   │ ──→ │  failed   │ ← Error or user abort
-└──────────────┘     └─────┬─────┘
-                           │ handleLeave
-                           ▼
-                     ┌──────────────┐
-                     │ disconnected │
-                     └──────────────┘
+Session = Transport (WebRTC DataChannel) + Adapter (TCP Sockets)
 ```
+
+**Session Lifecycle**:
+
+1. **Create/Join**: User initiates session creation (Host) or joins existing session (Client).
+2. **Establish Transport**: WebRTC negotiation completes, DataChannel opens.
+3. **Start Adapter**: Main process creates Host/Client adapter, binds to DataChannel via IPC.
+4. **Active**: TCP sockets can now be created and data flows through the system.
+5. **Teardown**: User stops connection → Adapter closes TCP sockets → Transport closes DataChannel.
+
+The UI's "Session Card" reflects this unified concept—displaying both Transport status and Adapter status together.
 
 ---
 
-## Closing Thoughts
+# Closing Thoughts
 
 This document describes the project's core technical architecture, including dual-process design, module collaboration patterns, and implementation details of the Adapter and Transport modules.
 
