@@ -204,27 +204,17 @@ module-state/
 
 ```typescript
 // store.ts (Renderer Process)
-type SessionState = {
-  role: "host" | "client";
-  status: ConnectionStatus;
-  history: ConnectionLogFormattedEntry[];
-  session: Session;
-  traffic: ReadonlyArray<TrafficPoint>;
-};
-
 const useSession = create<SessionState>(() => ({
   role: "host",
   status: "disconnected",
   history: [],
-  session: { id: "", host: "", client: "", createdAt: "", signal: {} },
-  traffic: [],
+  // ... initialization or declare where is the source
 }));
 
 // report.ts (Renderer Process)
 const reportStatus = (status: ConnectionStatus): boolean => {
   const { status: current } = useSession.getState();
 
-  // Validate state transition
   if (!validTransitions[current].includes(status)) {
     reportError({ message: `Invalid transition from ${current} to ${status}` });
     return false;
@@ -237,10 +227,9 @@ const reportStatus = (status: ConnectionStatus): boolean => {
 // handlers.ts (Renderer Process)
 const handleCreateSession = () => {
   reportRole("host");
-  createHostSession(); // Triggers core logic, which can report state via report
+  createHostSession(); // Triggers core logic, which will report other states via report.ts
 };
 
-// User intent: Abort connection
 const handleStop = () => {
   if (!reportStatus("aborting")) return; // Validate transition; success affects logic listening to this state
   reportWarn({ message: "Stop requested by user" });
@@ -251,16 +240,8 @@ const handleStop = () => {
 
 ```typescript
 // store.ts (Renderer Process)
-type AdapterState = {
-  instance: "host" | "client" | null;
-  history: ConnectionLogFormattedEntry[];
-  sockets: SocketPair[];
-  mappings: { id: string; mapping: string; createdAt: number }[];
-  rules: { id: string; pattern: string; createdAt: number }[];
-};
-
 const useAdapter = create<AdapterState>((set) => {
-  // Subscribe to IPC events from main process
+  // declare where is the source, in this case, IPC from main process
   window.electron.on(IPCChannel.AdapterInstanceChange, ({ instance }) => {
     set({ instance });
   });
@@ -274,11 +255,9 @@ const reportInstance = (props: InstanceChangePayload) => {
   win.webContents.send(IPCChannel.AdapterInstanceChange, props);
 };
 
-// Simplified core logic
+// core.ts (Main Process)
 ipcMain.handle(IPCChannel.AdapterStartHost, () => {
-  // Execute internal logic
   startAdapterService("host");
-  // Report state via report
   reportInstance({ instance: "host" });
 });
 
@@ -294,13 +273,7 @@ const handleStartHostAdapter = async () => {
 
 ```typescript
 // store.ts
-type HttpState = {
-  posts: ReadonlyArray<PostEntry>;
-  postsLoading: boolean;
-  postsError: string | null;
-};
-
-const usePostsStore = create<HttpState>(() => ({
+const usePostsStore = create<PostsState>(() => ({
   posts: [],
   postsLoading: false,
   postsError: null,
@@ -311,26 +284,29 @@ const reportPosts = (data: any) => {
   const posts = PostEntrySchema.array().parse(data);
   usePostsStore.setState({ posts, postsLoading: false, postsError: null });
 };
-
 const reportPostsError = (error: Error) => {
   usePostsStore.setState({ postsLoading: false, postsError: error.message });
 };
-
 const reportPostsLoading = () => {
   usePostsStore.setState({ postsLoading: true, postsError: null });
 };
 
-// handlers.ts
-const handleLoadPosts = async () => {
+// core.ts
+const fetchPosts = async () => {
   reportPostsLoading();
   try {
-    const response = await fetch("https://jsonplaceholder.typicode.com/posts");
+    const response = await fetch("https://example.com/posts");
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const data = await response.json();
     reportPosts(data);
   } catch (error) {
     reportPostsError(error as Error);
   }
+};
+
+// handlers.ts
+const handleLoadPosts = async () => {
+  await fetchPosts();
 };
 ```
 
@@ -363,17 +339,14 @@ After: UI as a pure function
 
 ```typescript
 import { usePostsStore } from "@/modules/posts/store";
-import { postsHandlers } from "@/modules/posts/handlers";
+import { handleLoadPosts } from "@/modules/posts/handlers";
 
 export function PostList() {
-  const { posts, loading, error } = usePostsStore();
+  const { posts, postsLoading, postsError } = usePostsStore();
 
-  if (!posts && !loading && !error)
-    return <PostsButton onClick={postsHandlers.handleLoadPosts} />;
-  if (loading)
-    return <Spinner />;
-  if (error)
-    return <ErrorBox message={error} onRetry={postsHandlers.handleLoadPosts} />;
+  if (!posts && !postsLoading && !postsError) return <PostsButton onClick={handleLoadPosts} />;
+  if (postsLoading) return <Spinner />;
+  if (postsError) return <ErrorBox message={postsError} onRetry={handleLoadPosts} />;
   return <PostCards posts={posts} />;
 }
 ```
