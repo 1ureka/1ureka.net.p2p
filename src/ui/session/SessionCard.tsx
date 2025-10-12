@@ -45,7 +45,7 @@ const SessionCardHeader = () => {
         <Typography variant="subtitle1" component="h2" sx={{ ...centerTextSx }}>
           Session
         </Typography>
-        <Typography variant="subtitle2" sx={{ color: "text.secondary", ...centerTextSx }}>
+        <Typography variant="subtitle2" sx={{ color: "text.secondary", whiteSpace: "nowrap", ...centerTextSx }}>
           {`as ${role}`}
         </Typography>
       </Box>
