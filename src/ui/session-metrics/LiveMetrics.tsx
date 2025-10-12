@@ -1,4 +1,5 @@
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
+import AnalyticsRoundedIcon from "@mui/icons-material/AnalyticsRounded";
 import { Box, Typography } from "@mui/material";
 
 import { useState } from "react";
@@ -22,7 +23,7 @@ const LiveMetrics = () => {
   return (
     <>
       <CardSubHeader>
-        <Typography variant="subtitle2" sx={{ color: "text.secondary", ...centerTextSx }}>
+        <Typography variant="subtitle2" sx={{ color: "text.secondary", whiteSpace: "nowrap", ...centerTextSx }}>
           Live Metrics
         </Typography>
 
@@ -30,10 +31,11 @@ const LiveMetrics = () => {
 
         <GithubTooltip title="Select a chart">
           <GithubButton size="small" onClick={handleOpenPopover}>
+            <AnalyticsRoundedIcon fontSize="small" />
             <Typography variant="body2" sx={{ textTransform: "capitalize", ...centerTextSx }}>
               {metric}
             </Typography>
-            <ExpandMoreRoundedIcon fontSize="small" />
+            <ExpandMoreRoundedIcon fontSize="small" sx={{ ml: 1 }} />
           </GithubButton>
         </GithubTooltip>
       </CardSubHeader>
