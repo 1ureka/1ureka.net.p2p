@@ -8,10 +8,23 @@ import { MappingCardNoItemDisplay } from "@/ui/configs/MappingCardNoItem";
 import { MappingCardList, MappingCardListItem } from "@/ui/configs/MappingCardList";
 import { CreateMappingPopover } from "@/ui/configs/MappingPopover";
 
+import { centerTextSx } from "@/ui/theme";
 import { useAdapter } from "@/adapter-state/store";
 import { useState } from "react";
 
+const StatChip = ({ color, text }: { color: string; text: string }) => {
+  return (
+    <Box sx={{ px: 1.5, py: 1, borderRadius: 1, position: "relative", overflow: "hidden" }}>
+      <Box sx={{ position: "absolute", inset: 0, bgcolor: color, opacity: 0.2 }} />
+      <Typography variant="body2" sx={{ position: "relative", textWrap: "nowrap", color, ...centerTextSx }}>
+        {text}
+      </Typography>
+    </Box>
+  );
+};
+
 const MappingCardHeader = () => {
+  const mappings = useAdapter((state) => state.mappings);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const instance = useAdapter((state) => state.instance);
   const addDisabled = instance === null;
@@ -27,12 +40,16 @@ const MappingCardHeader = () => {
 
       <Box sx={{ flex: 1 }} />
 
-      <GithubTooltip title={addDisabled ? "Adapter is not running" : "Add a new mapping"}>
-        <GithubButton size="small" disabled={addDisabled} onClick={handleOpen}>
-          <AddRoundedIcon fontSize="small" sx={{ mx: 0.5 }} />
-          <ExpandMoreRoundedIcon fontSize="small" />
-        </GithubButton>
-      </GithubTooltip>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <GithubTooltip title={addDisabled ? "Adapter is not running" : "Add a new mapping"}>
+          <GithubButton size="small" disabled={addDisabled} onClick={handleOpen}>
+            <AddRoundedIcon fontSize="small" sx={{ mx: 0.5 }} />
+            <ExpandMoreRoundedIcon fontSize="small" />
+          </GithubButton>
+        </GithubTooltip>
+
+        <StatChip color="text.secondary" text={`${mappings.length} total`} />
+      </Box>
 
       <CreateMappingPopover anchorEl={anchorEl} onClose={handleClose} />
     </CardHeader>
