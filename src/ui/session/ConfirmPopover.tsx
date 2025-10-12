@@ -55,8 +55,9 @@ const ConfirmPopover = ({ anchorEl, onClose, onConfirm, title, message }: Confir
       anchorEl={anchorEl}
       open={open}
       onClose={handleClose}
+      anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      transformOrigin={{ vertical: "top", horizontal: "center" }}
       slotProps={{ paper: commonPaperProps }}
-      anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
     >
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 2, height: 44 }}>
         <WarningAmberRoundedIcon fontSize="small" sx={{ color: "error.main" }} />
