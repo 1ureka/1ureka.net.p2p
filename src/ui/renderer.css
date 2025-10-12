@@ -1,25 +1,17 @@
 @font-face {
-  font-family: "jf openhuninn";
-  src: url("./fonts/jf-openhuninn-2.1.ttf") format("truetype");
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
   font-family: "Comfortaa";
   font-style: normal;
   font-weight: 300 700;
   font-display: block;
-  src: url("./fonts/Comfortaa-VariableFont_wght.ttf") format("truetype");
+  src: url("../../assets/fonts/Comfortaa-VariableFont_wght.ttf") format("truetype");
 }
 
 @font-face {
   font-family: "Ubuntu";
   font-style: normal;
-  /* font-weight: 300 700; */
   font-weight: 500;
   font-display: block;
-  src: url("./fonts/UbuntuSansMono-VariableFont_wght.ttf") format("truetype");
+  src: url("../../assets/fonts/UbuntuSansMono-VariableFont_wght.ttf") format("truetype");
 }
 
 * {
