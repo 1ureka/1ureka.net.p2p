@@ -337,7 +337,7 @@ useEffect(() => {
 
 After: UI as a pure function
 
-```typescript
+```tsx
 import { usePostsStore } from "@/modules/posts/store";
 import { handleLoadPosts } from "@/modules/posts/handlers";
 
