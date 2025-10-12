@@ -4,9 +4,7 @@ import { useSession } from "@/transport-state/store";
 import { memo } from "react";
 
 import { Header } from "@/ui/components/Header";
-import { Footer } from "@/ui/components/Footer";
 import { LaunchPage } from "@/ui/launch/LaunchPage";
-
 import { SessionCard } from "@/ui/session/SessionCard";
 import { ConfigsCard } from "@/ui/configs/ConfigsCard";
 import { EventsCard } from "@/ui/events/EventsCard";
@@ -54,10 +52,9 @@ const Pages = () => {
 };
 
 const App = () => (
-  <Stack sx={{ height: "100dvh" }}>
+  <Stack sx={{ height: "100dvh", overflow: "hidden" }}>
     <Header />
     <Pages />
-    <Footer />
   </Stack>
 );
 
