@@ -1,31 +1,47 @@
+import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
+import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import { Box, Typography } from "@mui/material";
-import { useFilter, FilterButtons, ClearFiltersButton } from "@/ui/events/EventsFilter";
-import { Card, CardHeader, CardSubHeader } from "@/ui/components/Card";
+import { useState } from "react";
+
+import { Card, CardHeader } from "@/ui/components/Card";
+import { GithubButton, GithubTooltip } from "@/ui/components/Github";
 import { EventsList, useLogs } from "@/ui/events/EventsList";
 import { EventsSummary } from "@/ui/events/EventsSummary";
+import { EventsFilterPopover, useFilters } from "@/ui/events/EventsFilterPopover";
 
-const EventsCardHeader = () => (
-  <CardHeader>
-    <Typography variant="subtitle1" component="h2">
-      Events
-    </Typography>
+const EventsCardHeader = () => {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
-    <Box sx={{ flex: 1 }} />
+  const handleOpenPopover = (e: React.MouseEvent<HTMLElement>) => setAnchorEl(e.currentTarget);
+  const handleClosePopover = () => setAnchorEl(null);
 
-    <EventsSummary />
-  </CardHeader>
-);
+  return (
+    <CardHeader>
+      <Typography variant="subtitle1" component="h2">
+        Events
+      </Typography>
 
-const EventsCardSubHeader = () => (
-  <CardSubHeader>
-    <FilterButtons />
-    <ClearFiltersButton />
-  </CardSubHeader>
-);
+      <Box sx={{ flex: 1 }} />
+
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+        <EventsSummary />
+
+        <GithubTooltip title="Filter events">
+          <GithubButton size="small" onClick={handleOpenPopover}>
+            <FilterListRoundedIcon fontSize="small" />
+            <ExpandMoreRoundedIcon fontSize="small" />
+          </GithubButton>
+        </GithubTooltip>
+      </Box>
+
+      <EventsFilterPopover anchorEl={anchorEl} onClose={handleClosePopover} />
+    </CardHeader>
+  );
+};
 
 const EventsCardBody = () => {
   const allLogs = useLogs();
-  const filters = useFilter((state) => state.filters);
+  const filters = useFilters((state) => state.filters);
 
   const filteredLogs = allLogs.filter((log) => filters.includes(log.level));
   const hasFilters = filters.length < 3;
@@ -36,7 +52,6 @@ const EventsCardBody = () => {
 const EventsCard = () => (
   <Card sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
     <EventsCardHeader />
-    <EventsCardSubHeader />
     <EventsCardBody />
   </Card>
 );

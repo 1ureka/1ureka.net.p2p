@@ -41,14 +41,14 @@ const MappingCardHeader = () => {
       <Box sx={{ flex: 1 }} />
 
       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <StatChip color="text.secondary" text={`${mappings.length} total`} />
+
         <GithubTooltip title={addDisabled ? "Adapter is not running" : "Add a new mapping"}>
           <GithubButton size="small" disabled={addDisabled} onClick={handleOpen}>
             <AddRoundedIcon fontSize="small" sx={{ mx: 0.5 }} />
             <ExpandMoreRoundedIcon fontSize="small" />
           </GithubButton>
         </GithubTooltip>
-
-        <StatChip color="text.secondary" text={`${mappings.length} total`} />
       </Box>
 
       <CreateMappingPopover anchorEl={anchorEl} onClose={handleClose} />
