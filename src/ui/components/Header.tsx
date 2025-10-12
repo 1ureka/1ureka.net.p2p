@@ -21,7 +21,7 @@ const HeaderTitle = () => {
           variant="body2"
           sx={{ display: { xs: "none", md: "block" }, color: "text.secondary", textAlign: "right", ...centerTextSx }}
         >
-          v1.0.0-alpha.10
+          v1.0.0-alpha.11
         </Typography>
       </Box>
     </Box>
