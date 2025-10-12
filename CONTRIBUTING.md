@@ -4,7 +4,7 @@
 
 ---
 
-## Table of Contents
+# Table of Contents
 
 - [Development Guide](#development-guide)
 - [Application Architecture](#application-architecture)
@@ -14,9 +14,9 @@
 
 ---
 
-## Development Guide
+# Development Guide
 
-### Prerequisites
+## Prerequisites
 
 Before you begin, ensure your system has the following tools installed:
 
@@ -24,22 +24,22 @@ Before you begin, ensure your system has the following tools installed:
 - **npm**: v11.x or later (bundled with Node.js)
 - **Git**: For version control
 
-### Getting Started
+## Getting Started
 
-#### 1. Clone the Repository
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/1ureka/1ureka.net.p2p.git
 cd 1ureka.net.p2p
 ```
 
-#### 2. Install Dependencies
+### 2. Install Dependencies
 
 ```bash
 npm install
 ```
 
-#### 3. Start Development Server
+### 3. Start Development Server
 
 ```bash
 npm start
@@ -51,7 +51,7 @@ This runs `electron-forge start`, which launches:
 - Electron main process
 - Electron renderer process
 
-### Testing
+## Testing
 
 The project uses an **end-to-end testing strategy**, validating complete data flows through the system.
 
@@ -64,22 +64,21 @@ The project uses an **end-to-end testing strategy**, validating complete data fl
 - Out-of-order delivery simulation
 - Scenarios with multiple mappings
 
-#### Run All Tests
+### Run All Tests
 
 ```bash
 npm test
 ```
 
-#### Run a Specific Test File
+### Run a Specific Test File
 
 ```bash
 npx vitest run src/adapter/adapter.test.ts
 ```
 
+## Building & Releasing
 
-### Building & Releasing
-
-#### Local Build
+### Local Build
 
 ```bash
 npm run package
@@ -87,7 +86,7 @@ npm run package
 
 This uses Electron Forge to package the application to a portable executable folder in the `out/` directory.
 
-#### Clean Build Artifacts
+### Clean Build Artifacts
 
 ```bash
 npm run clean
@@ -95,7 +94,7 @@ npm run clean
 
 This removes `out/`, `.vite/`, `dist/` directories.
 
-#### Release Workflow
+### Release Workflow
 
 The project uses **GitHub Actions** for automated releases. Currently supports Windows platform:
 
@@ -115,7 +114,7 @@ The project uses **GitHub Actions** for automated releases. Currently supports W
 
 ---
 
-## Application Architecture
+# Application Architecture
 
 The project is built on **Electron**, leveraging its dual-process architecture to layer network processing:
 
@@ -137,7 +136,7 @@ The project is built on **Electron**, leveraging its dual-process architecture t
                          (Electron)
 ```
 
-### Why Two Processes?
+## Why Two Processes?
 
 This isn't just an Electron requirement—it's a deliberate design choice based on **separation of concerns**:
 
@@ -159,11 +158,11 @@ This isn't just an Electron requirement—it's a deliberate design choice based 
 
 ---
 
-## Module Collaboration Pattern
+# Module Collaboration Pattern
 
 The project follows a **declarative, unidirectional data flow** architecture, ensuring clarity and traceability in state management.
 
-### Core Concepts
+## Core Concepts
 
 Every module (Adapter, Transport) follows this structure:
 
@@ -199,7 +198,9 @@ module-state/
   - Coordinate execution of internal module logic.
   - Can also report execution results back via report.
 
-### Example: Transport Implementation (Single Process)
+## Examples
+
+### Transport Implementation (Single Process)
 
 ```typescript
 // store.ts (Renderer Process)
@@ -246,7 +247,7 @@ const handleStop = () => {
 };
 ```
 
-### Example: Adapter Implementation (Dual Process)
+### Adapter Implementation (Dual Process)
 
 ```typescript
 // store.ts (Renderer Process)
@@ -289,7 +290,7 @@ const handleStartHostAdapter = async () => {
 };
 ```
 
-### Bonus Example: HTTP Implementation (For Illustration Only)
+### HTTP Implementation (For Illustration Only)
 
 ```typescript
 // store.ts
@@ -333,7 +334,7 @@ const handleLoadPosts = async () => {
 };
 ```
 
-### Advantages
+## Advantages
 
 1. **Unidirectional Data Flow**: State changes follow a clear path, making debugging and tracing straightforward.
 2. **Separation of Concerns**: State storage, event propagation, and intent handling each have distinct responsibilities.
@@ -379,13 +380,13 @@ export function PostList() {
 
 ---
 
-## Core Module: Adapter
+# Core Module: Adapter
 
 The Adapter is the **heart of protocol translation**, converting TCP connections into packets suitable for transmission over WebRTC DataChannel.
 
-### Why Do We Need an Adapter?
+## Why Do We Need an Adapter?
 
-#### The Nature of TCP
+### The Nature of TCP
 
 - **TCP is a bidirectional stream protocol**, where each connection is an independent socket.
 - Applications can open multiple TCP sockets simultaneously, even to the same service.
@@ -394,7 +395,7 @@ The Adapter is the **heart of protocol translation**, converting TCP connections
   - Database connection pools maintain multiple connections to the same database.
   - Vite dev servers handle short-lived static asset requests alongside long-lived HMR connections.
 
-#### WebRTC DataChannel Limitations
+### WebRTC DataChannel Limitations
 
 - DataChannel is built on **SCTP over DTLS over UDP**, making it fundamentally **message-oriented**.
 - Each DataChannel maps to a single SCTP stream, with size limits on individual messages.
@@ -404,11 +405,11 @@ The Adapter is the **heart of protocol translation**, converting TCP connections
 
 **The Adapter's role** is to turn a DataChannel into a "virtual wire" capable of carrying multiple TCP sockets.
 
-### Logical Sockets
+## Logical Sockets
 
 The Adapter uses **Socket Pairs as identifiers** combined with event packets to multiplex multiple logical TCP connections over a single DataChannel.
 
-#### Socket Pair as Identifier
+### Socket Pair as Identifier
 
 ```typescript
 type SocketPair = {
@@ -423,7 +424,7 @@ type SocketPair = {
 - `srcAddr/srcPort` ensures uniqueness for each connection, while `dstAddr/dstPort` lets the host identify the target service.
 - All `CONNECT`, `DATA`, and `CLOSE` packets related to this connection use the same identifier.
 
-#### Lifecycle
+### Lifecycle
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
@@ -437,34 +438,34 @@ type SocketPair = {
 └──────────────────────────────────────────────────────────────┘
 ```
 
-### Protocol Design
+## Protocol Design
 
 The project implements a custom application-layer protocol for multiplexing TCP connections over DataChannel.
 
-#### Packet Structure
+### Packet Structure
 
-| Offset  | Size | Field        | Type      | Description                                    |
-| ------- | ---- | ------------ | --------- | ---------------------------------------------- |
-| [0]     | 1    | event        | Uint8     | Event type (`CONNECT`, `DATA`, `CLOSE`)        |
-| [1–16]  | 16   | src_addr     | Uint8[16] | Source IP (IPv4 mapped to IPv6 format)         |
-| [17–18] | 2    | src_port     | Uint16    | Source port                                    |
-| [19–34] | 16   | dst_addr     | Uint8[16] | Destination IP (IPv4 mapped to IPv6 format)    |
-| [35–36] | 2    | dst_port     | Uint16    | Destination port                               |
-| [37–38] | 2    | stream_seq   | Uint16    | Stream sequence (for circular allocation)      |
-| [39–40] | 2    | chunk_index  | Uint16    | Index of this chunk in the stream              |
-| [41–42] | 2    | total_chunks | Uint16    | Total chunks in this stream                    |
-| [43– ]  | N    | payload      | Uint8[]   | Actual TCP data                                |
+| Offset  | Size | Field        | Type      | Description                                 |
+| ------- | ---- | ------------ | --------- | ------------------------------------------- |
+| [0]     | 1    | event        | Uint8     | Event type (`CONNECT`, `DATA`, `CLOSE`)     |
+| [1–16]  | 16   | src_addr     | Uint8[16] | Source IP (IPv4 mapped to IPv6 format)      |
+| [17–18] | 2    | src_port     | Uint16    | Source port                                 |
+| [19–34] | 16   | dst_addr     | Uint8[16] | Destination IP (IPv4 mapped to IPv6 format) |
+| [35–36] | 2    | dst_port     | Uint16    | Destination port                            |
+| [37–38] | 2    | stream_seq   | Uint16    | Stream sequence (for circular allocation)   |
+| [39–40] | 2    | chunk_index  | Uint16    | Index of this chunk in the stream           |
+| [41–42] | 2    | total_chunks | Uint16    | Total chunks in this stream                 |
+| [43– ]  | N    | payload      | Uint8[]   | Actual TCP data                             |
 
-#### Circular Allocation
+### Circular Allocation
 
 - `stream_seq` **must be implemented with circular reuse**.
 - Max value is 65535; when reached, wraps back to 0.
 - Incomplete `stream_seq` values must not be overwritten—implementations should ensure safe recycling.
 - This allows up to 65535 concurrent incomplete messages.
 
-### Role Implementations
+## Role Implementations
 
-#### Host Adapter
+### Host Adapter
 
 - **Responsibility**: Accept connection requests from client, create corresponding local TCP sockets.
 - **Workflow**:
@@ -474,7 +475,7 @@ The project implements a custom application-layer protocol for multiplexing TCP 
   4. Forward `DATA` packets → TCP socket ⇆ DataChannel.
   5. Handle `CLOSE` packet → Release resources.
 
-#### Client Adapter
+### Client Adapter
 
 - **Responsibility**: Create virtual TCP server, intercept local application connection requests.
 - **Workflow**:
@@ -485,11 +486,11 @@ The project implements a custom application-layer protocol for multiplexing TCP 
 
 ---
 
-## Core Module: Transport
+# Core Module: Transport
 
 The Transport module is the **foundation of P2P connectivity**, built on WebRTC to establish and maintain peer-to-peer connections.
 
-### Why WebRTC?
+## Why WebRTC?
 
 While Node.js/Electron can establish direct TCP/UDP connections, this often fails behind **NAT / firewalls**.
 
@@ -506,9 +507,9 @@ However, WebRTC's API can be cumbersome:
 
 The project wraps this complexity in a simplified API, ensuring clean lifecycle management.
 
-### Encapsulation & Extensibility
+## Encapsulation & Extensibility
 
-#### Simple API Surface
+### Simple API Surface
 
 The project uses a **Vanilla ICE flow**, binding RTCPeerConnection and RTCDataChannel to the same lifecycle:
 
@@ -522,14 +523,14 @@ const { getDataChannel, getLocal, setRemote, close } = createPeerConnection();
 - It only needs **one reliable data channel** to carry TCP packets.
 - Initialization happens upfront, so upper layers can focus on role-specific workflows.
 
-#### Plugin-Based Extension
+### Plugin-Based Extension
 
 To avoid tight coupling with WebRTC APIs, the project uses a **plugin-based binding** approach:
 
 ```typescript
 const dataChannel = await getDataChannel(timeout);
-bindDataChannelIPC(dataChannel);      // Bridge to main process
-bindDataChannelTraffic(dataChannel);  // Monitor bandwidth
+bindDataChannelIPC(dataChannel); // Bridge to main process
+bindDataChannelTraffic(dataChannel); // Monitor bandwidth
 ```
 
 **Plugin Contract**:
@@ -540,13 +541,13 @@ bindDataChannelTraffic(dataChannel);  // Monitor bandwidth
 
 This design is inspired by **Blender's addon system**: plugins have `register/unregister`, and the host app doesn't manage their cleanup.
 
-### Signaling Strategy
+## Signaling Strategy
 
 To establish a P2P connection, both peers must exchange connection information (SDP descriptions and ICE candidates).
 
 The project uses a **session-based HTTP signaling server** with long polling:
 
-#### Signaling Flow
+### Signaling Flow
 
 ```
 1. Host creates session          →   Receives Session ID
@@ -556,14 +557,14 @@ The project uses a **session-based HTTP signaling server** with long polling:
 4. WebRTC connection opens       →   Signaling complete
 ```
 
-#### Design Decisions
+### Design Decisions
 
 - **Long Polling**: Client polls for peer signals with server-side timeout (5s) and client-side retry (100ms).
 - **Stateless Design**: Server stores no sensitive data — only helps exchange public connection info.
 - **Single-Use Sessions**: Each Session ID is valid for one connection only; must create new session after disconnect.
 - **Auto Cleanup**: Redis TTL automatically cleans up expired sessions.
 
-### Lifecycle Management
+## Lifecycle Management
 
 The Transport module uses a **finite state machine (FSM)** to manage connection lifecycle:
 
@@ -602,7 +603,7 @@ stateDiagram-v2
 - **aborting**: User requested stop, cleaning up resources.
 - **failed**: Connection failed or stopped, ready to retry.
 
-> [Tip]
+> [!TIP]
 > For Client, Waiting state still occurs but only momentarily to ensure proper state transition.
 
 **State Validation**:
@@ -623,7 +624,7 @@ const validTransitions: Record<ConnectionStatus, ConnectionStatus[]> = {
 
 Any invalid transition is rejected and logged for debugging.
 
-### Session Concept
+## Session Concept
 
 In this project, a **Session** represents the **complete P2P connection entity**, including both Transport and Adapter:
 
@@ -643,7 +644,7 @@ The UI's "Session Card" reflects this unified concept—displaying both Transpor
 
 ---
 
-## Closing Thoughts
+# Closing Thoughts
 
 This document describes the project's core technical architecture, including dual-process design, module collaboration patterns, and implementation details of the Adapter and Transport modules.
 
