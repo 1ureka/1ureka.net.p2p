@@ -32,6 +32,7 @@ const series1: LineSeries = {
   curve: "linear",
   color: theme.palette.primary.main,
   valueFormatter: formatBytes,
+  labelMarkType: "square",
 };
 const series2: LineSeries = {
   id: "ingress",
@@ -42,6 +43,7 @@ const series2: LineSeries = {
   curve: "linear",
   color: theme.palette.success.main,
   valueFormatter: formatBytes,
+  labelMarkType: "square",
 };
 
 const TrafficChart = () => {
@@ -66,6 +68,12 @@ const TrafficChart = () => {
       yAxis={[yAxis1, yAxis2]}
       series={[series1, series2]}
       grid={{ vertical: true, horizontal: true }}
+      slotProps={{
+        legend: {
+          direction: "vertical",
+          sx: { gap: 3.5, ml: 0, ".MuiChartsLegend-series": { flexDirection: "column" } },
+        },
+      }}
       sx={{
         ml: -1.5,
         '& .MuiAreaElement-root[data-series="egress"]': { fill: "url(#GradientEgress)" },
