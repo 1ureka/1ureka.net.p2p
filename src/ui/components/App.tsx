@@ -8,7 +8,6 @@ import { Header } from "@/ui/components/Header";
 import { Footer } from "@/ui/components/Footer";
 import { LaunchPage } from "@/ui/launch/LaunchPage";
 import { EventsPage } from "@/ui/events/EventsPage";
-import { MetricPage } from "@/ui/metrics/MetricPage";
 
 import { SessionCard } from "@/ui/session/SessionCard";
 import { ConfigsCard } from "@/ui/configs/ConfigsCard";
@@ -56,11 +55,6 @@ const Pages = () => {
       {tab === "events" && (
         <Stack key="events" {...PageWrapperProps}>
           <EventsPage />
-        </Stack>
-      )}
-      {tab === "metrics" && (
-        <Stack key="metrics" {...PageWrapperProps}>
-          <MetricPage />
         </Stack>
       )}
     </AnimatePresence>

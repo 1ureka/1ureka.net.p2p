@@ -46,7 +46,6 @@ const HeaderTabs = () => {
   const tabs: TabEntry[] = [
     { label: "Overview", value: "overview", disabled: false },
     { label: "Events", value: "events", disabled: ["disconnected", "joining"].includes(status) },
-    { label: "Metrics", value: "metrics", disabled: ["disconnected", "joining"].includes(status) },
   ];
 
   return (

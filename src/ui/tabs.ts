@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-type Tab = "overview" | "events" | "metrics";
+type Tab = "overview" | "events";
 type TabEntry = { label: string; value: Tab; disabled: boolean };
 type TabsState = { tab: Tab; setTab: (tab: Tab) => void };
 
