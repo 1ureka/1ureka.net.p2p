@@ -1,9 +1,7 @@
 import NatRoundedIcon from "@mui/icons-material/NatRounded";
 import HelpRoundedIcon from "@mui/icons-material/HelpRounded";
-import { Box, BoxProps, Button, Tab, Tabs, Typography } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import { centerTextSx } from "@/ui/theme";
-import { useTab, type TabEntry } from "@/ui/tabs";
-import { useSession } from "@/transport-state/store";
 import { useState } from "react";
 import { UrlDialog } from "@/ui/components/UrlDialog";
 
@@ -39,50 +37,11 @@ const HeaderLinks = () => {
   );
 };
 
-const HeaderTabs = () => {
-  const status = useSession((state) => state.status);
-  const { tab, setTab } = useTab();
-
-  const tabs: TabEntry[] = [
-    { label: "Overview", value: "overview", disabled: false },
-    { label: "Events", value: "events", disabled: ["disconnected", "joining"].includes(status) },
-  ];
-
-  return (
-    <Tabs
-      value={tab}
-      onChange={(_, v) => setTab(v)}
-      slotProps={{ indicator: { children: <span className="MuiTabs-indicatorSpan" /> } }}
-      sx={{
-        mt: 2.5,
-        "& .MuiTabs-indicator": { display: "flex", justifyContent: "center", bgcolor: "transparent" },
-        "& .MuiTabs-indicatorSpan": { maxWidth: 40, width: 1, bgcolor: "primary.main" },
-        "& .MuiTab-root": { textTransform: "none", "&:not(.Mui-selected):hover": { color: "text.primary" } },
-      }}
-    >
-      {tabs.map(({ label, value, disabled }) => (
-        <Tab key={value} label={label} value={value} disabled={disabled} />
-      ))}
-    </Tabs>
-  );
-};
-
-const headerInnerSx: BoxProps["sx"] = {
-  display: "grid",
-  alignItems: "center",
-  gap: 3,
-  gridTemplateColumns: "minmax(min-content, 1fr) minmax(min-content, auto) minmax(min-content, 1fr)",
-  "& > div:nth-of-type(1)": { justifySelf: "start" },
-  "& > div:nth-of-type(2)": { justifySelf: "center" },
-  "& > div:nth-of-type(3)": { justifySelf: "end" },
-};
-
 const Header = () => {
   return (
     <Box sx={{ px: 4, bgcolor: "background.header", borderBottom: "2px solid", borderColor: "divider" }}>
-      <Box sx={headerInnerSx}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2, justifyContent: "space-between", height: 64 }}>
         <HeaderTitle />
-        <HeaderTabs />
         <HeaderLinks />
       </Box>
     </Box>
