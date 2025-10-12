@@ -5,6 +5,7 @@ import SummarizeRoundedIcon from "@mui/icons-material/SummarizeRounded";
 
 import { Box, Divider, type IconProps, type SxProps, Typography } from "@mui/material";
 import { GithubTooltip } from "@/ui/components/Github";
+import { Fragment } from "react";
 import { centerTextSx } from "@/ui/theme";
 import { useLogs } from "@/ui/events/EventsList";
 import type { ConnectionLogLevel } from "@/utils";
@@ -33,7 +34,6 @@ const StatChip = ({ level, value, sx }: { level: (typeof chipTypes)[number]; val
     <GithubTooltip title={level.charAt(0).toUpperCase() + level.slice(1) + " events count"}>
       <Box
         sx={{
-          position: "relative",
           display: "flex",
           alignItems: "center",
           gap: 1,
@@ -70,7 +70,6 @@ const EventsSummary = () => {
       sx={{
         display: "flex",
         alignItems: "center",
-        color: "text.secondary",
         borderRadius: 1,
         outline: "2px solid",
         outlineColor: "divider",
@@ -78,14 +77,14 @@ const EventsSummary = () => {
       }}
     >
       {chipTypes.map((level, i) => (
-        <>
+        <Fragment key={level}>
           <StatChip
             level={level}
             value={counts[level]}
             sx={{ pl: i === 0 ? 0.5 : 1, pr: i === chipTypes.length - 1 ? 0.5 : 1, py: 0.5 }}
           />
           {i < chipTypes.length - 1 && <Divider orientation="vertical" flexItem />}
-        </>
+        </Fragment>
       ))}
     </Box>
   );
