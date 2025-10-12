@@ -15,6 +15,7 @@ import { handleStop, handleLeave } from "@/transport-state/handlers";
 import { useSession } from "@/transport-state/store";
 import { useAdapter } from "@/adapter-state/store";
 import { useState } from "react";
+import { handleStopAdapter } from "@/adapter-state/handlers";
 
 const SessionCardHeader = () => {
   const role = useSession((state) => state.role);
@@ -22,7 +23,7 @@ const SessionCardHeader = () => {
   const instance = useAdapter((state) => state.instance);
 
   const stopLoading = status === "aborting";
-  const stopDisabled = ["disconnected", "joining", "aborting", "failed"].includes(status);
+  const stopDisabled = ["disconnected", "joining", "aborting", "failed"].includes(status) && instance === null;
   const leaveDisabled = status !== "failed" || instance !== null;
 
   const getStopTooltip = () => {
@@ -34,6 +35,14 @@ const SessionCardHeader = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const handleOpenPopover = (e: React.MouseEvent<HTMLElement>) => setAnchorEl(e.currentTarget);
   const handleClosePopover = () => setAnchorEl(null);
+
+  const handleStopClick = async () => {
+    if (["disconnected", "joining", "aborting", "failed"].includes(status)) {
+      handleStopAdapter();
+    } else {
+      handleStop();
+    }
+  };
 
   return (
     <CardHeader>
@@ -78,7 +87,7 @@ const SessionCardHeader = () => {
       <ConfirmPopover
         anchorEl={anchorEl}
         onClose={handleClosePopover}
-        onConfirm={async () => handleStop()}
+        onConfirm={handleStopClick}
         title="Stop session?"
         message="This will stop the current connection and end the session. You can create or join a new session afterwards."
       />
