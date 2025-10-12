@@ -3,6 +3,8 @@ import { centerTextSx } from "@/ui/theme";
 import { useLogs } from "@/ui/events/EventsList";
 import type { ConnectionLogLevel } from "@/utils";
 
+const chipTypes = ["info", "warn", "error", "total"] as const;
+
 const chipColors: Record<ConnectionLogLevel | "total", string> = {
   info: "text.secondary",
   warn: "warning.main",
@@ -21,7 +23,14 @@ const StatChip = ({ color, text }: { color: string; text: string }) => {
   );
 };
 
-const EventsSummary = ({ display }: { display: Record<ConnectionLogLevel | "total", boolean> }) => {
+const chipDisplayOnSmall: Record<ConnectionLogLevel | "total", boolean> = {
+  info: false,
+  warn: true,
+  error: true,
+  total: false,
+};
+
+const EventsSummary = () => {
   const logs = useLogs();
 
   const counts = logs.reduce(
@@ -35,16 +44,18 @@ const EventsSummary = ({ display }: { display: Record<ConnectionLogLevel | "tota
     { total: 0, info: 0, warn: 0, error: 0 }
   );
 
-  const array = Object.entries(display).filter(([, v]) => v) as [ConnectionLogLevel | "total", true][];
-  const chips = array.map(([level]) => ({
+  const chips = chipTypes.map((level) => ({
+    level,
     color: counts[level] > 0 ? chipColors[level] : "text.secondary",
     text: `${counts[level]} ${level}`,
   }));
 
   return (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, color: "text.secondary" }}>
-      {chips.map(({ color, text }) => (
-        <StatChip key={text} color={color} text={text} />
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "text.secondary" }}>
+      {chips.map(({ level, color, text }) => (
+        <Box key={level} sx={{ display: { xs: chipDisplayOnSmall[level] ? "block" : "none", lg: "block" } }}>
+          <StatChip color={color} text={text} />
+        </Box>
       ))}
     </Box>
   );
