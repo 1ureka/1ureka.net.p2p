@@ -1,33 +1,54 @@
-import { Box, Typography } from "@mui/material";
+import ErrorRoundedIcon from "@mui/icons-material/ErrorRounded";
+import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
+import InfoRoundedIcon from "@mui/icons-material/InfoRounded";
+import SummarizeRoundedIcon from "@mui/icons-material/SummarizeRounded";
+
+import { Box, Divider, type IconProps, type SxProps, Typography } from "@mui/material";
+import { GithubTooltip } from "@/ui/components/Github";
 import { centerTextSx } from "@/ui/theme";
 import { useLogs } from "@/ui/events/EventsList";
 import type { ConnectionLogLevel } from "@/utils";
 
-const chipTypes = ["info", "warn", "error", "total"] as const;
+const chipTypes: readonly (ConnectionLogLevel | "total")[] = ["info", "warn", "error", "total"] as const;
 
-const chipColors: Record<ConnectionLogLevel | "total", string> = {
+const chipColors: Record<(typeof chipTypes)[number], string> = {
   info: "text.secondary",
   warn: "warning.main",
   error: "error.main",
   total: "text.secondary",
 };
 
-const StatChip = ({ color, text }: { color: string; text: string }) => {
-  return (
-    <Box sx={{ px: 1.5, py: 1, borderRadius: 1, position: "relative", overflow: "hidden" }}>
-      <Box sx={{ position: "absolute", inset: 0, bgcolor: color, opacity: 0.2 }} />
-      <Typography variant="body2" sx={{ position: "relative", textWrap: "nowrap", color, ...centerTextSx }}>
-        {text}
-      </Typography>
-    </Box>
-  );
+const chipIcons: Record<(typeof chipTypes)[number], React.ComponentType<IconProps>> = {
+  info: InfoRoundedIcon,
+  warn: WarningRoundedIcon,
+  error: ErrorRoundedIcon,
+  total: SummarizeRoundedIcon,
 };
 
-const chipDisplayOnSmall: Record<ConnectionLogLevel | "total", boolean> = {
-  info: false,
-  warn: true,
-  error: true,
-  total: false,
+const StatChip = ({ level, value, sx }: { level: (typeof chipTypes)[number]; value: number; sx?: SxProps }) => {
+  const color = chipColors[level];
+  const Icon = chipIcons[level];
+
+  return (
+    <GithubTooltip title={level.charAt(0).toUpperCase() + level.slice(1) + " events count"}>
+      <Box
+        sx={{
+          position: "relative",
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          cursor: "help",
+          "&:hover": { bgcolor: "action.hover" },
+          ...sx,
+        }}
+      >
+        <Icon fontSize="small" sx={{ color }} />
+        <Typography variant="body2" sx={{ color, ...centerTextSx }}>
+          {value}
+        </Typography>
+      </Box>
+    </GithubTooltip>
+  );
 };
 
 const EventsSummary = () => {
@@ -44,18 +65,27 @@ const EventsSummary = () => {
     { total: 0, info: 0, warn: 0, error: 0 }
   );
 
-  const chips = chipTypes.map((level) => ({
-    level,
-    color: counts[level] > 0 ? chipColors[level] : "text.secondary",
-    text: `${counts[level]} ${level}`,
-  }));
-
   return (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "text.secondary" }}>
-      {chips.map(({ level, color, text }) => (
-        <Box key={level} sx={{ display: { xs: chipDisplayOnSmall[level] ? "block" : "none", lg: "block" } }}>
-          <StatChip color={color} text={text} />
-        </Box>
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        color: "text.secondary",
+        borderRadius: 1,
+        outline: "2px solid",
+        outlineColor: "divider",
+        overflow: "hidden",
+      }}
+    >
+      {chipTypes.map((level, i) => (
+        <>
+          <StatChip
+            level={level}
+            value={counts[level]}
+            sx={{ pl: i === 0 ? 0.5 : 1, pr: i === chipTypes.length - 1 ? 0.5 : 1, py: 0.5 }}
+          />
+          {i < chipTypes.length - 1 && <Divider orientation="vertical" flexItem />}
+        </>
       ))}
     </Box>
   );

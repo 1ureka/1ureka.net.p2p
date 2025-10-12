@@ -28,7 +28,7 @@ const EventsCardHeader = () => {
 
         <GithubTooltip title="Filter events">
           <GithubButton size="small" onClick={handleOpenPopover}>
-            <FilterListRoundedIcon fontSize="small" />
+            <FilterListRoundedIcon fontSize="small" sx={{ mx: 0.5 }} />
             <ExpandMoreRoundedIcon fontSize="small" />
           </GithubButton>
         </GithubTooltip>
