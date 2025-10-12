@@ -27,8 +27,7 @@
     "minecraft-server",
     "local-server",
     "no-central-server",
-    "end-to-end-encryption",
-    "cross-platform"
+    "end-to-end-encryption"
   ],
   "author": {
     "name": "1ureka",
