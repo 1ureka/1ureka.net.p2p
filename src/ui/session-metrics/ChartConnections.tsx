@@ -55,14 +55,16 @@ const ConnectionsChart = () => {
   };
 
   const yAxis: YAxis<"linear"> = {
+    scaleType: "linear",
     dataKey: "count",
-    width: 20,
+    width: 32,
     min: 0,
+    max: 20,
   };
 
   const series: LineSeries = {
     id: "connections",
-    label: "Connections",
+    label: (location) => (location === "legend" ? "Sockets" : "Connections"),
     dataKey: "count",
     showMark: false,
     area: true,
