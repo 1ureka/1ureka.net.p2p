@@ -27,7 +27,7 @@ const MappingCardHeader = () => {
 
       <Box sx={{ flex: 1 }} />
 
-      <GithubTooltip title={addDisabled ? "Start adapter first" : "Add a new mapping"}>
+      <GithubTooltip title={addDisabled ? "Adapter is not running" : "Add a new mapping"}>
         <GithubButton size="small" disabled={addDisabled} onClick={handleOpen}>
           <AddRoundedIcon fontSize="small" sx={{ mx: 0.5 }} />
           <ExpandMoreRoundedIcon fontSize="small" />
