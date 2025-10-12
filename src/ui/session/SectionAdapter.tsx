@@ -1,4 +1,4 @@
-import { Box, Divider, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { CardSubHeader } from "@/ui/components/Card";
 import { ConnectionIndicator } from "@/ui/session/SessionCardIndicator";
 
@@ -40,7 +40,6 @@ const AdapterSection = () => (
         Adapter
       </Typography>
     </CardSubHeader>
-    <Divider />
     <AdapterBody />
   </>
 );

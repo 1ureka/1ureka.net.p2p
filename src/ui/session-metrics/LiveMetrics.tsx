@@ -1,5 +1,5 @@
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
-import { Box, Divider, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 
 import { useState } from "react";
 import { centerTextSx } from "@/ui/theme";
@@ -37,8 +37,6 @@ const LiveMetrics = () => {
           </GithubButton>
         </GithubTooltip>
       </CardSubHeader>
-
-      <Divider />
 
       <Box sx={{ flex: 1, minHeight: 0, overflow: "auto", mb: -2 }}>
         {metric === "traffic" && <TrafficChart />}
