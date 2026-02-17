@@ -2,6 +2,8 @@
 
 1ureka.net.p2p has been completely rewritten in Go and rebranded as Roj1.
 
+### 👉 New Repository: [github.com/1ureka/roj1]()
+
 ## Why the change?
 
 - Performance: Transitioned from Electron to Go, achieving massive performance gains.
