@@ -2,7 +2,7 @@
 
 1ureka.net.p2p has been completely rewritten in Go and rebranded as Roj1.
 
-### 👉 New Repository: [github.com/1ureka/roj1]()
+### 👉 New Repository: [github.com/1ureka/roj1](https://github.com/1ureka/roj1)
 
 ## Why the change?
 
